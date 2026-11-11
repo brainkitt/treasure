@@ -1,0 +1,50 @@
+[
+ {
+  "agent": "ALPHA",
+  "qualified": false,
+  "gates_passed": 10,
+  "gates": 12,
+  "pf": 2.045940248600566,
+  "pf_is": 2.0633825590167807,
+  "pf_oos": 2.0098214285712737,
+  "pf_stress": 1.9407376420552376,
+  "trades": 60,
+  "net": 35.9724999999964,
+  "max_dd": 6.9450000000004195,
+  "worst": -1.4000000000000679,
+  "active": 89.47368421052632,
+  "symbols": "EURUSD, GBPUSD"
+ },
+ {
+  "agent": "DELTA",
+  "qualified": false,
+  "gates_passed": 7,
+  "gates": 12,
+  "pf": 1.457028134794788,
+  "pf_is": 1.608414176753918,
+  "pf_oos": 1.1903489602895652,
+  "pf_stress": 1.3803985815432858,
+  "trades": 74,
+  "net": 10.561071428571447,
+  "max_dd": 3.6693571428572795,
+  "worst": -1.4000000000000001,
+  "active": 93.33333333333333,
+  "symbols": "US SP 500"
+ },
+ {
+  "agent": "CHARLIE",
+  "qualified": false,
+  "gates_passed": 6,
+  "gates": 12,
+  "pf": 0.9022410660206519,
+  "pf_is": 0.8406861802377559,
+  "pf_oos": 1.0070044514271403,
+  "pf_stress": 0.8279185836102266,
+  "trades": 360,
+  "net": -8.06999999999476,
+  "max_dd": 16.94199999999584,
+  "worst": -1.4759999999999855,
+  "active": 100.0,
+  "symbols": "Range Break 100 Index"
+ }
+]

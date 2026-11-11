@@ -35,7 +35,8 @@ def load_specs(strategy_path):
     extra = os.path.join(os.path.dirname(os.path.abspath(strategy_path)), "specs.json")
     if os.path.exists(extra):
         for k, v in json.load(open(extra)).items():
-            specs[k] = {**specs.get(k, {}), **v}
+            if isinstance(v, dict):
+                specs[k] = {**specs.get(k, {}), **v}
     return specs
 
 
@@ -102,7 +103,9 @@ def run_legs(mod, specs, spread_mult=1.0, cut=None):
                              usd_per_quote=spec.get("usd_per_quote", 1.0))
         tr["leg"] = n; tr["symbol"] = spec["name"]
         all_tr.append(tr)
-        days |= set(m1.time.dt.floor("D").unique())
+        # a market day = a calendar day with at least 6 hours of M1 bars (skips Sunday-evening stubs)
+        cnt = m1.time.dt.floor("D").value_counts()
+        days |= set(cnt[cnt >= 360].index)
     tr = pd.concat(all_tr).sort_values("exit_time").reset_index(drop=True) if all_tr else pd.DataFrame()
     return tr, sorted(days), orders_by_leg, ok
 
