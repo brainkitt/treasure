@@ -169,3 +169,105 @@ kill switch do not exist in strategy.py — neither would have triggered in the 
 * Forward test at 0.1 units for 8+ weeks before believing anything beyond PF 1.2.
 
 Research scripts are in `research/` (s1-s17, in the order run); `lib.py` and `fam.py` are helpers.
+
+---
+
+# Round 2 (supervisor objectives 1-4)
+
+**Outcome: nothing new was adopted. The strategy, parameters and cBot are unchanged from round 1; only the
+M1 history is longer. Round 2 made me *less* confident in the edge, not more.**
+
+## Official result after round 2
+
+```
+period 2026-08-25 -> 2026-11-11  (OOS from 2026-10-19)
+full   trades=  95 PF=1.43 net=$12.76 win=71% DD=$3.67 worst=$-1.40 tr/day=1.7 active=93% wk+=83%
+is     trades=  70 PF=1.43 net=$8.79 win=70% DD=$3.67 worst=$-1.40 tr/day=1.8 active=92% wk+=75%
+oos    trades=  25 PF=1.41 net=$3.98 win=72% DD=$3.52 worst=$-1.40 tr/day=1.4 active=94% wk+=100%
+stress trades=  94 PF=1.37 net=$11.27 win=69% DD=$4.76 worst=$-1.40 tr/day=1.6 active=93% wk+=83%
+FAIL: pf_full, pf_oos, pf_is, stress pf, trades >= 150, oos trades >= 40.   PASS: the other six.
+NOT QUALIFIED
+```
+
+## 1. Siblings — the effect does NOT replicate (rules frozen: N=32, SL 2 ATR, TP 1 ATR, 4 h, no refit)
+
+SL cap per index = $1.40 / (0.1 units x USD per point): S&P and Russell 14.0 pts, UK 100 10.7 pts (GBPUSD 1.31).
+
+| index | window (NY) | pre-sample | spread used | trades | PF | halves | verdict |
+|---|---|---|---|---|---|---|---|
+| US SP 500 | 03:00-09:30 | Mar 26 - Sep 9 | 0.36 | 168 | 1.47 | 1.44 / 1.50 | (submitted) |
+| US Small Cap 2000 | 03:00-09:30 | Mar 26 - Sep 9 | 0.30 | 212 | **1.02** | 0.98 / 1.08 | fails |
+| US Small Cap 2000 | same, zero spread | | 0 | 214 | 1.08 | 1.04 / 1.14 | fails even gross |
+| US Small Cap 2000 | N = 20 / 24 / 48 / 64 | | 0.30 | 121-256 | 0.96 / 0.91 / 0.94 / 1.07 | | fails |
+| UK 100 | 18:00-03:00 (Asian session) | Jun 18 - Sep 9 | 3.36 | 100 | **0.51** | | fails |
+| UK 100 | same, hypothetical 1.0 spread | | 1.0 | 99 | 0.79 | | fails |
+| UK 100 | 03:00-09:30 and 12:00-18:00 | | 3.36 | 99 / 25 | 0.49 / 0.61 | | fails |
+
+Not tested, ruled out by arithmetic at 0.1 units: US Tech 100 (M15 ATR ~45 pts pre-open, 2 ATR = $9),
+Wall Street 30 (~32 pts, 2 ATR = $6.4), Germany 40 (spread 8.8 pts off-hours, sampled twice). UK 100's
+off-hours spread (3.36 pts, sampled twice) is half of its quiet-session M15 ATR (~7 pts), so a fade there
+cannot work regardless.
+
+**What this means.** I predicted that a real effect should show up on siblings. Russell is ~0.8 correlated
+with the S&P in those hours and shows nothing, even before costs. So either the effect is specific to the
+S&P contract, or the S&P result is partly luck from the ~4,900 parameter sets I have now run. I cannot tell
+which. No multi-leg portfolio is possible; trade count stays single-leg.
+
+## 2. Exits — the exit is not the weak part; the edge itself is thin
+
+Excursion profile after a fade entry, S&P pre-sample, 195 signals, in ATR units, signed in trade direction:
+
+| M15 bars held | mean | median | % positive | mean MFE | mean MAE |
+|---|---|---|---|---|---|
+| 1 | +0.09 | +0.05 | 51% | +0.74 | -0.65 |
+| 2 | +0.17 | +0.10 | 54% | +1.04 | -0.94 |
+| 4 | +0.06 | +0.11 | 53% | +1.49 | -1.33 |
+| 8 | +0.08 | +0.35 | 59% | +2.22 | -2.14 |
+| 16 | -0.21 | 0.00 | 50% | +3.43 | -3.47 |
+| 24 | -0.46 | -0.36 | 47% | +4.60 | -4.89 |
+
+The reversion is worth about 0.1-0.17 ATR (0.5-0.8 pts, against a 0.36 spread), peaks after 30 minutes and
+is gone within two hours. MFE and MAE are symmetric. The 1 ATR target / 2 ATR stop harvests that small drift
+with a high hit rate; it does not create edge.
+
+Exit variants expressible in the engine, pre-sample vs forward (official window before extension):
+
+| exit | pre-sample PF (halves) | forward PF (IS / OOS) | adopted |
+|---|---|---|---|
+| **TP 1 ATR, SL 2 ATR, 4 h (baseline)** | 1.47 (1.44 / 1.50) | 1.46 (1.61 / 1.19) | kept |
+| TP at 25% / 33% / 50% / 100% of distance to range midpoint | 1.34 / 1.41 / 1.38 / 1.38 | 1.49 / 1.69 / 1.27 / 0.97 | no |
+| hold 30 min / 1 h / 2 h | 1.17 / 1.27 / 1.44 | 1.43 / 1.55 / 1.34 | no |
+| trailing stop 1 / 1.5 / 2 ATR, no TP | 1.13 / 1.12 / 1.19 | 1.02 / 0.91 / 1.50 | no |
+| SL/TP 1/1, 1.5/1.5, 2/2, 3/1.5, 1/0.5, 1.5/2 ATR | 1.12 / 1.35 / 1.32 / 1.47 / 0.96 / 1.17 | 1.17 / 1.37 / 1.21 / 1.30 / 1.19 / 1.19 | no |
+| ATR-expansion filter (round 1, threshold 1.2) | 1.75 | 0.92 | no (overfit) |
+
+Nothing beats the baseline on the pre-sample, so nothing is adopted. "Midpoint 33%" scores 1.69 forward but
+1.41 on the pre-sample; picking it would be choosing on the official window. A conditional time-stop ("exit
+if not in profit after N bars") cannot be expressed in the arena engine (only SL / TP / max_bars / trail), so
+it could not be scored officially; the profile shows trades that are negative after 2 bars end at -1.08 ATR on
+average versus +0.55 for the rest, so it is the one idea here I would still test in a forward run.
+
+## 3. Spreads
+
+Three samples for the S&P (21:40, 21:49, 21:58 UTC on 2026-11-11): 0.36 each time. Russell 0.30 (x3),
+UK 100 3.36 (x2), Germany 40 8.8 (x2). The session clock advanced only ~20 minutes over both rounds, so I
+still have no sample inside 08:00-14:30 UTC. specs.json unchanged (0.36). At 2x spread the window PF is 1.30,
+at 3x 1.27.
+
+## 4. M1 history
+
+Extended the S&P M1 series back from 2026-09-10 to 2026-08-25 (17 calls; 77,226 bars, one 5-hour hole on
+2026-09-07, the US Labor Day early close). The API still returned data, so more is available; I stopped
+there. **Caveat:** Aug 25 - Sep 9 lies inside the pre-sample the parameters came from, so about 16% of the
+new official window is no longer out-of-sample. The clean forward segment is still Sep 10 - Nov 11
+(74 trades, PF 1.46).
+
+## Trials
+
+Round 2 added about 45 parameter sets (15 sibling, 30 exit). Running total ~3,490 sets, 16 ideas.
+
+## Round-2 verdict
+
+Honest PF estimate is unchanged at roughly 1.3-1.5 on the S&P alone, but the failed Russell replication is
+real evidence against it being a structural effect. Not qualified; not a candidate for more than a
+small-size observational forward test. Round-2 scripts: `research/r2_1.py`, `research/r2_2.py`.
