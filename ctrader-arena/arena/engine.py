@@ -17,7 +17,8 @@ Pessimism rules
   * SL and TP inside the same bar -> SL.
   * On the fill bar of a pending order only the SL is checked (TP cannot be assumed to come after the fill).
   * Stops slip by `slip`; if a bar OPENS beyond the stop, fill at the open.
-  * gap_sl=True (spike instruments: Boom/Crash/Jump...): a stopped trade fills at the bar EXTREME, not at the stop.
+  * gap_sl=True (spike instruments: Boom/Crash/Jump...): a stopped trade fills at the bar EXTREME, not at the stop,
+    and a stop ENTRY order also fills at the bar extreme (it cannot fill in the middle of a one-tick jump).
   * max_open concurrent positions (default 1); signals arriving while full are dropped.
 """
 import numpy as np
@@ -95,10 +96,11 @@ def _run(o, h, l, c, idx, side, kind, price, sl, tp, max_bars, trail, valid, vol
                 elif side[r] < 0 and hb >= price[r]:
                     fpx = max(price[r], ob); filled = True
             else:  # stop
+                # on gap_sl (single-tick jump) instruments a stop entry fills AFTER the jump: bar extreme
                 if side[r] > 0 and hb + spread >= price[r]:
-                    fpx = max(price[r], ob + spread) + slip; filled = True
+                    fpx = (hb + spread) if gap_sl else max(price[r], ob + spread) + slip; filled = True
                 elif side[r] < 0 and lb <= price[r]:
-                    fpx = min(price[r], ob) - slip; filled = True
+                    fpx = lb if gap_sl else min(price[r], ob) - slip; filled = True
             if filled:
                 q_on[s] = False
                 slot = -1

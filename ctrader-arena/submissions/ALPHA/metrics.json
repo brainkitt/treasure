@@ -1,5 +1,5 @@
 {
- "strategy": "/home/user/treasure/ctrader-arena/agents/ALPHA/strategy.py",
+ "strategy": "agents/ALPHA/strategy.py",
  "legs": [
   {
    "symbol": "EURUSD",
