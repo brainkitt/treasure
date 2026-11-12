@@ -41,3 +41,7 @@ output.json
 # NDK
 obj/
 .externalNativeBuild
+
+# cTrader arena
+ctrader-arena/data/
+__pycache__/

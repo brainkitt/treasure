@@ -1,0 +1,9 @@
+{
+  "_doc_charlie": {"note": "Measured by CHARLIE 2026-11-11 ~21:40-22:00 UTC. spread = ask-bid from get_spot_prices (RB100 sampled 3x: 2.6/2.6/2.6; RB200 2x: 2.0/2.0). min_units from LIMIT BUY volume=1 probes at 50% of price: accepted (then cancelled, confirmed gone) => 0.01 units; rejected => broker message value."},
+  "2449": {"name": "Range Break 100 Index", "spread": 2.6, "min_units": 0.01, "gap_sl": true, "usd_per_quote": 1.0, "always_open": true},
+  "2450": {"name": "Range Break 200 Index", "spread": 2.0, "min_units": 0.01, "gap_sl": true, "usd_per_quote": 1.0, "always_open": true},
+  "2442": {"name": "Boom 500 Index", "spread": 0.532, "min_units": 0.2, "gap_sl": true, "usd_per_quote": 1.0, "always_open": true},
+  "2443": {"name": "Crash 500 Index", "spread": 0.328, "min_units": 0.2, "gap_sl": true, "usd_per_quote": 1.0, "always_open": true},
+  "2444": {"name": "Boom 1000 Index", "spread": 1.7155, "min_units": 0.2, "gap_sl": true, "usd_per_quote": 1.0, "always_open": true},
+  "2462": {"name": "DEX 900 UP Index", "spread": 0.53, "min_units": 0.1, "gap_sl": true, "usd_per_quote": 1.0, "always_open": true}
+}
