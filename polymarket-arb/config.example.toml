@@ -1,0 +1,26 @@
+# Copy to config.toml. Every key is optional; these are the defaults.
+
+bankroll        = 1000.0   # USDC. Paper balance, and the equity base for the risk caps.
+min_edge        = 0.03     # enter when fair - ask - fee >= this ($ per $1 payout)
+exit_edge       = 0.005    # exit when bid (net of fee) is within this of fair
+risk_per_trade  = 0.005    # 0.5% of equity per trade (premium paid = max loss)
+daily_risk      = 0.02     # 2% of start-of-day equity: realised losses + open premium
+min_price       = 0.05
+max_price       = 0.95
+min_secs_left   = 10.0
+min_secs_elapsed = 5.0
+slippage_ticks  = 1.0
+cooldown_ms     = 1500
+max_spot_age_ms = 3000
+fee_rate        = 0.25     # taker fee/share = fee_rate * p * (p(1-p))^fee_exponent
+fee_exponent    = 2.0
+vol_mult        = 1.0      # >1 makes fair values more conservative
+paper_latency_ms = 80
+intervals_min   = [5, 15]
+feeds           = ["binance", "coinbase", "kraken", "okx"]
+dashboard_addr  = "127.0.0.1:8787"
+
+[live]
+clob_host      = "https://clob.polymarket.com"
+signature_type = 0         # 0 = EOA, 1 = Polymarket proxy (email login), 2 = Gnosis Safe
+# funder       = "0x..."   # address holding the funds when signature_type != 0
