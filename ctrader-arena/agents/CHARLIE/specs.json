@@ -1,9 +1,71 @@
 {
-  "_doc_charlie": {"note": "Measured by CHARLIE 2026-11-11 ~21:40-22:00 UTC. spread = ask-bid from get_spot_prices (RB100 sampled 3x: 2.6/2.6/2.6; RB200 2x: 2.0/2.0). min_units from LIMIT BUY volume=1 probes at 50% of price: accepted (then cancelled, confirmed gone) => 0.01 units; rejected => broker message value."},
-  "2449": {"name": "Range Break 100 Index", "spread": 2.6, "min_units": 0.01, "gap_sl": true, "usd_per_quote": 1.0, "always_open": true},
-  "2450": {"name": "Range Break 200 Index", "spread": 2.0, "min_units": 0.01, "gap_sl": true, "usd_per_quote": 1.0, "always_open": true},
-  "2442": {"name": "Boom 500 Index", "spread": 0.532, "min_units": 0.2, "gap_sl": true, "usd_per_quote": 1.0, "always_open": true},
-  "2443": {"name": "Crash 500 Index", "spread": 0.328, "min_units": 0.2, "gap_sl": true, "usd_per_quote": 1.0, "always_open": true},
-  "2444": {"name": "Boom 1000 Index", "spread": 1.7155, "min_units": 0.2, "gap_sl": true, "usd_per_quote": 1.0, "always_open": true},
-  "2462": {"name": "DEX 900 UP Index", "spread": 0.53, "min_units": 0.1, "gap_sl": true, "usd_per_quote": 1.0, "always_open": true}
+ "_doc_charlie": {
+  "note": "Measured by CHARLIE 2026-11-11 ~21:40-22:00 UTC. spread = ask-bid from get_spot_prices (RB100 sampled 3x: 2.6/2.6/2.6; RB200 2x: 2.0/2.0). min_units from LIMIT BUY volume=1 probes at 50% of price: accepted (then cancelled, confirmed gone) => 0.01 units; rejected => broker message value."
+ },
+ "2449": {
+  "name": "Range Break 100 Index",
+  "spread": 2.6,
+  "min_units": 0.01,
+  "gap_sl": true,
+  "usd_per_quote": 1.0,
+  "always_open": true
+ },
+ "2450": {
+  "name": "Range Break 200 Index",
+  "spread": 2.0,
+  "min_units": 0.01,
+  "gap_sl": true,
+  "usd_per_quote": 1.0,
+  "always_open": true
+ },
+ "2442": {
+  "name": "Boom 500 Index",
+  "spread": 0.532,
+  "min_units": 0.2,
+  "gap_sl": true,
+  "usd_per_quote": 1.0,
+  "always_open": true
+ },
+ "2443": {
+  "name": "Crash 500 Index",
+  "spread": 0.328,
+  "min_units": 0.2,
+  "gap_sl": true,
+  "usd_per_quote": 1.0,
+  "always_open": true
+ },
+ "2444": {
+  "name": "Boom 1000 Index",
+  "spread": 1.7155,
+  "min_units": 0.2,
+  "gap_sl": true,
+  "usd_per_quote": 1.0,
+  "always_open": true
+ },
+ "2462": {
+  "name": "DEX 900 UP Index",
+  "spread": 0.53,
+  "min_units": 0.1,
+  "gap_sl": true,
+  "usd_per_quote": 1.0,
+  "always_open": true
+ },
+ "4": {
+  "name": "USDJPY",
+  "spread": 0.014,
+  "min_units": 1000,
+  "gap_sl": false,
+  "usd_per_quote": 0.006257,
+  "always_open": false,
+  "measured": "spread 1.4 pips in CHARLIE samples 2026-11-11 22:00 UTC (close) and 2026-11-12 07:45 UTC (London); min_units 1000 from ALPHA's probe (rejected: minimum allowed volume = 1000.00); usd_per_quote = 1/159.8"
+ },
+ "9": {
+  "name": "EURGBP",
+  "spread": 0.00027,
+  "min_units": null,
+  "gap_sl": false,
+  "usd_per_quote": 1.327,
+  "always_open": false,
+  "measured": "NOT TRADED. spread 0.8 pips London 2026-11-12 07:45 UTC, 2.4-2.7 pips at the 22:00 UTC close; min lot not probed"
+ }
 }
