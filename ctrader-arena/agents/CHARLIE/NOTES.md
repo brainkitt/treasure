@@ -137,3 +137,32 @@ disaster TP and a trailing stop.
 * `rb_explore.py`, `rb_touch.py`, `rb_grid.py`, `rb_grid2.py`, `rb_grid3.py`, `rbcore.py` — Range Break research;
   `grid_2449.csv`, `grid3_2449.csv` — full grid results.
 * `submissions/CHARLIE/metrics.json`, `trades.csv` — official evaluate output.
+
+---
+# ROUND 2 — real FX (working log, written as I go)
+
+Turf: FX pairs/sessions ALPHA does not cover. Method: M15 PRE-SAMPLE (2026-03-31 .. 2026-09-15, entirely before the
+official M1 window) to choose mechanism and parameters; official M1 window scored untouched.
+
+Findings so far
+* Bars are BID. Around the daily FX close (NY 16:45-18:15) the bid dips and recovers as the spread widens
+  (USDJPY pre-sample: 16:45 NY bar -2.6 pips t=-7.0, 18:00 NY bar +3.8 pips t=+5.5). The engine uses a constant spread,
+  so any strategy that is long across that window books a fake gain. I exclude NY 16:30-18:30 from all research.
+  Supervisor: please check other FX submissions for holds across the rollover.
+* Spreads frozen at the 22:00 UTC close on 2026-11-11 (rollover-wide): EURGBP 2.4-2.7 pips, EURCHF 2.6, AUDNZD 10.0,
+  NZDUSD 3.2, USDCAD 3.0, AUDJPY 2.9, GBPJPY 13.5, EURJPY 5.6, USDCHF 0.9 -> 4.2.
+* USDJPY time-of-day drift (96 M15 slots, 145 days): nothing beyond |t|=3 outside the rollover artefact; hourly drift
+  of the two half-samples correlates 0.15. Tokyo-fix slot (00:45 UTC) not significant. No seasonality edge.
+* USDJPY Donchian-break event study by session (N=16/48, horizons 4/8/16 bars): only "late NY 18:00-20:30 UTC" shows a
+  consistent fade (-4.2 +/- 1.4 pips at 8 bars, both halves), 1 of 48 cells, and the horizon runs into the rollover.
+* Spreads sampled 2026-11-12 ~07:45 UTC (London): EURUSD 1.3, GBPUSD 1.5, USDJPY 1.4, EURJPY 1.6, AUDUSD 1.0,
+  USDCHF 0.9, EURGBP 0.8, EURCHF 1.0 pips.
+* Donchian-break event study pooled over EURUSD, GBPUSD, USDJPY pre-sample (N=16/32/64 x horizon 4/8 bars x 8 session
+  buckets = 48 cells): largest pooled |z| = 2.7 (Tokyo 00-03 UTC, N=16, 1 h: fade worth 0.8 / 1.9 / -0.2 pips, below the
+  1.3-1.5 pip spread). USDJPY late-NY fade does NOT generalise (EURUSD/GBPUSD show the opposite sign). No break edge.
+* Bollinger-fade sims on M15 pre-sample (engine, real spread), EURUSD/GBPUSD/USDJPY x Asia/London/NY x 16 sets = 144 sets:
+  median PF 0.64-0.97, best cell 1.40 (GBPUSD Asia, n=60). At ZERO spread the same rules give PF 1.2-2.1: short-horizon
+  mean reversion is real in mid prices but smaller than the spread.
+* Session-to-session continuation/reversal (Asia, early Europe, London, NY, late NY; 8 session pairs x 3 pairs, all days
+  and big-move days): largest pooled z = +2.7 (early-Europe move continues in NY on big days, +3.7..+7.5 pips against a
+  20-40 pip session sd). Nothing tradable.

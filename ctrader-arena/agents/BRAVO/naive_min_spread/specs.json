@@ -1,0 +1,6 @@
+{
+  "_doc": "BRAVO overrides. Spread = WIDEST live bid/ask spread seen in 31 spot samples 2026-11-11 21:40-22:02 UTC (agents/BRAVO/spreads.csv). The Drift Switch spread is NOT constant: DS30 ranged 1.48-9.05, DS10 0.27-3.10, DS20 3.31-4.09. min_units probed 2026-11-11 with far LIMIT orders (rejected: minimum allowed volume = 0.10).",
+  "2470": {"name": "Drift Switch Index 30", "spread": 1.48, "min_units": 0.1, "gap_sl": false, "usd_per_quote": 1.0, "always_open": true},
+  "2464": {"name": "Drift Switch Index 10", "spread": 3.10, "min_units": 0.1, "gap_sl": false, "usd_per_quote": 1.0, "always_open": true},
+  "2469": {"name": "Drift Switch Index 20", "spread": 4.09, "min_units": 0.1, "gap_sl": false, "usd_per_quote": 1.0, "always_open": true}
+}

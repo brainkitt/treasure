@@ -1,5 +1,5 @@
 {
- "strategy": "agents/DELTA/strategy.py",
+ "strategy": "/home/user/treasure/ctrader-arena/agents/DELTA/strategy.py",
  "legs": [
   {
    "symbol": "US SP 500",
