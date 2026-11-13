@@ -170,3 +170,63 @@ Findings so far
   London 0.72-1.13 (1.40 at zero spread). Bid recovers +3.1 pips at the 22:00 UTC bar (t=12.9) = night spread ~3 pips.
 * Pooled market-entry fade ranking over EURUSD+GBPUSD+USDJPY: best pooled PF 1.08 (NY, k=2.5), session medians 0.72-0.92.
   Running total Round 2: 160 market-entry sets, ~90 statistical cells. Next: passive LIMIT-entry fades (coordinator request).
+
+## Round 2 — final
+
+**Bottom line: nothing survives. The submission is NOT QUALIFIED and should not be forward-tested as an edge.**
+
+### Passive LIMIT-entry fade (coordinator's last task), M15 pre-sample 2026-03-31..2026-09-15, split in two halves
+Rule: |z| of Bollinger(20) > k at an M15 close inside the session -> limit order `off` ATR beyond the close (buy limit in
+ASK terms, sell limit in BID terms), valid 2 bars, SL 1.5/3 ATR, TP to the band mean, hold 6/16 bars.
+Grid: k 2.0/2.5 x off 0/0.25/0.5 x SL 1.5/3 x hold 6/16 = 24 sets per cell. Pass = PF > 1.2 in BOTH halves.
+
+| Pair (spread) | Session | Sets | PF median | PF max | Sets passing both halves | Best by weaker half (PF all, h1, h2, n) |
+|---|---|---|---|---|---|---|
+| USDJPY (1.4) | London 07-12 UTC | 24 | 0.61 | 0.79 | 0 | 0.79, 0.71, 0.87, n=73 |
+| USDJPY (1.4) | NY 12-16 UTC | 24 | 0.94 | 1.23 | 0 | 1.18, 1.05, 1.26, n=38 (worst trade -$6.77) |
+| EURGBP (0.8) | London 07-12 UTC | 24 | 0.70 | 1.17 | 0 | 1.17, 1.25, 1.10, n=79 |
+| EURGBP (0.8) | NY 12-16 UTC | 24 | 0.93 | 1.28 | 0 | 1.21, 1.09, 1.32, n=35 |
+
+0 of 96 sets pass. A resting limit does not recover the spread: the fills are the adversely selected ones.
+Only USDJPY and EURGBP were tested because they are the only non-ALPHA pairs I had pre-sample for; USDCHF, AUDUSD,
+EURCHF and EURJPY were NOT tested (no pre-sample downloaded, budget).
+
+### Candidate forwarded once to the official M1 window
+Chosen before the forward run: USDJPY, NY morning (08:00-12:00 New York), k=2.0, off=0.5 ATR, SL 1.5 ATR capped at
+22 pips, hold 90 min — the only USDJPY set whose worst trade could be capped under $1.50 with a pre-sample PF near 1
+(pre-sample PF 1.00, halves 1.08 / 0.96, 88 trades, before the stop cap).
+
+```
+period 2026-09-21 -> 2026-11-11  (OOS from 2026-10-27)
+full   trades=  26 PF=2.30 net=$9.42 win=62% DD=$4.36 worst=$-1.21 tr/day=0.7 active=61% wk+=75%
+is     trades=  15 PF=9.25 net=$12.39 win=80% DD=$0.79 worst=$-0.67 tr/day=0.6 active=58% wk+=100%
+oos    trades=  11 PF=0.48 net=$-2.97 win=36% DD=$4.36 worst=$-1.21 tr/day=0.9 active=67% wk+=33%
+stress trades=  26 PF=2.22 net=$8.93 win=58% DD=$4.58 worst=$-1.21 tr/day=0.7 active=61% wk+=75%
+FAIL pf_oos, trades >= 150, oos trades >= 40, active days;  PASS the other eight.   NOT QUALIFIED
+```
+
+How to read it: 26 trades. The headline PF 2.30 is noise — in-sample 9.25 and out-of-sample 0.48 are the same rule, and
+$8.97 of the $9.42 came from the 12 long trades. Pre-sample (88 trades, PF 1.00) plus forward (26 trades) is consistent
+with zero expectancy. This is the same trap as ALPHA's London breakout: a good official window, nothing behind it.
+
+### Why this file set rather than Round 1
+Both are no-edge. The FX candidate is on the requested turf, has pre-sample PF 1.00 against a structurally negative
+Range Break system (PF 0.84-0.90), and stays inside the drawdown and worst-trade gates. Round 1 files are kept in
+`round1/` (strategy_rangebreak.py, CharlieBot_rangebreak.cs, metrics_rangebreak.json).
+
+### Round 2 trial count
+* Backtested parameter sets, all on the pre-sample: 160 market-entry Bollinger fades + 96 limit-entry fades = 256.
+* Statistical cells: 96 time-of-day slots x 2 pairs, 48 pooled Donchian-break cells, 16 session-pair cells.
+* Forward runs on the official window: 1.
+
+### Things the supervisor should know
+* BID-bar rollover artefact (see above): constant-spread engine credits a fake gain to longs held across NY 16:45-18:15.
+* Night spreads are about 3x London spreads on crosses (EURGBP 0.8 -> 2.4-2.7 pips), so specs sampled in London hours
+  overstate any Asian-session strategy.
+* Short-horizon FX mean reversion is real in mid prices (PF 1.2-2.1 at zero spread) and consistently smaller than the
+  retail spread on this account, with market or limit entries.
+
+### Known weaknesses of the submission
+* No edge; 0.7 trades/day; one leg. The cBot is an untested port (not compiled in cTrader); its time exit is checked
+  once a minute and its limit price uses the live spread, where the backtest uses a constant 1.4 pips.
+* USDJPY minimum size (1000 units) is taken from ALPHA's probe, not re-probed by me.

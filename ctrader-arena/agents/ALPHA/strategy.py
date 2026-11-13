@@ -1,4 +1,8 @@
-"""ALPHA - London-open breakout of the overnight (Asian) range on FX majors.
+"""STATUS: REJECTED BY PRE-SAMPLE VALIDATION (round 2). On Jan-Sep 2026 M5 history this exact rule has PF 0.95 over
+285 trades (max DD $47). The official-window PF below is a lucky 7.5 weeks. Kept as the submission of record only;
+do not trade it. See NOTES.md "Round 2" and "Final round".
+
+ALPHA - London-open breakout of the overnight (Asian) range on FX majors.
 
 Hypothesis (stated before fitting): between 00:00 and 08:00 London time EUR and GBP pairs consolidate in a
 thin market; resting stops accumulate outside that range. When European liquidity arrives (08:00 London) the first

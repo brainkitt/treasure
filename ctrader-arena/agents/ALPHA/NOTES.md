@@ -186,3 +186,47 @@ rejected.** Breadth to other pairs and a portfolio risk rule were not pursued: t
 
 Spreads sampled 2026-11-12 ~07:45 UTC (London morning, the session traded): EURUSD 1.2 pips (twice),
 GBPUSD 1.4 pips (twice), USDJPY 1.4, AUDUSD 1.0. GBPUSD is wider than the 1.3 used in round 1 -> specs.json now 1.4.
+
+---
+# Final round - one pre-sample-first search for passive (limit-order) mean reversion: nothing survives TRAIN
+
+Split fixed in advance: TRAIN 2026-01-01..06-30, VALIDATE 2026-07-01..09-20, FORWARD = official M1 window (untouched).
+Data: the EURUSD / GBPUSD M5 history already downloaded. Spreads 1.3 / 1.4 pips. 1000 units, stop <= 14 pips.
+
+Hypothesis: short-horizon FX mean reversion exists in mid prices (CHARLIE's finding) but is smaller than the spread
+for a market entry. A resting LIMIT order at a band or range extreme is filled only when the ask trades down to it
+(engine `kind=1`), so the entry is not chased and the engine supplies the adverse selection. No order may hold
+across 20:45-22:30 UTC (rollover artifact). Long and short sides simulated as separate books.
+
+| family (script) | grid on TRAIN | configs | PF > 1.0 | PF > 1.2 | median PF | best PF | zero-spread check |
+|---|---|---|---|---|---|---|---|
+| A: fade MA(20) +/- k x mean-range band, TP toward the mean (`research/r4.py`) | TF 5/15 x k 1.5/2/3 x TP 0.5/1 x SL 2/4 x 3 hour-windows | 72 | 0 | 0 | 0.68 | 0.94 | reference config PF 0.97 at zero spread |
+| B: fade the rolling 4h/12h/24h range extreme on M15 (`research/r5.py`) | N 16/48/96 x offset 0/3 pips x TP 0.25/0.5 range x SL 8/14 x 3 hour-windows | 72 | 6 | 0 | 0.82 | 1.12 (98 trades) | best config PF 1.37 at zero spread |
+
+| stage | result |
+|---|---|
+| TRAIN | 144 configurations, none above PF 1.2; the best (1.12 on 98 trades) is what the top of 72 noisy draws looks like |
+| VALIDATE | not run - nothing earned it |
+| FORWARD | not run for these families - the official window was left untouched |
+
+Reading: in this engine a limit buy fills when the bid is already one spread below the limit, so a passive entry
+still starts one spread under water; the fills are the adversely selected ones. Family A has no edge even at zero
+spread (0.97). Family B shows the mid-price effect (1.37 at zero spread) but 1.3-1.4 pips eats all of it.
+
+## Final state of the submission
+* Nothing survived, so the submission of record is still the London breakout (strategy.py, AlphaBot.cs, specs.json
+  consistent with each other), **marked REJECTED** in both file headers. It must not be traded.
+* Official re-run with the supervisor's new day definition and GBPUSD at 1.4 pips:
+  full 60 trades PF 2.04, IS 2.06, OOS 2.01, stress 1.94, DD $6.96, active 89%, weekly 75%; fails trades >= 150 and
+  OOS trades >= 40 -> NOT QUALIFIED. At spread x1.55 (2.0 / 2.2 pips): full PF 1.94, IS 1.91, OOS 1.99.
+* Those numbers describe 7.5 weeks. The same rule over the previous 8.7 months: 285 trades, PF 0.95, DD $47.57.
+
+## Trials, all rounds
+Round 1 ~390 parameter sets in 12 families; round 2 pre-sample check ~45 (surface + knobs, diagnostic only);
+final round 144 in 2 families. Total ~580. Zero survive out-of-sample at the costs of this account.
+
+## Verdict
+No FX or metals system from this research deserves a forward test. At 1.2-1.4 pips on EURUSD/GBPUSD and a 1-oz
+minimum on gold, every M1-M15 idea tested is either flat before costs or smaller than the spread. The one thing
+with a favourable cost structure on this account is US SP 500 at 0.1 unit (spread about 0.45% of the daily range
+versus 2% for EURUSD); it showed no stable edge in round 1 and would need its own pre-sample-first study.
