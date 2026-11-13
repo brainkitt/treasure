@@ -1,0 +1,253 @@
+<title>cTrader Arena Report</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* layout: one reading column (max 980px); verdict first, then scoreboard, evidence charts, per-agent findings, method */
+:root{
+  --bg:#f7f8f9; --surface:#ffffff; --ink:#12161b; --ink2:#4a535e; --ink3:#77818d; --line:#dfe3e8; --grid:#e9ecf0;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --good:#0a7a2f; --bad:#c22f2e; --goodbg:#e6f4ea; --badbg:#fbe9e8; --note:#eef3fa;
+  --display:"Space Grotesk","Inter",system-ui,sans-serif; --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121416; --surface:#1a1d20; --ink:#eef0f2; --ink2:#b9c0c8; --ink3:#8a929c; --line:#30353b; --grid:#272b30;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --good:#4fc27a; --bad:#f07f7d; --goodbg:#16301f; --badbg:#3a1c1c; --note:#1c2530; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#121416; --surface:#1a1d20; --ink:#eef0f2; --ink2:#b9c0c8; --ink3:#8a929c; --line:#30353b; --grid:#272b30;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --good:#4fc27a; --bad:#f07f7d; --goodbg:#16301f; --badbg:#3a1c1c; --note:#1c2530; color-scheme:dark }
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+.wrap{max-width:980px;margin:0 auto;padding-block:40px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:44px}
+h1{font-family:var(--display);font-size:clamp(28px,5vw,40px);line-height:1.12;font-weight:600;margin:0;text-wrap:balance;letter-spacing:-0.01em}
+h2{font-family:var(--display);font-size:23px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--display);font-size:17px;font-weight:600;margin:0}
+p{margin:0;max-width:68ch} .lead{font-size:17px;color:var(--ink2)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+section{display:flex;flex-direction:column;gap:16px;min-width:0}
+.verdict{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:22px 24px;display:flex;flex-direction:column;gap:12px}
+.verdict strong{font-family:var(--display);font-size:20px;font-weight:600}
+ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-width:72ch} li{padding-left:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.kpi{background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.kpi b{font-family:var(--display);font-size:26px;font-weight:600;font-variant-numeric:tabular-nums}
+.kpi span{color:var(--ink3);font-size:13px}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0} th{font-weight:600;color:var(--ink2);font-size:13px;white-space:nowrap;background:var(--surface)}
+td.n,th.n{text-align:right;white-space:nowrap}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:99px;white-space:nowrap}
+.pass{background:var(--goodbg);color:var(--good)} .fail{background:var(--badbg);color:var(--bad)}
+.fig{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px 18px 12px;display:flex;flex-direction:column;gap:8px;min-width:0;position:relative}
+.fig .cap{color:var(--ink2);font-size:14px;max-width:72ch}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+svg{display:block;width:100%;height:auto;overflow:visible} svg text{font-family:var(--body);fill:var(--ink2);font-size:12px}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;line-height:1.45;padding:7px 10px;border-radius:5px;white-space:nowrap;z-index:5;font-variant-numeric:tabular-nums}
+.agents{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
+.agent{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.agent .hd{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap} .dot{width:10px;height:10px;border-radius:2px;display:inline-block}
+.agent p,.agent li{font-size:14.5px} .agent .sub{color:var(--ink3);font-size:13px}
+.note{background:var(--note);border-radius:6px;padding:14px 16px;font-size:14.5px}
+code{font-family:var(--mono);font-size:13px;background:var(--grid);padding:1px 5px;border-radius:3px;overflow-wrap:anywhere}
+.foot{color:var(--ink3);font-size:13px}
+</style>
+
+<div class="wrap">
+<header style="display:flex;flex-direction:column;gap:14px">
+  <div class="eyebrow">Deriv demo · cTrader · $30 account · minimum lot · M1–M15 · report of 13 Nov 2026</div>
+  <h1>Four agents, about 5,100 backtests, no system that earns a place on the account</h1>
+  <p class="lead">Four research agents competed to build a cBot with a profit factor of at least 1.7 that trades every day on a $30 Deriv account. None qualified. Three systems looked good on the recent two months; each one that could be checked against earlier months failed there.</p>
+</header>
+
+<section>
+  <div class="verdict">
+    <span class="eyebrow">Supervisor verdict</span>
+    <strong>Nothing is approved for a demo forward test as a trading system.</strong>
+    <ul>
+      <li><b>Best honest result:</b> DELTA's S&amp;P 500 fade, profit factor 1.43 on the scored window and 1.47 on the 5.5 months before it. It is real but modest, comes from one symbol, and did not replicate on a sister index.</li>
+      <li><b>Highest scores are not real:</b> ALPHA's 2.04 and CHARLIE's 2.30 both fell to about 1.0 on earlier data.</li>
+      <li><b>One open question:</b> BRAVO's Drift Switch system swings from 2.82 to 0.66 depending only on the spread assumed. Recording live bid and ask prices for a few days would settle it.</li>
+    </ul>
+  </div>
+  <div class="kpis" id="kpis"></div>
+</section>
+
+<section>
+  <h2>Scoreboard</h2>
+  <p>Every submission was re-run by the supervisor on the same engine. Profit factor is gross profit divided by gross loss; 1.0 is break-even. All dollar figures are for a $30 start at the broker's minimum size.</p>
+  <div class="tw"><table id="score"></table></div>
+  <div class="fig">
+    <h3>The scored window flatters; earlier months do not</h3>
+    <div class="legend"><span><i style="background:var(--s1)"></i>Scored window (about 2 months of M1 bars)</span><span><i style="background:var(--s2)"></i>Same rule on earlier months</span></div>
+    <div id="c_pf"></div>
+    <div class="cap">Dashed lines mark break-even (1.0) and the 1.7 target. Earlier-month figures: ALPHA 285 trades Jan–Sep; CHARLIE 88 trades Mar–Sep; DELTA 168 trades Mar–Sep. BRAVO has no earlier history; its bar uses the widest spread seen.</div>
+  </div>
+  <div class="fig">
+    <h3>Account balance over the scored window, starting from $30</h3>
+    <div class="legend" id="lg_eq"></div>
+    <div id="c_eq"></div>
+    <div class="cap">Daily closing balance from each agent's official trade list. BRAVO's line stops where the balance reaches zero. ALPHA and CHARLIE rise here but lost or broke even on earlier months, so their curves are not a forecast.</div>
+  </div>
+</section>
+
+<section>
+  <h2>Which gates each system passed</h2>
+  <p>The 1.7 target alone is easy to hit by accident on a short window, so a system also had to hold up on unseen days, under wider spreads, and with enough trades to mean something.</p>
+  <div class="tw"><table id="gates"></table></div>
+</section>
+
+<section>
+  <h2>Two results that would have fooled a simpler test</h2>
+  <div class="fig">
+    <h3>ALPHA: the London breakout, month by month</h3>
+    <div class="legend"><span><i style="background:var(--s2)"></i>Earlier months (M5 bars, rule frozen)</span><span><i style="background:var(--s1)"></i>Scored window</span></div>
+    <div id="c_alpha"></div>
+    <div class="cap">The rule buys or sells the first break of the overnight range on EURUSD and GBPUSD after 08:00 London. Over January to 20 September it made 285 trades at profit factor 0.95, with a $47.57 drawdown that would have emptied a $30 account. The scored window caught seven favourable weeks.</div>
+  </div>
+  <div class="fig">
+    <h3>BRAVO: Drift Switch 30 profit factor against the spread assumed</h3>
+    <div id="c_bravo"></div>
+    <div class="cap">Same trades, same rules; only the assumed spread changes. Live samples ranged from 1.48 to 9.05 price units within 22 minutes, and averaged 5.8 at the moments the system wanted to buy. The engine assumes one constant spread, so a single quiet sample produces a system that passes all 12 gates and would likely lose in live trading.</div>
+  </div>
+</section>
+
+<section>
+  <h2>What each agent found</h2>
+  <div class="agents" id="agents"></div>
+</section>
+
+<section>
+  <h2>What a $30 account can and cannot trade on Deriv cTrader</h2>
+  <p>Minimum sizes were read from the broker by sending a deliberately undersized, far-from-market limit order and reading the rejection. A few were accepted at the true minimum and were cancelled at once; no position was ever opened.</p>
+  <div class="tw"><table>
+    <tr><th>Instrument</th><th class="n">Minimum size</th><th>What that means on $30</th></tr>
+    <tr><td>EURUSD, GBPUSD, USDJPY</td><td class="n">1,000 units (0.01 lot)</td><td>About $0.10 per pip. Risk fits easily, but the 1.2–1.4 pip spread is about 2% of the daily range, larger than every short-term effect found.</td></tr>
+    <tr><td>US S&amp;P 500</td><td class="n">0.1 unit</td><td>Best cost structure seen: spread about 0.45% of the daily range. A 14-point stop costs $1.40.</td></tr>
+    <tr><td>US Tech 100, Wall Street 30, Germany 40</td><td class="n">0.1 unit</td><td>A sensible stop costs about $9 on US Tech 100 and $6.40 on Wall Street 30; Germany 40's off-hours spread is 8.8 points.</td></tr>
+    <tr><td>Gold (XAUUSD)</td><td class="n">1 oz (0.01 lot)</td><td>The $1.50 loss cap is a $1.45 stop on a market that moves about $73 a day. Not tradable inside the risk limits.</td></tr>
+    <tr><td>BTCUSD</td><td class="n">0.01 BTC</td><td>Breakout fades scored 1.25–1.30 but with $27–46 drawdown. Unusable on $30.</td></tr>
+    <tr><td>Boom 500 / Boom 1000</td><td class="n">0.20 unit</td><td>One adverse spike costs $1.55 / $3.56 on average at minimum size.</td></tr>
+    <tr><td>Range Break 100, DEX 900 UP</td><td class="n">0.01 / 0.10 unit</td><td>One adverse jump costs about $1.10 / $1.04 on average, up to $4.32 / $5.23 seen.</td></tr>
+    <tr><td>Drift Switch 10 / 20 / 30</td><td class="n">0.10 unit</td><td>Risk fits, but the spread is variable and widest when the price is rising.</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>How the test worked, and its limits</h2>
+  <ul>
+    <li><b>Data:</b> real Deriv candles pulled through the cTrader connection, about two months of 1-minute bars per traded symbol, plus up to nine months of 5- and 15-minute bars for the earlier-month checks.</li>
+    <li><b>Engine:</b> spread charged on every trade; when a bar touches both stop and target, the stop is assumed hit; spike instruments fill stops at the worst price of the bar; zero commission, matching the account's deal history.</li>
+    <li><b>Rounds:</b> each agent submitted, was re-scored and criticised, and was sent back. ALPHA and CHARLIE had three rounds, DELTA two, BRAVO one.</li>
+    <li><b>Not modelled:</b> overnight financing, slippage on market orders, and changing spreads. The last one decides the Drift Switch result.</li>
+    <li><b>cBots are untested:</b> all four C# cBots are written but none has been compiled or run in cTrader, because the research environment has no cTrader toolchain.</li>
+    <li><b>Spread sampling is thin:</b> most spreads were sampled near the daily rollover; EURUSD and GBPUSD were re-sampled in the London morning (1.2 and 1.4 pips).</li>
+    <li><b>Two engine flaws were found and fixed during the run:</b> stop-entry orders filling mid-spike on spike instruments (found by CHARLIE), and Sunday-evening stubs counting as trading days.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Recommended next steps</h2>
+  <ul>
+    <li><b>Do not fund any of these four systems.</b> ALPHA's and CHARLIE's files are kept only as a record and are marked rejected.</li>
+    <li><b>Settle the Drift Switch question cheaply.</b> Run a recording-only cBot on Drift Switch 10, 20 and 30 for several days to log bid and ask on every tick. If the spread at buy signals stays under about 3.5, the system is worth a real forward test; at 5.8 it is break-even.</li>
+    <li><b>Optional observation run:</b> DELTA's S&amp;P 500 bot at 0.1 unit on demo, to see whether 1.3–1.5 holds. Its worst trade is capped at $1.40.</li>
+    <li><b>Reconsider the constraints.</b> A profit factor of 1.7, trades every day, 1–15 minute signals and $30 at minimum lot could not all be met at once here. Dropping the daily-trade requirement, allowing longer holds, or a larger balance each widens the field.</li>
+  </ul>
+  <div class="note">Everything is in the repository under <code>ctrader-arena/</code>: the engine and gates in <code>arena/</code>, each agent's strategy, cBot and research log in <code>agents/&lt;NAME&gt;/</code>, and official trade lists in <code>submissions/&lt;NAME&gt;/</code>.</div>
+  <p class="foot">Past backtest results do not predict future returns. Trading leveraged products can lose the whole balance.</p>
+</section>
+</div>
+
+<script>
+const D = {"ALPHA": {"legs": ["EURUSD", "GBPUSD"], "period": ["2026-09-21", "2026-11-11"], "oos_start": "2026-10-27", "gates": {"pf_full >= 1.7": true, "pf_oos >= 1.5 (last 30% of time)": true, "pf_is >= 1.5": true, "pf under 1.5x spread >= 1.4": true, "trades >= 150": false, "oos trades >= 40": false, "active days >= 85%": true, "max drawdown <= 30% of $30 start ($9)": true, "worst single trade <= $1.50 (5% of $30)": true, "no look-ahead": true, "min lot respected": true, "weekly PF >= 1.0 in >= 70% of weeks": true}, "full": {"trades": 60, "pf": 2.043879404286073, "net": 35.92249999999608, "win_rate": 55.00000000000001, "avg_win": 2.1313636363635635, "avg_loss": -1.2745370370370932, "expectancy": 0.598708333333268, "max_dd_usd": 6.955000000000489, "max_dd_pct": 12.284187751138322, "min_equity": 31.399999999999846, "worst_trade": -1.4000000000000679, "best_trade": 2.7999999999999137, "trades_per_day": 1.5789473684210527, "active_day_pct": 89.47368421052632, "max_consec_losses": 6, "weeks_profitable_pct": 75.0, "sharpe_daily": 5.188291675710665, "return_pct": 119.7416666666536, "days": 38, "avg_hold_min": 211.08333333333334, "overnight_trades": 0}, "is_": {"trades": 42, "pf": 2.0603123317176624, "net": 24.612499999997265, "win_rate": 54.761904761904766, "avg_win": 2.0793478260868796, "avg_loss": -1.2217105263158403, "expectancy": 0.5860119047618396, "max_dd_usd": 6.955000000000489, "max_dd_pct": 12.284187751138322, "min_equity": 31.399999999999846, "worst_trade": -1.4000000000000679, "best_trade": 2.7999999999999137, "trades_per_day": 1.6153846153846154, "active_day_pct": 88.46153846153845, "max_consec_losses": 6, "weeks_profitable_pct": 83.33333333333334, "sharpe_daily": 5.1910094554772, "return_pct": 82.04166666665755, "days": 26, "avg_hold_min": 218.1904761904762, "overnight_trades": 0}, "oos": {"trades": 18, "pf": 2.0098214285712737, "net": 11.309999999998821, "win_rate": 55.55555555555556, "avg_win": 2.250999999999936, "avg_loss": -1.4000000000000679, "expectancy": 0.6283333333332678, "max_dd_usd": 4.9200000000002575, "max_dd_pct": 16.40000000000086, "min_equity": 25.079999999999742, "worst_trade": -1.4000000000000679, "best_trade": 2.7999999999999137, "trades_per_day": 1.5, "active_day_pct": 91.66666666666666, "max_consec_losses": 3, "weeks_profitable_pct": 66.66666666666666, "sharpe_daily": 4.961418213919031, "return_pct": 37.699999999996066, "days": 12, "avg_hold_min": 194.5, "overnight_trades": 0}, "stress": {"trades": 60, "pf": 1.9374695355475222, "net": 33.65749999999634, "win_rate": 53.333333333333336, "avg_win": 2.1737499999999326, "avg_loss": -1.2822321428571968, "expectancy": 0.5609583333332723, "max_dd_usd": 7.3300000000009575, "max_dd_pct": 13.354588931908362, "min_equity": 31.38499999999997, "worst_trade": -1.434999999999853, "best_trade": 2.7999999999999137, "trades_per_day": 1.5789473684210527, "active_day_pct": 89.47368421052632, "max_consec_losses": 6, "weeks_profitable_pct": 75.0, "sharpe_daily": 4.886956637848937, "return_pct": 112.19166666665446, "days": 38, "avg_hold_min": 210.91666666666666, "overnight_trades": 0}, "equity": [["2026-09-22", 31.4], ["2026-09-23", 37.0], ["2026-09-24", 34.2], ["2026-09-25", 38.02], ["2026-09-28", 36.74], ["2026-09-29", 34.05], ["2026-09-30", 36.73], ["2026-10-01", 42.33], ["2026-10-02", 39.53], ["2026-10-06", 45.13], ["2026-10-07", 50.73], ["2026-10-08", 47.93], ["2026-10-12", 49.95], ["2026-10-13", 52.34], ["2026-10-14", 54.49], ["2026-10-15", 53.09], ["2026-10-16", 56.62], ["2026-10-19", 53.99], ["2026-10-20", 52.59], ["2026-10-21", 51.06], ["2026-10-22", 52.46], ["2026-10-23", 51.67], ["2026-10-26", 54.61], ["2026-10-27", 53.89], ["2026-10-29", 51.09], ["2026-10-30", 49.69], ["2026-11-02", 55.29], ["2026-11-03", 53.89], ["2026-11-04", 52.49], ["2026-11-05", 51.36], ["2026-11-06", 54.16], ["2026-11-09", 58.92], ["2026-11-10", 60.32], ["2026-11-11", 65.92]]}, "BRAVO": {"legs": ["Drift Switch Index 30"], "period": ["2026-09-12", "2026-11-11"], "oos_start": "2026-10-24", "gates": {"pf_full >= 1.7": false, "pf_oos >= 1.5 (last 30% of time)": false, "pf_is >= 1.5": false, "pf under 1.5x spread >= 1.4": false, "trades >= 150": true, "oos trades >= 40": true, "active days >= 85%": true, "max drawdown <= 30% of $30 start ($9)": false, "worst single trade <= $1.50 (5% of $30)": true, "no look-ahead": true, "min lot respected": true, "weekly PF >= 1.0 in >= 70% of weeks": false}, "full": {"trades": 463, "pf": 0.6550653692316788, "net": -115.56000000000378, "win_rate": 28.077753779697623, "avg_win": 1.6881538461538352, "avg_loss": -1.0060660660660732, "expectancy": -0.24958963282938182, "max_dd_usd": 118.53400000000389, "max_dd_pct": 368.9314949111516, "min_equity": -86.40500000000388, "worst_trade": -1.40600000000004, "best_trade": 10.601000000000022, "trades_per_day": 7.590163934426229, "active_day_pct": 100.0, "max_consec_losses": 20, "weeks_profitable_pct": 20.0, "sharpe_daily": -6.708821228906096, "return_pct": -385.2000000000126, "days": 61, "avg_hold_min": 28.92656587473002, "overnight_trades": 10}, "is_": {"trades": 318, "pf": 0.6677366950418977, "net": -76.69800000000451, "win_rate": 27.67295597484277, "avg_win": 1.7515568181817998, "avg_loss": -1.0036304347826213, "expectancy": -0.24118867924529722, "max_dd_usd": 80.59500000000443, "max_dd_pct": 250.84814342184453, "min_equity": -48.46600000000443, "worst_trade": -1.40600000000004, "best_trade": 10.601000000000022, "trades_per_day": 7.571428571428571, "active_day_pct": 100.0, "max_consec_losses": 20, "weeks_profitable_pct": 28.57142857142857, "sharpe_daily": -6.05473152786841, "return_pct": -255.66000000001506, "days": 42, "avg_hold_min": 30.29245283018868, "overnight_trades": 7}, "oos": {"trades": 145, "pf": 0.6269904496808615, "net": -38.86199999999927, "win_rate": 28.965517241379313, "avg_win": 1.5553095238095298, "avg_loss": -1.0115048543689273, "expectancy": -0.26801379310344325, "max_dd_usd": 43.60899999999889, "max_dd_pct": 128.63252905433, "min_equity": -9.706999999998942, "worst_trade": -1.4000000000000001, "best_trade": 7.100999999999932, "trades_per_day": 7.631578947368421, "active_day_pct": 100.0, "max_consec_losses": 7, "weeks_profitable_pct": 0.0, "sharpe_daily": -8.459982670477439, "return_pct": -129.53999999999758, "days": 19, "avg_hold_min": 25.93103448275862, "overnight_trades": 3}, "stress": {"trades": 814, "pf": 0.12665009626669657, "net": -862.0849999999983, "win_rate": 7.73955773955774, "avg_win": 1.984388888888896, "avg_loss": -1.3143828229027947, "expectancy": -1.0590724815724795, "max_dd_usd": 862.0849999999886, "max_dd_pct": 2873.6166666666286, "min_equity": -832.0849999999886, "worst_trade": -1.419500000000153, "best_trade": 10.148500000000059, "trades_per_day": 13.344262295081966, "active_day_pct": 100.0, "max_consec_losses": 89, "weeks_profitable_pct": 0.0, "sharpe_daily": -28.983991617505097, "return_pct": -2873.6166666666613, "days": 61, "avg_hold_min": 9.896805896805898, "overnight_trades": 8}, "equity": [["2026-09-12", 25.87], ["2026-09-13", 22.02], ["2026-09-14", 16.03], ["2026-09-15", 10.9], ["2026-09-16", 10.09], ["2026-09-17", 5.68], ["2026-09-18", 3.83], ["2026-09-19", 3.49], ["2026-09-20", -0.54], ["2026-09-21", -2.02], ["2026-09-22", 0.14], ["2026-09-23", -1.41], ["2026-09-24", -5.08], ["2026-09-25", 4.53], ["2026-09-26", 3.18], ["2026-09-27", 1.93], ["2026-09-28", 5.45], ["2026-09-29", -1.02], ["2026-09-30", -12.38], ["2026-10-01", -13.85], ["2026-10-02", -18.8], ["2026-10-03", -24.97], ["2026-10-04", -31.95], ["2026-10-05", -30.9], ["2026-10-06", -35.77], ["2026-10-07", -44.34], ["2026-10-08", -36.4], ["2026-10-09", -40.93], ["2026-10-10", -39.76], ["2026-10-11", -36.34], ["2026-10-12", -35.97], ["2026-10-13", -38.38], ["2026-10-14", -40.15], ["2026-10-15", -40.16], ["2026-10-16", -39.64], ["2026-10-17", -44.76], ["2026-10-18", -32.86], ["2026-10-19", -42.77], ["2026-10-20", -48.47], ["2026-10-21", -44.53], ["2026-10-22", -43.36], ["2026-10-23", -46.7], ["2026-10-24", -43.81], ["2026-10-25", -48.2], ["2026-10-26", -45.63], ["2026-10-27", -53.04], ["2026-10-28", -58.14], ["2026-10-29", -54.58], ["2026-10-30", -55.24], ["2026-10-31", -54.44], ["2026-11-01", -54.91], ["2026-11-02", -63.29], ["2026-11-03", -69.06], ["2026-11-04", -75.24], ["2026-11-05", -75.15], ["2026-11-06", -79.8], ["2026-11-07", -79.63], ["2026-11-08", -83.61], ["2026-11-09", -79.71], ["2026-11-10", -84.07], ["2026-11-11", -85.56]]}, "CHARLIE": {"legs": ["USDJPY"], "period": ["2026-09-21", "2026-11-11"], "oos_start": "2026-10-27", "gates": {"pf_full >= 1.7": true, "pf_oos >= 1.5 (last 30% of time)": false, "pf_is >= 1.5": true, "pf under 1.5x spread >= 1.4": true, "trades >= 150": false, "oos trades >= 40": false, "active days >= 85%": false, "max drawdown <= 30% of $30 start ($9)": true, "worst single trade <= $1.50 (5% of $30)": true, "no look-ahead": true, "min lot respected": true, "weekly PF >= 1.0 in >= 70% of weeks": true}, "full": {"trades": 26, "pf": 2.3044002970664317, "net": 9.419690035714265, "win_rate": 61.53846153846154, "avg_win": 1.0400726183035816, "avg_loss": -0.7221471857143043, "expectancy": 0.3622957706043948, "max_dd_usd": 4.35835804285724, "max_dd_pct": 9.955578729857924, "min_equity": 29.211171071428527, "worst_trade": -1.2060367499999347, "best_trade": 2.527157607142901, "trades_per_day": 0.6842105263157895, "active_day_pct": 60.526315789473685, "max_consec_losses": 3, "weeks_profitable_pct": 75.0, "sharpe_daily": 4.018959423049074, "return_pct": 31.398966785714215, "days": 38, "avg_hold_min": 50.61538461538461, "overnight_trades": 0}, "is_": {"trades": 15, "pf": 9.24857950319697, "net": 12.392256657142728, "win_rate": 80.0, "avg_win": 1.1578839208333367, "avg_loss": -0.5007834642857704, "expectancy": 0.8261504438095152, "max_dd_usd": 0.7888289285714727, "max_dd_pct": 2.629429761904909, "min_equity": 29.211171071428527, "worst_trade": -0.6703928571428825, "best_trade": 2.527157607142901, "trades_per_day": 0.5769230769230769, "active_day_pct": 57.692307692307686, "max_consec_losses": 1, "weeks_profitable_pct": 100.0, "sharpe_daily": 9.047820424712167, "return_pct": 41.30752219047576, "days": 26, "avg_hold_min": 62.0, "overnight_trades": 0}, "oos": {"trades": 11, "pf": 0.4802406908139148, "net": -2.9725666214284634, "win_rate": 36.36363636363637, "avg_win": 0.6866387107143169, "avg_loss": -0.8170173520408188, "expectancy": -0.2702333292207694, "max_dd_usd": 4.3583580428572475, "max_dd_pct": 13.886404788510637, "min_equity": 27.027433378571537, "worst_trade": -1.2060367499999347, "best_trade": 0.968896450000065, "trades_per_day": 0.9166666666666666, "active_day_pct": 66.66666666666666, "max_consec_losses": 3, "weeks_profitable_pct": 33.33333333333333, "sharpe_daily": -3.5260206545559742, "return_pct": -9.908555404761545, "days": 12, "avg_hold_min": 35.09090909090909, "overnight_trades": 0}, "stress": {"trades": 26, "pf": 2.222328880193385, "net": 8.934906614286584, "win_rate": 57.692307692307686, "avg_win": 1.0829764576190821, "avg_loss": -0.664521840909059, "expectancy": 0.34365025439563784, "max_dd_usd": 4.580347464285808, "max_dd_pct": 10.525843319253982, "min_equity": 29.079774071428965, "worst_trade": -1.2060367499999347, "best_trade": 2.527157607142901, "trades_per_day": 0.6842105263157895, "active_day_pct": 60.526315789473685, "max_consec_losses": 3, "weeks_profitable_pct": 75.0, "sharpe_daily": 3.82013058811009, "return_pct": 29.783022047621948, "days": 38, "avg_hold_min": 51.19230769230769, "overnight_trades": 0}, "equity": [["2026-09-21", 29.6], ["2026-09-22", 29.64], ["2026-09-23", 29.21], ["2026-09-24", 29.9], ["2026-09-25", 32.43], ["2026-09-28", 33.71], ["2026-10-01", 34.23], ["2026-10-02", 36.5], ["2026-10-08", 37.1], ["2026-10-13", 36.43], ["2026-10-14", 36.72], ["2026-10-15", 38.07], ["2026-10-16", 39.28], ["2026-10-20", 40.61], ["2026-10-23", 42.39], ["2026-10-28", 41.85], ["2026-10-29", 42.68], ["2026-11-02", 43.64], ["2026-11-03", 43.78], ["2026-11-05", 40.72], ["2026-11-09", 41.53], ["2026-11-10", 40.79], ["2026-11-11", 39.42]]}, "DELTA": {"legs": ["US SP 500"], "period": ["2026-08-25", "2026-11-11"], "oos_start": "2026-10-19", "gates": {"pf_full >= 1.7": false, "pf_oos >= 1.5 (last 30% of time)": false, "pf_is >= 1.5": false, "pf under 1.5x spread >= 1.4": false, "trades >= 150": false, "oos trades >= 40": false, "active days >= 85%": true, "max drawdown <= 30% of $30 start ($9)": true, "worst single trade <= $1.50 (5% of $30)": true, "no look-ahead": true, "min lot respected": true, "weekly PF >= 1.0 in >= 70% of weeks": true}, "full": {"trades": 95, "pf": 1.4271711897794828, "net": 12.763142857142704, "win_rate": 70.52631578947368, "avg_win": 0.6364392324093783, "avg_loss": -1.067081632653058, "expectancy": 0.13434887218044952, "max_dd_usd": 3.6693571428572795, "max_dd_pct": 9.307301659773211, "min_equity": 29.61578571428563, "worst_trade": -1.4000000000000001, "best_trade": 1.3257857142857574, "trades_per_day": 1.6666666666666667, "active_day_pct": 92.98245614035088, "max_consec_losses": 3, "weeks_profitable_pct": 83.33333333333334, "sharpe_daily": 3.3500650243563226, "return_pct": 42.54380952380901, "days": 57, "avg_hold_min": 45.1578947368421, "overnight_trades": 0}, "is_": {"trades": 70, "pf": 1.4332340242708432, "net": 8.787285714285463, "win_rate": 70.0, "avg_win": 0.593271137026232, "avg_loss": -0.965857142857138, "expectancy": 0.1255326530612209, "max_dd_usd": 3.6693571428572795, "max_dd_pct": 9.307301659773211, "min_equity": 29.61578571428563, "worst_trade": -1.4000000000000001, "best_trade": 0.9330714285713839, "trades_per_day": 1.794871794871795, "active_day_pct": 92.3076923076923, "max_consec_losses": 3, "weeks_profitable_pct": 75.0, "sharpe_daily": 3.3459179745182035, "return_pct": 29.290952380951545, "days": 39, "avg_hold_min": 44.285714285714285, "overnight_trades": 0}, "oos": {"trades": 25, "pf": 1.4143552637455987, "net": 3.9758571428572393, "win_rate": 72.0, "avg_win": 0.7539523809523871, "avg_loss": -1.3707551020408186, "expectancy": 0.15903428571428957, "max_dd_usd": 3.520428571428603, "max_dd_pct": 10.539145979766866, "min_equity": 29.8829285714286, "worst_trade": -1.4000000000000001, "best_trade": 1.3257857142857574, "trades_per_day": 1.3888888888888888, "active_day_pct": 94.44444444444444, "max_consec_losses": 2, "weeks_profitable_pct": 100.0, "sharpe_daily": 3.2638814573272095, "return_pct": 13.252857142857463, "days": 18, "avg_hold_min": 47.6, "overnight_trades": 0}, "stress": {"trades": 94, "pf": 1.368207415563623, "net": 11.274142857142579, "win_rate": 69.14893617021278, "avg_win": 0.6445098901098867, "avg_loss": -1.0558275862068982, "expectancy": 0.1199376899696019, "max_dd_usd": 4.75907142857168, "max_dd_pct": 12.18924085948787, "min_equity": 29.61578571428563, "worst_trade": -1.4000000000000001, "best_trade": 1.3257857142857574, "trades_per_day": 1.6491228070175439, "active_day_pct": 92.98245614035088, "max_consec_losses": 5, "weeks_profitable_pct": 83.33333333333334, "sharpe_daily": 2.9020581777784438, "return_pct": 37.58047619047526, "days": 57, "avg_hold_min": 46.6063829787234, "overnight_trades": 0}, "equity": [["2026-08-26", 31.13], ["2026-08-27", 31.65], ["2026-08-28", 30.94], ["2026-09-01", 30.22], ["2026-09-02", 31.6], ["2026-09-03", 31.54], ["2026-09-04", 32.56], ["2026-09-07", 33.34], ["2026-09-08", 34.0], ["2026-09-09", 34.41], ["2026-09-10", 32.2], ["2026-09-11", 34.36], ["2026-09-14", 36.11], ["2026-09-15", 38.05], ["2026-09-16", 38.53], ["2026-09-17", 37.98], ["2026-09-18", 38.89], ["2026-09-21", 38.99], ["2026-09-22", 38.34], ["2026-09-23", 37.54], ["2026-09-24", 37.06], ["2026-09-25", 36.95], ["2026-09-28", 38.29], ["2026-09-29", 36.96], ["2026-09-30", 38.46], ["2026-10-01", 39.24], ["2026-10-02", 37.82], ["2026-10-05", 39.03], ["2026-10-06", 39.07], ["2026-10-07", 36.65], ["2026-10-08", 37.39], ["2026-10-09", 36.55], ["2026-10-12", 36.21], ["2026-10-13", 36.69], ["2026-10-14", 38.03], ["2026-10-15", 38.79], ["2026-10-19", 39.39], ["2026-10-20", 41.05], ["2026-10-21", 41.61], ["2026-10-22", 41.17], ["2026-10-23", 39.77], ["2026-10-26", 40.5], ["2026-10-27", 40.0], ["2026-10-28", 42.19], ["2026-10-30", 40.82], ["2026-11-02", 41.47], ["2026-11-03", 40.07], ["2026-11-04", 39.79], ["2026-11-05", 40.08], ["2026-11-06", 41.4], ["2026-11-09", 42.35], ["2026-11-10", 43.61], ["2026-11-11", 42.76]]}, "bravo_sweep": [[1.48, 2.82, 230.66, 458], [2.5, 2.21, 184.22, 458], [3.5, 1.78, 138.72, 458], [4.5, 1.46, 93.29, 458], [5.8, 1.14, 34.53, 458], [7.5, 0.85, -44.05, 460], [9.05, 0.66, -115.56, 463]]};
+const A = ["ALPHA","BRAVO","CHARLIE","DELTA"], COL = {ALPHA:"var(--s1)",BRAVO:"var(--s2)",CHARLIE:"var(--s3)",DELTA:"var(--s4)"};
+const INFO = {
+ ALPHA:{turf:"Forex and metals",sys:"London-open breakout of the overnight range, EURUSD + GBPUSD",trials:580,early:0.95,rounds:3,
+  pts:["Scored 2.04 on the window and passed 10 of 12 gates, missing only the two trade-count gates.","The same frozen rule scored 0.95 over 285 trades on January to September. Rejected.","Resting limit-order fades: 144 configurations on January–June, none above 1.2.","Twelve other forex ideas were rejected in round 1; USDJPY was dropped on in-sample evidence."]},
+ BRAVO:{turf:"Volatility, Step and Drift Switch synthetics",sys:"Buy Drift Switch 30 when a two-state filter says the calm, rising state is on",trials:135,early:null,rounds:1,
+  pts:["The two-state pattern in bid prices is stable across 61 days, but the spread is not constant.","At the widest spread seen (9.05) it loses $115 on a $30 account; at the narrowest (1.48) it passes every gate.","A price with no drift and a lagging bid reproduces the pattern, so the 'drift' is probably how the quote is built.","VolSwitch, Ladder, Exponential Growth and Trek showed no directional structure after spread."]},
+ CHARLIE:{turf:"Spike synthetics, then forex crosses",sys:"Round 1: Range Break 100 breakout. Final: USDJPY limit-order fade in New York hours",trials:928,early:1.00,rounds:3,
+  pts:["Boom, Crash, Jump, DEX and Range Break: spikes are memoryless and drift between spikes does not cover the spread. Range Break 100 scored 0.90.","The drift-side trade (short Boom, long Crash) cannot meet a $1.50 loss cap at minimum lot.","Forex mean reversion exists in mid prices (1.2–2.1 at zero spread) but is smaller than the spread.","Final USDJPY rule: 2.30 on 26 trades, 0.48 on the unseen part, 1.00 on earlier months. Noise."]},
+ DELTA:{turf:"Stock indices, crypto and oil",sys:"Fade breakouts of the 8-hour range on the S&P 500 between 03:00 and 09:30 New York",trials:3490,early:1.47,rounds:2,
+  pts:["Parameters were chosen on 5.5 months before the scored window, then tested forward: 1.47 before, 1.43 after.","Low risk: worst trade $1.40, maximum drawdown $3.67.","Did not replicate on US Small Cap 2000 (1.02) or UK 100 (0.51), so it may be specific to one contract or partly luck.","An Asian-session idea that scored 1.78 on the window was thrown out after scoring 0.83 on earlier months."]}
+};
+const $ = (h)=>{const t=document.createElement("template");t.innerHTML=h.trim();return t.content.firstChild};
+const f2=x=>x.toFixed(2), usd=x=>(x<0?"−$":"$")+Math.abs(x).toFixed(2);
+
+// KPI row
+document.getElementById("kpis").innerHTML=[["4","agents, up to 3 rounds each"],["≈5,100","parameter sets backtested"],["0 of 4","systems qualified"],["1.43","best honest profit factor (target 1.7)"],["$30","start balance, minimum lot"]].map(k=>`<div class="kpi"><b>${k[0]}</b><span>${k[1]}</span></div>`).join("");
+
+// scoreboard
+document.getElementById("score").innerHTML=`<tr><th>Agent</th><th style="min-width:230px">System</th><th class="n">Profit factor</th><th class="n">Unseen 30%</th><th class="n">Earlier months</th><th class="n">Trades</th><th class="n">Net on $30</th><th class="n">Max drawdown</th><th class="n">Worst trade</th><th class="n">Gates</th></tr>`+
+ A.map(a=>{const o=D[a],g=Object.values(o.gates).filter(Boolean).length;return `<tr><td><b>${a}</b></td><td>${INFO[a].sys}</td><td class="n">${f2(o.full.pf)}</td><td class="n">${f2(o.oos.pf)}</td><td class="n">${INFO[a].early==null?"n/a":f2(INFO[a].early)}</td><td class="n">${o.full.trades}</td><td class="n">${usd(o.full.net)}</td><td class="n">${usd(o.full.max_dd_usd)}</td><td class="n">${usd(o.full.worst_trade)}</td><td class="n">${g} of 12</td></tr>`}).join("");
+
+// gates matrix
+const GN={"pf_full >= 1.7":"Profit factor ≥ 1.7","pf_oos >= 1.5 (last 30% of time)":"≥ 1.5 on unseen last 30% of days","pf_is >= 1.5":"≥ 1.5 on first 70% of days","pf under 1.5x spread >= 1.4":"≥ 1.4 with spread ×1.5","trades >= 150":"At least 150 trades","oos trades >= 40":"At least 40 unseen trades","active days >= 85%":"Trades on ≥ 85% of market days","max drawdown <= 30% of $30 start ($9)":"Max drawdown ≤ $9","worst single trade <= $1.50 (5% of $30)":"Worst trade ≤ $1.50","no look-ahead":"No peeking at future bars","min lot respected":"Minimum lot respected","weekly PF >= 1.0 in >= 70% of weeks":"Profitable in ≥ 70% of weeks"};
+document.getElementById("gates").innerHTML=`<tr><th>Gate</th>${A.map(a=>`<th>${a}</th>`).join("")}</tr>`+Object.keys(GN).map(k=>`<tr><td>${GN[k]}</td>${A.map(a=>`<td><span class="pill ${D[a].gates[k]?"pass":"fail"}">${D[a].gates[k]?"✓ Pass":"✕ Fail"}</span></td>`).join("")}</tr>`).join("");
+
+// agents
+document.getElementById("agents").innerHTML=A.map(a=>`<div class="agent"><div class="hd"><span class="dot" style="background:${COL[a]}"></span><h3>${a}</h3><span class="sub">${INFO[a].turf} · ${INFO[a].rounds} round${INFO[a].rounds>1?"s":""} · about ${INFO[a].trials.toLocaleString()} parameter sets</span></div><p><b>${INFO[a].sys}.</b></p><ul>${INFO[a].pts.map(p=>`<li>${p}</li>`).join("")}</ul></div>`).join("");
+
+// ---------- charts ----------
+const NS="http://www.w3.org/2000/svg";
+function el(n,at,p){const e=document.createElementNS(NS,n);for(const k in at)e.setAttribute(k,at[k]);if(p)p.appendChild(e);return e}
+function frame(id,W,H,m){const host=document.getElementById(id);const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"},host);const tip=$('<div class="tip" hidden></div>');host.parentNode.appendChild(tip);
+  const show=(ev,html)=>{tip.innerHTML=html;tip.hidden=false;const r=host.parentNode.getBoundingClientRect();let x=ev.clientX-r.left+14,y=ev.clientY-r.top-10;if(x+tip.offsetWidth>r.width-6)x=ev.clientX-r.left-tip.offsetWidth-14;tip.style.left=Math.max(4,x)+"px";tip.style.top=y+"px"};
+  return {svg,show,hide:()=>tip.hidden=true,iw:W-m.l-m.r,ih:H-m.t-m.b}}
+function yaxis(svg,m,iw,ih,lo,hi,ticks,fmt){const y=v=>m.t+ih-(v-lo)/(hi-lo)*ih;ticks.forEach(t=>{el("line",{x1:m.l,x2:m.l+iw,y1:y(t),y2:y(t),stroke:"var(--grid)","stroke-width":1},svg);const tx=el("text",{x:m.l-8,y:y(t)+4,"text-anchor":"end"},svg);tx.textContent=fmt(t)});return y}
+function ref(svg,m,iw,y,v,label){el("line",{x1:m.l,x2:m.l+iw,y1:y(v),y2:y(v),stroke:"var(--ink3)","stroke-width":1,"stroke-dasharray":"4 4"},svg);const t=el("text",{x:m.l+iw+6,y:y(v)+4,"text-anchor":"start"},svg);t.textContent=label}
+function bar(svg,x,y0,y1,w,fill){const top=Math.min(y0,y1),h=Math.max(1,Math.abs(y1-y0)),r=Math.min(4,h);return el("path",{d:`M${x},${top+h}V${top+r}q0,-${r} ${r},-${r}h${w-2*r}q${r},0 ${r},${r}V${top+h}z`,fill},svg)}
+
+// 1) PF: window vs earlier
+(()=>{const W=900,H=320,m={l:44,r:100,t:16,b:40},F=frame("c_pf",W,H,m),{svg,iw,ih}=F;
+ const y=yaxis(svg,m,iw,ih,0,2.5,[0,0.5,1,1.5,2,2.5],f2);ref(svg,m,iw,y,1.7,"target 1.7");ref(svg,m,iw,y,1.0,"break-even 1.0");
+ const gw=iw/4,bw=Math.min(70,gw*0.3);
+ A.forEach((a,i)=>{const cx=m.l+gw*i+gw/2,vals=[[D[a].full.pf,"var(--s1)","Scored window",D[a].full.trades+" trades"],[INFO[a].early,"var(--s2)","Earlier months",""]];
+  vals.forEach((v,j)=>{if(v[0]==null)return;const x=cx+(j?2:-bw-2)+ (INFO[a].early==null? bw/2+2:0);const b=bar(svg,x,y(0),y(Math.min(v[0],2.5)),bw,v[1]);
+   const t=el("text",{x:x+bw/2,y:y(Math.min(v[0],2.5))-6,"text-anchor":"middle",style:"fill:var(--ink);font-weight:600"},svg);t.textContent=f2(v[0]);
+   b.addEventListener("mousemove",e=>F.show(e,`<b>${a}</b> · ${v[2]}<br>Profit factor ${f2(v[0])}${v[3]?"<br>"+v[3]:""}`));b.addEventListener("mouseleave",F.hide)});
+  const t=el("text",{x:cx,y:H-14,"text-anchor":"middle",style:"fill:var(--ink);font-weight:600"},svg);t.textContent=a})})();
+
+// 2) equity
+(()=>{const W=900,H=340,m={l:48,r:100,t:16,b:34},F=frame("c_eq",W,H,m),{svg,iw,ih}=F;
+ const days=[...new Set(A.flatMap(a=>D[a].equity.map(e=>e[0])))].sort();const t0=Date.parse(days[0]),t1=Date.parse(days[days.length-1]);
+ const x=d=>m.l+(Date.parse(d)-t0)/(t1-t0)*iw;const y=yaxis(svg,m,iw,ih,0,70,[0,10,20,30,40,50,60,70],v=>"$"+v);ref(svg,m,iw,y,30,"start");
+ ["2026-09-01","2026-10-01","2026-11-01"].forEach(d=>{const t=el("text",{x:x(d),y:H-10,"text-anchor":"middle"},svg);t.textContent=new Date(d).toLocaleString("en",{month:"short",timeZone:"UTC"})+" 1";el("line",{x1:x(d),x2:x(d),y1:m.t+ih,y2:m.t+ih+5,stroke:"var(--ink3)"},svg)});
+ const series={};const ends=[];
+ A.forEach(a=>{let pts=[[D[a].period[0],30],...D[a].equity];const cut=pts.findIndex(p=>p[1]<=0);if(cut>=0){pts=pts.slice(0,cut+1);pts[cut]=[pts[cut][0],0]}series[a]=pts;
+  el("path",{d:pts.map((p,i)=>(i?"L":"M")+x(p[0]).toFixed(1)+","+y(p[1]).toFixed(1)).join(""),fill:"none",stroke:COL[a],"stroke-width":2,"stroke-linejoin":"round"},svg);
+  const L=pts[pts.length-1];el("circle",{cx:x(L[0]),cy:y(L[1]),r:4,fill:COL[a],stroke:"var(--surface)","stroke-width":2},svg);ends.push({a,x:x(L[0]),y:y(L[1]),v:L[1],cut:cut>=0})});
+ ends.sort((p,q)=>p.y-q.y);for(let i=1;i<ends.length;i++)if(Math.abs(ends[i].x-ends[i-1].x)<60&&ends[i].ly===undefined){}
+ let last=-99;ends.forEach(e=>{let ly=e.y+4;if(Math.abs(e.x-(m.l+iw))<5){if(ly-last<15)ly=last+15;last=ly}const t=el("text",{x:e.x+9,y:e.cut?e.y-2:ly,style:"fill:var(--ink);font-weight:600"},svg);t.textContent=e.cut?"BRAVO $0":e.a+" $"+e.v.toFixed(0)});
+ document.getElementById("lg_eq").innerHTML=A.map(a=>`<span><i style="background:${COL[a]}"></i>${a} · ${D[a].legs.join(" + ")}</span>`).join("");
+ const cross=el("line",{y1:m.t,y2:m.t+ih,stroke:"var(--ink3)","stroke-width":1,visibility:"hidden"},svg);
+ const hit=el("rect",{x:m.l,y:m.t,width:iw,height:ih,fill:"transparent"},svg);
+ hit.addEventListener("mousemove",e=>{const r=svg.getBoundingClientRect(),px=(e.clientX-r.left)/r.width*W,ts=t0+(px-m.l)/iw*(t1-t0);const d=days.reduce((b,c)=>Math.abs(Date.parse(c)-ts)<Math.abs(Date.parse(b)-ts)?c:b);
+  cross.setAttribute("x1",x(d));cross.setAttribute("x2",x(d));cross.setAttribute("visibility","visible");
+  F.show(e,`<b>${d}</b><br>`+A.map(a=>{const p=series[a].filter(q=>q[0]<=d).pop();return `${a}: ${p?"$"+p[1].toFixed(2):"not started"}`}).join("<br>"))});
+ hit.addEventListener("mouseleave",()=>{F.hide();cross.setAttribute("visibility","hidden")})})();
+
+// 3) ALPHA monthly
+(()=>{const W=900,H=300,m={l:44,r:100,t:16,b:40},F=frame("c_alpha",W,H,m),{svg,iw,ih}=F;
+ const rows=[["Jan",0.42,32],["Feb",0.55,30],["Mar",0.75,33],["Apr",1.45,35],["May",1.39,36],["Jun",1.24,30],["Jul",1.30,35],["Aug",1.11,36],["Sep 1–20",0.58,18],["Sep 21–Nov 11",2.04,60]];
+ const y=yaxis(svg,m,iw,ih,0,2.5,[0,0.5,1,1.5,2,2.5],f2);ref(svg,m,iw,y,1.7,"target 1.7");ref(svg,m,iw,y,1.0,"break-even 1.0");
+ const gw=iw/rows.length,bw=Math.min(46,gw*0.6);
+ rows.forEach((r,i)=>{const cx=m.l+gw*i+gw/2,last=i==rows.length-1,b=bar(svg,cx-bw/2,y(0),y(r[1]),bw,last?"var(--s1)":"var(--s2)");
+  const t=el("text",{x:cx,y:y(r[1])-6,"text-anchor":"middle",style:"fill:var(--ink);font-weight:600"},svg);t.textContent=f2(r[1]);
+  const lb=el("text",{x:cx,y:H-14,"text-anchor":"middle"},svg);lb.textContent=last?"Scored":r[0];
+  b.addEventListener("mousemove",e=>F.show(e,`<b>${r[0]} 2026</b><br>Profit factor ${f2(r[1])}<br>${r[2]} trades`));b.addEventListener("mouseleave",F.hide)})})();
+
+// 4) BRAVO sweep
+(()=>{const W=900,H=320,m={l:44,r:100,t:24,b:46},F=frame("c_bravo",W,H,m),{svg,iw,ih}=F,S=D.bravo_sweep;
+ const x=v=>m.l+(v-1)/(9.5-1)*iw,y=yaxis(svg,m,iw,ih,0,3,[0,0.5,1,1.5,2,2.5,3],f2);ref(svg,m,iw,y,1.7,"target 1.7");ref(svg,m,iw,y,1.0,"break-even 1.0");
+ [2,4,6,8].forEach(v=>{const t=el("text",{x:x(v),y:m.t+ih+18,"text-anchor":"middle"},svg);t.textContent=v});
+ const ax=el("text",{x:m.l+iw/2,y:H-8,"text-anchor":"middle"},svg);ax.textContent="Assumed spread, price units";
+ el("path",{d:S.map((p,i)=>(i?"L":"M")+x(p[0])+","+y(p[1])).join(""),fill:"none",stroke:"var(--s2)","stroke-width":2},svg);
+ const lab={1.48:"quietest sample",5.8:"average at buy signals",9.05:"widest seen"};
+ S.forEach(p=>{const c=el("circle",{cx:x(p[0]),cy:y(p[1]),r:5,fill:"var(--s2)",stroke:"var(--surface)","stroke-width":2},svg);
+  if(lab[p[0]]){const t=el("text",{x:x(p[0])+(p[0]>8?-8:9),y:y(p[1])-9,"text-anchor":p[0]>8?"end":"start",style:"fill:var(--ink);font-weight:600"},svg);t.textContent=`${f2(p[1])} · ${lab[p[0]]}`}
+  const h=el("circle",{cx:x(p[0]),cy:y(p[1]),r:16,fill:"transparent"},svg);h.addEventListener("mousemove",e=>F.show(e,`Spread ${p[0]}<br>Profit factor ${f2(p[1])}<br>Net ${usd(p[2])} on $30 · ${p[3]} trades`));h.addEventListener("mouseleave",F.hide)})})();
+</script>

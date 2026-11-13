@@ -16,6 +16,22 @@
   "symbols": "EURUSD, GBPUSD"
  },
  {
+  "agent": "CHARLIE",
+  "qualified": false,
+  "gates_passed": 8,
+  "gates": 12,
+  "pf": 2.3044002970664317,
+  "pf_is": 9.24857950319697,
+  "pf_oos": 0.4802406908139148,
+  "pf_stress": 2.222328880193385,
+  "trades": 26,
+  "net": 9.419690035714265,
+  "max_dd": 4.35835804285724,
+  "worst": -1.2060367499999347,
+  "active": 60.526315789473685,
+  "symbols": "USDJPY"
+ },
+ {
   "agent": "DELTA",
   "qualified": false,
   "gates_passed": 6,
@@ -30,22 +46,6 @@
   "worst": -1.4000000000000001,
   "active": 92.98245614035088,
   "symbols": "US SP 500"
- },
- {
-  "agent": "CHARLIE",
-  "qualified": false,
-  "gates_passed": 6,
-  "gates": 12,
-  "pf": 0.9022410660206519,
-  "pf_is": 0.8406861802377559,
-  "pf_oos": 1.0070044514271403,
-  "pf_stress": 0.8279185836102266,
-  "trades": 360,
-  "net": -8.06999999999476,
-  "max_dd": 16.94199999999584,
-  "worst": -1.4759999999999855,
-  "active": 100.0,
-  "symbols": "Range Break 100 Index"
  },
  {
   "agent": "BRAVO",
