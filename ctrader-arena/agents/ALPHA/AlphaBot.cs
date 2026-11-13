@@ -1,6 +1,6 @@
 // *** STATUS: REJECTED BY PRE-SAMPLE VALIDATION - DO NOT RUN ON A FUNDED ACCOUNT. ***
 // The identical rule has PF 0.95 over 285 trades on Jan-Sep 2026 (max draw-down $47 at 0.01 lot). See NOTES.md.
-// Not compiled or run in cTrader. Kept so that strategy.py, specs.json and the cBot stay consistent.
+// Compiles against cTrader.Automate 1.0.21; never run in cTrader. Kept so that strategy.py, specs.json and the cBot stay consistent.
 // AlphaBot - London-open breakout of the overnight (Asian) range.  cTrader Automate cBot (cAlgo.API).
 // Mirrors agents/ALPHA/strategy.py exactly (same rules, same defaults):
 //   * Range  = high/low of the M5 bars starting in [RangeStartHour, RangeEndHour) Europe/London time (00:00-08:00).

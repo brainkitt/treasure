@@ -142,7 +142,7 @@ code{font-family:var(--mono);font-size:13px;background:var(--grid);padding:1px 5
     <li><b>Engine:</b> spread charged on every trade; when a bar touches both stop and target, the stop is assumed hit; spike instruments fill stops at the worst price of the bar; zero commission, matching the account's deal history.</li>
     <li><b>Rounds:</b> each agent submitted, was re-scored and criticised, and was sent back. ALPHA and CHARLIE had three rounds, DELTA two, BRAVO one.</li>
     <li><b>Not modelled:</b> overnight financing, slippage on market orders, and changing spreads. The last one decides the Drift Switch result.</li>
-    <li><b>cBots are untested:</b> all four C# cBots are written but none has been compiled or run in cTrader, because the research environment has no cTrader toolchain.</li>
+    <li><b>cBots compile but are unproven live:</b> all five cBots build with zero errors against the official cTrader package (files in <code>cbots/</code>), but none has yet been run inside cTrader.</li>
     <li><b>Spread sampling is thin:</b> most spreads were sampled near the daily rollover; EURUSD and GBPUSD were re-sampled in the London morning (1.2 and 1.4 pips).</li>
     <li><b>Two engine flaws were found and fixed during the run:</b> stop-entry orders filling mid-spike on spike instruments (found by CHARLIE), and Sunday-evening stubs counting as trading days.</li>
   </ul>

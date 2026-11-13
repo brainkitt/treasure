@@ -15,8 +15,9 @@ Four research agents competed to build a cTrader cBot for a $30 Deriv account
 ## Layout
 * `RULES.md`, `BRIEF.md` - gates, engine assumptions, agent instructions
 * `arena/` - ingest, backtest engine, official scoring, leaderboard
-* `agents/<NAME>/` - strategy.py, cBot (.cs, not compiled), specs.json, NOTES.md research log
+* `agents/<NAME>/` - strategy.py, cBot source, specs.json, NOTES.md research log
 * `submissions/<NAME>/` - official metrics.json and trades.csv
+* `cbots/` - all five cBots as .cs source and built .algo files, with install notes
 * `report/` - report page (`template.html` + `data.json` -> `index.html`)
 * `data/` - downloaded candles (not committed)
 
