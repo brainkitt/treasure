@@ -11,6 +11,8 @@ Orders (one row each, numpy arrays of equal length, sorted by `idx`):
   max_bars   time exit: close at the close of the max_bars-th bar after the fill bar (0 -> none)
   trail      trailing stop distance (0 = off); stop ratchets on bar closes, effective next bar
   valid      bars a pending order stays live (kind 1/2)
+  prove      conditional time-stop: if the trade is not in profit at the close of the prove-th bar after the
+             fill bar, it is closed there (0 = off)
   volume     position size in UNITS of the base asset (cTrader volume / 100)
 
 Pessimism rules
@@ -20,13 +22,15 @@ Pessimism rules
   * gap_sl=True (spike instruments: Boom/Crash/Jump...): a stopped trade fills at the bar EXTREME, not at the stop,
     and a stop ENTRY order also fills at the bar extreme (it cannot fill in the middle of a one-tick jump).
   * max_open concurrent positions (default 1); signals arriving while full are dropped.
+  * Financing: every 22:00 UTC rollover a position is held across costs swap_per_night x notional
+    (default 0.025% per night, about 9% a year, charged on longs AND shorts; set per symbol in specs.json).
 """
 import numpy as np
 from numba import njit
 
 
 @njit(cache=True)
-def _run(o, h, l, c, idx, side, kind, price, sl, tp, max_bars, trail, valid, volume,
+def _run(o, h, l, c, idx, side, kind, price, sl, tp, max_bars, trail, valid, volume, prove,
          spread, slip, gap_sl, max_open):
     n = len(o)
     m = len(idx)
@@ -36,7 +40,7 @@ def _run(o, h, l, c, idx, side, kind, price, sl, tp, max_bars, trail, valid, vol
     p_side = np.zeros(max_open); p_entry = np.zeros(max_open); p_sl = np.zeros(max_open)
     p_tp = np.zeros(max_open); p_end = np.zeros(max_open, np.int64); p_tr = np.zeros(max_open)
     p_vol = np.zeros(max_open); p_bar = np.zeros(max_open, np.int64); p_row = np.zeros(max_open, np.int64)
-    p_on = np.zeros(max_open, np.bool_)
+    p_on = np.zeros(max_open, np.bool_); p_pv = np.zeros(max_open, np.int64)
     # pending slots (bounded by max_open too)
     q_on = np.zeros(max_open, np.bool_); q_row = np.zeros(max_open, np.int64); q_exp = np.zeros(max_open, np.int64)
     j = 0
@@ -74,6 +78,10 @@ def _run(o, h, l, c, idx, side, kind, price, sl, tp, max_bars, trail, valid, vol
                     px = p_tp[s]; reason = 2; done = True
             if not done and p_end[s] > 0 and i >= p_end[s]:
                 px = cb if p_side[s] > 0 else cb + spread; reason = 3; done = True
+            if not done and p_pv[s] > 0 and i == p_bar[s] + p_pv[s]:
+                q = cb if p_side[s] > 0 else cb + spread
+                if (q - p_entry[s]) * p_side[s] <= 0:
+                    px = q; reason = 5; done = True
             if done:
                 out[k, 0] = p_bar[s]; out[k, 1] = i; out[k, 2] = p_side[s]; out[k, 3] = p_entry[s]
                 out[k, 4] = px; out[k, 5] = (px - p_entry[s]) * p_side[s] * p_vol[s]; out[k, 6] = reason
@@ -113,7 +121,7 @@ def _run(o, h, l, c, idx, side, kind, price, sl, tp, max_bars, trail, valid, vol
                 p_sl[slot] = fpx - side[r] * sl[r]
                 p_tp[slot] = fpx + side[r] * tp[r] if tp[r] > 0 else 0.0
                 p_end[slot] = i + max_bars[r] if max_bars[r] > 0 else 0
-                p_tr[slot] = trail[r]; p_bar[slot] = i; p_row[slot] = r
+                p_tr[slot] = trail[r]; p_bar[slot] = i; p_row[slot] = r; p_pv[slot] = prove[r]
                 # same-bar adverse check (pessimistic): SL only for pending, SL then TP for market
                 hit = False; px = 0.0; reason = 0.0
                 if side[r] > 0:
@@ -142,7 +150,10 @@ def _run(o, h, l, c, idx, side, kind, price, sl, tp, max_bars, trail, valid, vol
     return out[:k]
 
 
-def simulate(bars, orders, spread, slip=0.0, gap_sl=False, max_open=1, usd_per_quote=1.0):
+DEFAULT_SWAP = 0.00025   # financing charged per night held, as a fraction of position notional (both directions)
+
+
+def simulate(bars, orders, spread, slip=0.0, gap_sl=False, max_open=1, usd_per_quote=1.0, swap_per_night=DEFAULT_SWAP):
     """bars: DataFrame from ingest.load(). orders: DataFrame with the columns documented above
     (missing optional columns default: kind=0, price=0, tp=0, max_bars=0, trail=0, valid=1).
     Returns a trades DataFrame with pnl in USD."""
@@ -152,12 +163,19 @@ def simulate(bars, orders, spread, slip=0.0, gap_sl=False, max_open=1, usd_per_q
     res = _run(bars.open.to_numpy(np.float64), bars.high.to_numpy(np.float64), bars.low.to_numpy(np.float64),
                bars.close.to_numpy(np.float64), g("idx", 0, np.int64), g("side", 1), g("kind", 0, np.int64),
                g("price", 0.0), g("sl", 0.0), g("tp", 0.0), g("max_bars", 0, np.int64), g("trail", 0.0),
-               g("valid", 1, np.int64), g("volume", 1.0), float(spread), float(slip), bool(gap_sl), int(max_open))
+               g("valid", 1, np.int64), g("volume", 1.0), g("prove", 0, np.int64), float(spread), float(slip),
+               bool(gap_sl), int(max_open))
     tr = pd.DataFrame(res, columns=["entry_bar", "exit_bar", "side", "entry_px", "exit_px", "pnl", "reason", "order_row"])
-    tr["pnl"] *= usd_per_quote
     tr["entry_time"] = bars.time.to_numpy()[tr.entry_bar.astype(int)]
     tr["exit_time"] = bars.time.to_numpy()[tr.exit_bar.astype(int)]
-    tr["reason"] = tr.reason.map({1: "SL", 2: "TP", 3: "TIME", 4: "EOD"})
+    # financing: one charge per 22:00 UTC rollover the position is held across (never a credit)
+    roll = lambda t: (pd.to_datetime(t) - pd.Timedelta(hours=22)).dt.floor("D")
+    nights = (roll(tr.exit_time) - roll(tr.entry_time)).dt.days.clip(lower=0) if len(tr) else 0
+    vol = od.volume.to_numpy(float)[tr.order_row.astype(int)] if len(tr) else 0
+    tr["swap"] = -nights * swap_per_night * tr.entry_px * vol
+    tr["pnl"] = (tr.pnl + tr.swap) * usd_per_quote
+    tr["swap"] *= usd_per_quote
+    tr["reason"] = tr.reason.map({1: "SL", 2: "TP", 3: "TIME", 4: "EOD", 5: "PROVE"})
     return tr.sort_values("exit_time").reset_index(drop=True)
 
 

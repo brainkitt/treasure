@@ -1,0 +1,12 @@
+{
+ "2517": {
+  "name": "US SP 500",
+  "spread": 0.36,
+  "min_units": 0.1,
+  "gap_sl": false,
+  "usd_per_quote": 1.0,
+  "always_open": false,
+  "_measured": "spread 0.36 at 2026-11-11 21:40, 21:49 and 21:58 UTC (three samples, identical; widest = 0.36). No sample inside the 08:00-14:30 UTC trading window: the session clock advanced only ~20 min. min lot: LIMIT BUY volume=1 @3800 rejected 'minimum allowed volume = 0.10' on 2026-11-11.",
+  "_doc": "DELTA overrides. spread = widest bid/ask seen in get_spot_prices samples (price units). min_units = broker minimum from LIMIT-probe rejections (cTrader volume/100)."
+ }
+}

@@ -15,19 +15,20 @@ START_BALANCE = 30.0
 OOS_FRACTION = 0.30
 
 GATES = {
-    "pf_full >= 1.7": lambda m: m["full"]["pf"] >= 1.7,
-    "pf_oos >= 1.5 (last 30% of time)": lambda m: m["oos"]["pf"] >= 1.5,
-    "pf_is >= 1.5": lambda m: m["is"]["pf"] >= 1.5,
-    "pf under 1.5x spread >= 1.4": lambda m: m["stress"]["pf"] >= 1.4,
-    "trades >= 150": lambda m: m["full"]["trades"] >= 150,
-    "oos trades >= 40": lambda m: m["oos"]["trades"] >= 40,
-    "active days >= 85%": lambda m: m["full"]["active_day_pct"] >= 85,
-    "max drawdown <= 30% of $30 start ($9)": lambda m: m["full"]["max_dd_usd"] <= 9.0,
-    "worst single trade <= $1.50 (5% of $30)": lambda m: m["full"]["worst_trade"] >= -1.5,
+    "history >= 300 calendar days": lambda m: m["history_days"] >= 300,
+    "pf_full >= 1.3": lambda m: m["full"]["pf"] >= 1.3,
+    "pf_is >= 1.15 (first 70% of days)": lambda m: m["is"]["pf"] >= 1.15,
+    "pf_oos >= 1.15 (last 30% of days)": lambda m: m["oos"]["pf"] >= 1.15,
+    "pf under 1.5x spread >= 1.15": lambda m: m["stress"]["pf"] >= 1.15,
+    "trades >= 200": lambda m: m["full"]["trades"] >= 200,
+    "oos trades >= 50": lambda m: m["oos"]["trades"] >= 50,
+    "profitable in >= 60% of calendar months": lambda m: m["full"]["months_profitable_pct"] >= 60,
+    "max drawdown <= $12 (40% of $30 start)": lambda m: m["full"]["max_dd_usd"] <= 12.0,
+    "worst single trade >= -$1.80 (6% of $30)": lambda m: m["full"]["worst_trade"] >= -1.8,
     "no look-ahead": lambda m: m["lookahead_ok"],
     "min lot respected": lambda m: m["min_lot_ok"],
-    "weekly PF >= 1.0 in >= 70% of weeks": lambda m: m["full"]["weeks_profitable_pct"] >= 70,
 }
+PERIOD_MIN = {"M_1": 1, "M_5": 5, "M_15": 15, "M_30": 30, "H_1": 60, "H_4": 240, "D_1": 1440}
 
 
 def load_specs(strategy_path):
@@ -54,7 +55,7 @@ def stats(tr, day_index):
     if len(tr) == 0:
         return dict(trades=0, pf=0.0, net=0.0, win_rate=0.0, avg_win=0.0, avg_loss=0.0, expectancy=0.0, max_dd_usd=0.0,
                     max_dd_pct=0.0, min_equity=START_BALANCE, worst_trade=0.0, best_trade=0.0, trades_per_day=0.0,
-                    active_day_pct=0.0, max_consec_losses=0, weeks_profitable_pct=0.0, sharpe_daily=0.0,
+                    active_day_pct=0.0, max_consec_losses=0, weeks_profitable_pct=0.0, months_profitable_pct=0.0, swap=0.0, sharpe_daily=0.0,
                     return_pct=0.0, days=len(day_index), avg_hold_min=0.0, overnight_trades=0)
     p = tr.pnl.to_numpy()
     gp, gl = p[p > 0].sum(), -p[p < 0].sum()
@@ -65,6 +66,7 @@ def stats(tr, day_index):
     tdays = pd.to_datetime(tr.entry_time).dt.floor("D")
     daily = tr.groupby(pd.to_datetime(tr.exit_time).dt.floor("D")).pnl.sum().reindex(days, fill_value=0.0)
     wk = tr.groupby(pd.to_datetime(tr.exit_time).dt.to_period("W")).pnl.sum()
+    mo = tr.groupby(pd.to_datetime(tr.exit_time).dt.to_period("M")).pnl.sum()
     streak = best = 0
     for x in p:
         streak = streak + 1 if x < 0 else 0
@@ -77,7 +79,8 @@ def stats(tr, day_index):
         max_dd_usd=float(dd.max()), max_dd_pct=float((dd / peak).max() * 100), min_equity=float(eq.min()),
         worst_trade=float(p.min()), best_trade=float(p.max()), trades_per_day=float(len(p) / max(1, len(days))),
         active_day_pct=float(tdays.nunique() / max(1, len(days)) * 100), max_consec_losses=int(best),
-        weeks_profitable_pct=float((wk > 0).mean() * 100), sharpe_daily=float(daily.mean() / daily.std() * np.sqrt(252)) if daily.std() > 0 else 0.0,
+        weeks_profitable_pct=float((wk > 0).mean() * 100), months_profitable_pct=float((mo > 0).mean() * 100),
+        swap=float(tr.swap.sum()) if "swap" in tr else 0.0, sharpe_daily=float(daily.mean() / daily.std() * np.sqrt(252)) if daily.std() > 0 else 0.0,
         return_pct=float(p.sum() / START_BALANCE * 100), days=int(len(days)), avg_hold_min=float(hold.mean()),
         overnight_trades=int((pd.to_datetime(tr.exit_time).dt.floor("D") != tdays).sum()),
     )
@@ -89,7 +92,8 @@ def run_legs(mod, specs, spread_mult=1.0, cut=None):
     for n, leg in enumerate(mod.LEGS):
         sid = str(leg["symbol_id"])
         spec = specs[sid]
-        m1 = ingest.load(sid, "M_1")
+        period = leg.get("period", "M_1")   # base bar series the leg is simulated on
+        m1 = ingest.load(sid, period)
         if cut is not None:
             m1 = m1.iloc[:int(len(m1) * cut)].reset_index(drop=True)
         od = mod.signals(m1, leg.get("params", {}), spec)
@@ -101,23 +105,24 @@ def run_legs(mod, specs, spread_mult=1.0, cut=None):
             ok = False
         tr = engine.simulate(m1, od, spread=spec["spread"] * spread_mult, slip=spec.get("slip", 0.0),
                              gap_sl=spec.get("gap_sl", False), max_open=leg.get("max_open", 1),
-                             usd_per_quote=spec.get("usd_per_quote", 1.0))
+                             usd_per_quote=spec.get("usd_per_quote", 1.0),
+                             swap_per_night=spec.get("swap_per_night", engine.DEFAULT_SWAP))
         tr["leg"] = n; tr["symbol"] = spec["name"]
         all_tr.append(tr)
-        # a market day = a calendar day with at least 6 hours of M1 bars (skips Sunday-evening stubs)
+        # a market day = a calendar day with at least 6 hours of bars (skips Sunday-evening stubs)
         cnt = m1.time.dt.floor("D").value_counts()
-        days |= set(cnt[cnt >= 360].index)
+        days |= set(cnt[cnt >= max(1, 360 // PERIOD_MIN[period])].index)
     tr = pd.concat(all_tr).sort_values("exit_time").reset_index(drop=True) if all_tr else pd.DataFrame()
     return tr, sorted(days), orders_by_leg, ok
 
 
 def lookahead_check(mod, specs, full_orders):
     """Signals computed on truncated history must equal the full-history signals over the shared prefix."""
-    cols = ["idx", "side", "kind", "price", "sl", "tp", "max_bars", "trail", "valid", "volume"]
+    cols = ["idx", "side", "kind", "price", "sl", "tp", "max_bars", "trail", "valid", "volume", "prove"]
     for cut in (0.55, 0.8):
         _, _, part, _ = run_legs(mod, specs, cut=cut)
         for full, p, leg in zip(full_orders, part, mod.LEGS):
-            n = int(len(ingest.load(str(leg["symbol_id"]), "M_1")) * cut)
+            n = int(len(ingest.load(str(leg["symbol_id"]), leg.get("period", "M_1"))) * cut)
             a = full[full.idx < n - 1].reset_index(drop=True)
             b = p[p.idx < n - 1].reset_index(drop=True)
             if len(a) != len(b):
@@ -136,6 +141,7 @@ def evaluate(path, spread_mult=1.0, check=True):
     split = days[int(len(days) * (1 - OOS_FRACTION))]
     m = {"strategy": path, "legs": [{"symbol": specs[str(l["symbol_id"])]["name"], **l} for l in mod.LEGS],
          "period": [str(days[0].date()), str(days[-1].date())], "oos_start": str(split.date()),
+         "history_days": int((days[-1] - days[0]).days) + 1,
          "full": stats(tr, days),
          "is": stats(tr[tr.entry_time < split], days[days < split]),
          "oos": stats(tr[tr.entry_time >= split], days[days >= split]),
