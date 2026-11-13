@@ -1,5 +1,5 @@
 {
- "strategy": "agents/BRAVO/strategy.py",
+ "strategy": "/home/user/treasure/ctrader-arena/agents/BRAVO/strategy.py",
  "legs": [
   {
    "symbol": "Drift Switch Index 30",

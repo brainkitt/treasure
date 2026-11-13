@@ -166,3 +166,7 @@ Findings so far
 * Session-to-session continuation/reversal (Asia, early Europe, London, NY, late NY; 8 session pairs x 3 pairs, all days
   and big-move days): largest pooled z = +2.7 (early-Europe move continues in NY on big days, +3.7..+7.5 pips against a
   20-40 pip session sd). Nothing tradable.
+* EURGBP Bollinger fade pre-sample: Asia PF 0.36-0.56 at 0.8 pip and only 1.02 at ZERO spread (no Asian reversion at all);
+  London 0.72-1.13 (1.40 at zero spread). Bid recovers +3.1 pips at the 22:00 UTC bar (t=12.9) = night spread ~3 pips.
+* Pooled market-entry fade ranking over EURUSD+GBPUSD+USDJPY: best pooled PF 1.08 (NY, k=2.5), session medians 0.72-0.92.
+  Running total Round 2: 160 market-entry sets, ~90 statistical cells. Next: passive LIMIT-entry fades (coordinator request).

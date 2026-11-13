@@ -41,8 +41,9 @@ def load_specs(strategy_path):
 
 
 def load_strategy(path):
-    spec = importlib.util.spec_from_file_location("strat_" + str(abs(hash(path))), path)
+    spec = importlib.util.spec_from_file_location("strat_" + "".join(ch if ch.isalnum() else "_" for ch in os.path.abspath(path)), path)
     mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
     sys.path.insert(0, os.path.dirname(os.path.abspath(path)))
     spec.loader.exec_module(mod)
     return mod

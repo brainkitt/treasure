@@ -150,3 +150,39 @@ $9 equity draw-down kill-switch that closes positions and stops the bot, 16:00 L
 * Test the same rule on EURGBP, EURCHF and GBPCHF only if their London-hours spread is under 1.5 pips.
 * US SP 500 at 0.1 unit has the best cost structure on this account; it needs a regime-aware idea, since simple
   momentum and mean reversion each worked in only one half of the sample.
+
+---
+# Round 2 - pre-sample validation: the London breakout is REJECTED
+
+Method: 52 M_5 calls per symbol gave EURUSD and GBPUSD M5 history back to 2025-12-31. The exact round-1 rule,
+parameters frozen, was run through `arena.engine.simulate` on the M5 frame (entry at the next M5 open) for
+2026-01-01 .. 2026-09-20 (`research/r2.py`, `research/r3.py`). The M5 engine reproduces the official M1 result on
+the official window (EURUSD PF 2.12 vs 2.14 on M1), so the comparison is like for like.
+
+| pre-sample 2026-01-01..09-20 | trades | PF | net | max DD |
+|---|---|---|---|---|
+| EURUSD | 137 | 1.02 | +$2.32 | $20.56 |
+| EURUSD long / short | 67 / 70 | 1.18 / 0.89 | | |
+| GBPUSD (1.4-pip spread) | 148 | 0.90 | -$12.88 | $28.40 |
+| GBPUSD long / short | 74 / 74 | 1.10 / 0.73 | | |
+| **portfolio** | **285** | **0.95** | **-$10.56** | **$47.57** |
+| portfolio at 2.0-pip spread | 285 | 0.88 | -$28.27 | $47.85 |
+
+Monthly portfolio PF Jan..Sep: 0.42 / 0.55 / 0.75 / 1.45 / 1.39 / 1.24 / 1.30 / 1.11 / 0.58. Day-level t = -0.31 (164 days).
+
+Sensitivity surface on the pre-sample (portfolio PF; rows = range end, columns = entry-window length 1/2/3/5 h):
+```
+06:00  0.88 0.94 0.96 0.92      08:00  0.97 0.99 0.95 1.03
+06:30  0.84 0.88 1.00 0.97      08:30  1.15 0.99 0.96 0.95
+07:00  0.90 0.96 0.96 0.94      09:00  1.03 0.98 0.92 0.91
+07:30  0.85 1.00 0.92 0.95      10:00  0.61 0.71 0.83 0.75
+```
+Other knobs: SL mult 0.5/1.0 -> 0.93/0.92; TP mult 1/1.5/3 -> 0.87/0.86/0.90; exit 13:00/20:00 -> 0.72/0.92;
+range start 02:00/04:00 -> 1.05/0.97. Fading the break instead: PF 0.76.
+
+Conclusion: there is no plateau anywhere and no edge in either direction. The PF 2.05 on the official window was
+seven lucky weeks; a $30 account running this rule from January would have drawn down $47. **The London breakout is
+rejected.** Breadth to other pairs and a portfolio risk rule were not pursued: the rule fails on its home pairs.
+
+Spreads sampled 2026-11-12 ~07:45 UTC (London morning, the session traded): EURUSD 1.2 pips (twice),
+GBPUSD 1.4 pips (twice), USDJPY 1.4, AUDUSD 1.0. GBPUSD is wider than the 1.3 used in round 1 -> specs.json now 1.4.
