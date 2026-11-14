@@ -230,3 +230,145 @@ Range Break system (PF 0.84-0.90), and stays inside the drawdown and worst-trade
 * No edge; 0.7 trades/day; one leg. The cBot is an untested port (not compiled in cTrader); its time exit is checked
   once a minute and its limit price uses the live spread, where the backtest uses a constant 1.4 pips.
 * USDJPY minimum size (1000 units) is taken from ALPHA's probe, not re-probed by me.
+
+---
+# Phase 2 (CHARLIE) — small-notional real markets, H1+ bars, multi-year
+
+## Setup facts (2026-11-13/14)
+* get_trendbars is now capped at a 30-day window per call (H_1: 720 bars/call, not 1000). Paging grid: toTimestamp =
+  2026-11-13T22:00Z - 30d*k.
+* Crypto H_1 history exists back to at least Jan 2024 (ETH, SOL, XRP, LTC, BNB, LINK); US Oil / Brent H_1 are empty at
+  Jan 2024, present at Nov 2024.
+* Spread sample 2026-11-13 22:20 UTC (ask-bid, % of price): ETH 1.58 (0.08%), XRP 0.0011 (0.11%), BNB 0.73 (0.12%),
+  XAG 0.06 (0.12%), LINK 0.016 (0.16%), SOL 0.14 (0.18%), US Oil 0.155 (0.18%), Brent 0.155 (0.16%), LTC 0.187 (0.38%),
+  BCH 1.05 (0.48%), AVAX 0.042 (0.51%), DOGE 0.00034 (0.53%), ADA 0.00103 (0.62%), DOT 0.006 (0.74%), NGAS 0.055 (1.6%, closed).
+* Min-lot probes (LIMIT BUY vol=1 at 50% of price, both rejected): BNBUSD min 0.10 units (~$63), LNKUSD min 6 units (~$59).
+* get_trendbars result files are named by millisecond: parallel calls that land in the same ms overwrite each other
+  (lost 5 of 18 in one batch). `agents/CHARLIE/gaps.py <ids>` lists missing 30-day windows to re-request.
+* More min-lot probes (all rejected, 2026-11-14): DOGE 1500 (~$96), ADA 200 (~$33), TRX 1500 (~$468), DASH 1 (~$40),
+  ETC 7 (~$44), DOT 40 (~$32), AVAX 6 (~$49), BCH 0.2 (~$44). The broker sets every crypto minimum at roughly $30-100
+  notional, so there is no "tiny notional" coin; and prices were 2-3x higher in 2024-25 (SOL median 129 vs 78 now),
+  so at min size a $1.5 stop is only 1-3% of price over most of the history = 1-3 H1 ATRs. Classic multi-day
+  trend-following stops (8-15%) are NOT affordable on $30. Everything below is constrained to that.
+* More spreads (% of price): DASH 0.145, UNI 0.14, XMR 0.08, TRX 0.30, BAT 0.30, XLM 0.31, ETC 0.36, ALGO 0.72, IOTA 1.5,
+  NEO 2.4, FIL 4.4.
+* Data: ETH and SOL H_1 complete 2023-12-29 -> 2026-11-13 (25,172 bars each). Real flash-crash hours present
+  (e.g. 2024-01-03 12:00 SOL low -20% inside one bar) -> stops can slip a long way; engine fills at stop unless the bar opens beyond.
+
+## Trial log
+T1 (16 sets, IS = first 70%): H1 Donchian close-breakout N in 24/48/96/168 h, SL = k*ATR48 (k 2,3), trail = SL, no $ cap.
+   ETH PF 0.85-1.13 (one cell 1.42 at N=168,k=3, 149 trades); SOL PF 0.63-0.85 everywhere. Holds 11-29 h, win 30-40%.
+   -> short-horizon breakout with tight trailing stop is whipsawed; no edge.
+S1 (statistics, IS only; ETH + SOL H1, 17,620 bars each): hour-of-day mean returns (24 cells), day-of-week (7), and
+   sign(past k h) -> future j h for k in 1,4,12,24,72,168,336 and j in 1,4,24,72,168 (35 cells per symbol).
+   No cell reaches |t| > 2.1 on both symbols; signs differ between ETH and SOL (SOL mildly mean-reverting at every
+   horizon, ETH flat). Best hour effect (21-22 UTC, ETH t 2.7 / SOL 1.8) is ~0.06%/h = below the spread.
+   -> no time-series momentum, no usable seasonality in the two most liquid coins. Did not download the other
+   four coins (130+ calls) because the alt-coins are one correlated bet with wider spreads.
+* XAGUSD min = 50 oz (~$2,430 notional) -> unusable. Softs spreads 0.25-0.64% + short sessions -> not pursued.
+* US Oil H_1: 2024-04-28 -> 2026-11-13 (14.4k bars). Price range 55-112. Weekend gaps: mean |1.08%|, max 12.1%
+  => at 1 unit a weekend gap alone can cost $1-10, so oil must be flat over weekends on a $30 account.
+S2 (statistics, IS only; oil, 445 days): hour-of-day (24), six intraday continuation pairs (Asia->rest, pre-open->US,
+   US first 3h -> last 2h ...), daily momentum 1/2/3/5/10/20 d -> next day, four yesterday->session cells.
+   All |t| < 2; hit rates 45-52%. Mild 1-day reversal (-15 bp, t -1.65) is smaller than the 22 bp spread.
+   -> no intraday or daily momentum in WTI on this sample.
+* US Small Cap 2000 (id 2521) H_1: 2024-04-28 -> 2026-11-13, 15,065 bars, price 1708-3070 (0.1 unit = $170-307 notional).
+  Weekend gaps mean |0.36%|, q95 1.19%, max 3.83% (= up to $11 at 0.1 unit) -> must be flat over weekends.
+  Daily-break gap mean 0.05%. Spread: 0.76 pts at the Friday close (my sample), 0.30 in session (DELTA) -> spec uses 0.76.
+
+S3 (statistics, IS only = 2024-04-28 -> 2026-02-11, 442 days; Small Cap): hour-of-day in New York time (24), six session
+   means, seven intraday continuation pairs, daily momentum 1/2/3/5/10 d, day-of-week (5)  (~47 cells).
+   What stood out, each with a textbook reason:
+   - overnight drift 16:00 -> 09:00 NY +8.1 bp (t 1.8) - but spread 3 bp + financing 2.5 bp leaves ~2 bp: not tradable.
+   - overnight move -> first cash hour: corr -0.154, fade earns 6.2 bp gross (t 2.7, hit 56%)  <- liquidity provision /
+     overreaction of thin pre-market small-cap pricing; someone who must trade the open pays for it.
+   - yesterday's return -> today's 09:00-16:00: fade 9.8 bp (t 1.7).
+   No intraday momentum (first hour -> last hour t 0.0).
+S4 (IS, 30 conditional cells): fade the overnight move at 09:00 NY when |overnight| > thr x 20-day daily vol, net of spread.
+   Hold to 16:00: thr 0 / .25 / .5 / .75 / 1.0 -> PF 1.21 / 1.42 / 1.66 / 2.34 / 2.11 (n 420 / 260 / 143 / 88 / 39).
+   Monotone in the size of the gap = what a liquidity effect should look like. "Long after a down day" also positive
+   (z<-1: PF 2.4, n 57) but "short after an up day" is not -> not used.
+
+## Candidate: overnight-gap fade on US Small Cap 2000 (hypothesis fixed before any engine run)
+Rule: at 09:00 New York (close of the 08:00 NY H1 bar) compute on = ln(price / yesterday's 16:00 NY price) and
+z = on / std(last 20 daily 16:00->16:00 returns). If |z| > thr: market order against the overnight move, 0.1 unit,
+hard stop $1.50 (15 pts), close at 16:00 NY (6 H1 bars). No trade on NYSE holidays / early-close days (calendar).
+T2 (engine, IS, 24 sets): thr 0/.25/.5/.75 x hold 1/3/6 bars x stop 0.5/1.0 vol (capped $1.5). Hold-to-close best at every
+   thr: PF 1.20 / 1.38 / 1.48 / 1.65. 1-bar and 3-bar holds PF 1.1-1.3.
+T3 (engine, IS, 18 sets): risk cap 0.75/1.0/1.5 x gap-fill target 0/0.5/1.0 x thr .25/.5. A profit target HURTS (PF 0.87-1.24):
+   the profit is in the days that keep reversing to the close (TIME exits avg +$1.6; 43-58% of trades stop out).
+T4 (engine, IS, 19 sets) neighbours of thr .5 / risk 1.5 / hold 6 / W 20 / entry 09:00 NY, base PF 1.50 (143 trades, DD 11.3):
+   thr .3/.4/.6/.7 -> 1.38/1.44/1.40/1.64 | risk 1.0/1.25/1.75 -> 1.64/1.42/1.44 | hold 4/5/7 -> 1.41/1.44/1.41 |
+   W 10/30/60 -> 1.30/1.58/1.45 | entry 08:00/10:00 NY -> 1.57/1.23 | long only 1.44 (59) | short only 1.54 (84).
+   IS quarters (2024Q2..2026Q1) PF: 1.62 0.58 1.78 2.18 2.21 1.52 1.32 0.22(7 trades).
+   Same rule on US Oil (1 unit), thr .25/.5: PF 0.66 / 0.54 -> NOT a cross-asset effect; equity-index specific. Oil dropped.
+   Chosen before looking at OOS: thr 0.5, stop $1.50, hold to 16:00, W 20. (thr 0.5 rather than 0.7 only because the
+   gate needs >= 200 trades; IS drawdown $11.3 is already close to the $12 gate - expected to be the weak point.)
+
+## Phase 2 result - official run (one forward look at the last 30%, nothing tuned afterwards)
+```
+period 2024-04-29 -> 2026-11-13  (OOS from 2026-02-10)
+full   trades= 223 PF=1.31 net=$54.17 win=43% DD=$18.87 worst=$-1.50 tr/day=0.3 active=34% wk+=51%
+is     trades= 143 PF=1.45 net=$49.22 win=43% DD=$14.69 worst=$-1.50 tr/day=0.3 active=31% wk+=55%
+oos    trades=  80 PF=1.07 net=$4.95 win=41% DD=$18.87 worst=$-1.50 tr/day=0.4 active=40% wk+=42%
+stress trades= 223 PF=1.28 net=$49.88 win=42% DD=$19.79 worst=$-1.50 tr/day=0.3 active=34% wk+=51%
+FAIL pf_oos >= 1.15 (1.07) and max drawdown <= $12 ($18.87).  PASS the other ten.   NOT QUALIFIED
+```
+| period | trades | net $ | PF |   | period | trades | net $ | PF |
+|---|---|---|---|---|---|---|---|---|
+| 2024 (May-Dec) | 49 | +4.5 | 1.11 | | 2024H1 | 13 | +4.1 | 1.61 |
+| 2025 | 87 | +51.7 | 1.84 | | 2024H2 | 36 | +0.4 | 1.01 |
+| 2026 (Jan-Nov) | 87 | -2.1 | 0.97 | | 2025H1 | 50 | +40.0 | 2.19 |
+| | | | | | 2025H2 | 37 | +11.7 | 1.42 |
+| | | | | | 2026H1 | 46 | +5.3 | 1.12 |
+| | | | | | 2026H2 | 41 | -7.4 | 0.76 |
+
+Quarters 2024Q2..2026Q4 PF: 1.61 0.47 1.78 2.18 2.20 1.51 1.32 1.32 0.80 0.73 0.80 (last three all below 1).
+Shorts 129 trades PF 1.38, longs 94 trades PF 1.22. Exits: 110 stops (-$165.00), 113 time exits (+$219.17, avg +$1.94).
+68% of months profitable, 9 max consecutive losses, lowest equity $19.38, no overnight holds, zero financing.
+
+How to read it:
+* $51.7 of the $54.2 comes from calendar 2025. 2024 and 2026 are flat. An effect that is "on" for one year in three
+  is not something to put a $30 account behind.
+* OOS neighbours (looked at, not used): thr 0/.25/.3/.4/.5/.6/.7/.75/1.0 -> PF 0.99/1.15/1.11/1.08/1.07/1.09/0.89/1.01/1.47;
+  risk 1.0/1.25/1.75 -> 1.04/1.06/1.09; hold 1/3/4/5/7 bars -> 1.28/1.13/1.05/1.04/1.07; W 10/30/60 -> 1.10/1.20/1.06;
+  entry 08:00/10:00 NY -> 0.98/1.16. The IS dose-response (bigger gap -> bigger reversal) is gone out of sample, so the
+  most persuasive piece of IS evidence did not replicate. OOS is "slightly better than zero" everywhere, nowhere >= 1.3
+  with a meaningful trade count.
+* Drawdown $18.87 = 63% of the account. This is structural, not a tuning problem: 0.1 unit is $170-300 of index, a
+  $1.50 stop is 0.5-0.8% and is hit on ~49% of trades, and the edge per trade ($0.24) is small against a per-trade
+  swing of about +/-$1.7. Tighter stops (IS: $0.75 / $1.00) did not lower the drawdown.
+* Costs are not the problem here (stress PF 1.28 vs 1.31, spec spread 0.76 is 2.5x the in-session 0.30).
+* H1 bars + "SL first" pessimism: some of the 110 stop-outs would have survived on M1 bars; the real PF is probably a
+  little higher than shown, but not enough to change the verdict.
+
+## Phase 2 trial count
+* Engine parameter sets, all on the first 70%: T1 16 (crypto Donchian) + T2 24 + T3 18 + T4 19 (gap fade) + 2 (oil
+  generalisation) = 79.
+* Statistical cells, all on the first 70%: S1 132 (ETH, SOL) + S2 ~44 (oil) + S3 ~47 + S4 30 (Small Cap) = ~250.
+* Looks at the last 30%: 1 official run of the pre-chosen set, then 22 neighbour sets for description only.
+
+## Phase 2 verdict
+No qualifying system on my turf.
+* Crypto (ETH, SOL, 2.9 years of H1): no time-series momentum at any horizon from 1 h to 14 days, no seasonality bigger
+  than the spread, H1 breakouts lose. Every coin's minimum is $30-100 notional and was 2-3x that in 2024-25, so real
+  trend-following stops are unaffordable anyway.
+* US Oil (2.5 years): no intraday or daily momentum; weekend gaps up to 12% rule out holding; the gap-fade rule loses.
+* US Small Cap 2000 (2.5 years): the only effect with a reason and an IS plateau (overnight-gap fade, IS PF 1.45,
+  all 16 neighbours 1.23-1.64) came out at PF 1.07 on the unseen 9 months and needs a $19 drawdown to earn $54.
+The submitted files are that system with its true numbers. It does NOT deserve a demo forward test on a $30 account;
+at most it is a weak lead worth re-testing on M1/M5 bars and on a larger account where 0.1 unit is a small position.
+
+## Known weaknesses / what I would try next
+* One symbol, 0.24 trades/day. The same idea on S&P 500 / Nasdaq needs $760+ notional at minimum size.
+* Holiday handling is a hard-coded NYSE calendar (2024-2027) in gapfade.py and CharlieBot.cs; extend it yearly.
+* cBot compiles (dotnet build, 0 warnings) but has not been run in cTrader. Its time exit fires on the close of the
+  15:00 NY bar plus a 30 s timer safety net; the backtest exits at that bar's close.
+* If continued: (1) M5 bars for the 09:00-16:00 window to remove the H1 stop pessimism, (2) condition on the cash-open
+  direction (enter 09:35 only if the first 5 minutes do not extend the gap), (3) test on a 5-10 year small-cap futures
+  history from another source - 2.5 years with one good year cannot settle it.
+* Tooling note for the supervisor: parallel get_trendbars calls overwrite each other's result file when they land in the
+  same millisecond; always re-check for missing windows (agents/CHARLIE/gaps.py).
+
+Files: strategy.py + gapfade.py (signals), specs.json, CharlieBot.cs, lab.py / gaps.py (research helpers),
+phase1_files/ and round1/ (phase-1 material), submissions/CHARLIE/metrics.json + trades.csv (official run above).

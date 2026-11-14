@@ -271,3 +271,32 @@ Round 2 added about 45 parameter sets (15 sibling, 30 exit). Running total ~3,49
 Honest PF estimate is unchanged at roughly 1.3-1.5 on the S&P alone, but the failed Russell replication is
 real evidence against it being a structural effect. Not qualified; not a candidate for more than a
 small-size observational forward test. Round-2 scripts: `research/r2_1.py`, `research/r2_2.py`.
+
+---
+
+# Phase 2 (long-history brief, BRIEF2.md)
+
+## P2.1 Frozen PreOpenFade on unseen history — IT FAILS
+
+Data: US SP 500 (2517) M_15 downloaded as far back as the API has it: **2024-04-08 -> 2026-11-13**, 60,667 bars
+(API returns nothing earlier; one hole 2024-04-08..04-19; ~70 calls, several lost to result-file name collisions
+in parallel batches and re-fetched; `agents/DELTA/gaps.py` lists holes). The previously missing M_15 stretch
+2026-09-11..10-28 was filled too.
+
+Rule frozen exactly as phase 1 (N=32, 03:00-09:30 NY, SL min(2 ATR, 14), TP 1 ATR, 16 M15 bars), simulated on M_15
+bars with the phase-2 engine, spread 0.36, 0.1 units. Everything before 2026-03-26 had never been looked at.
+
+| segment | trades | PF | net $ | win | max DD $ | months + |
+|---|---|---|---|---|---|---|
+| **unseen 2024-04 .. 2026-03-25** | 848 | **0.89** | -34.12 | 61% | 42.17 | 33% |
+| seen 2026-03-26 .. 2026-11-13 | 249 | 1.42 | +33.70 | 70% | 5.99 | 89% |
+| unseen, zero spread | 852 | 1.01 | +2.75 | 65% | | 46% |
+| unseen, 1.5x / 2x spread | 849 / 847 | 0.85 / 0.82 | | | | |
+
+By half-year (entry date): 2024H1 0.94 (97) | 2024H2 0.79 (236) | 2025H1 1.10 (222) | 2025H2 0.81 (194) |
+2026H1 1.03 (192) | 2026H2 1.37 (156).
+
+**Verdict: the phase-1 lead was a 7-month artefact.** On two unseen years it has no edge even before costs
+(PF 1.01 at zero spread). The failed Russell replication in round 2 was the correct warning. The rule is dropped;
+no `prove`/session tweaks were tried on it (improving a rule with gross PF 1.0 would be curve fitting).
+Script: `p2/a1.py` (core in `p2/core.py`). Trials so far in phase 2: 1 frozen rule (+3 spread levels).

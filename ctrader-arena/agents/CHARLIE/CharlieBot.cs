@@ -1,17 +1,13 @@
-// CharlieBot.cs - cTrader Automate cBot, port of agents/CHARLIE/strategy.py (round 2).
-// USDJPY New-York-morning passive band fade. Attach to a USDJPY M15 chart.
-// HONEST STATUS: no statistical edge (pre-sample PF 1.00 over 88 trades; forward PF 2.30 on only 26 trades with
-// out-of-sample PF 0.48). Demo observation only. The Round 1 Range Break bot is kept in round1/.
-//
-// On every closed M15 bar that STARTED 08:00 <= t < 12:00 New York time (Mon-Fri):
-//   z = (close - SMA20(close)) / stdev20(close)   (sample stdev), ATR = simple mean of true range over 14 bars
-//   |z| > 2.0 -> fade with a LIMIT order 0.5 ATR beyond the close:
-//       z < 0: BUY limit  at  bidClose - 0.5 ATR            (fills when the ASK trades down to it)
-//       z > 0: SELL limit at  bidClose + spread + 0.5 ATR   (fills when the BID trades up to it)
-//   order valid 30 minutes; SL = min(1.5 ATR, 22 pips); TP = max(|close - SMA20|, 0.3 ATR); time exit 90 min after fill.
-// One position / one pending order per symbol, minimum volume by default, hard SL and TP on every order,
-// spread filter, daily loss limit, max-drawdown kill switch. All prices in price units; converted with Symbol.PipSize.
+// CharlieBot (phase 2) - overnight-gap fade on US Small Cap 2000, H1 chart, minimum size.
+// Same logic and parameters as agents/CHARLIE/strategy.py (gapfade.py):
+//   09:00 New York (close of the 08:00 NY H1 bar):
+//       on = ln(close / yesterday's 16:00 NY close);  z = on / stdev(last 20 daily 16:00->16:00 log returns)
+//       if |z| > Threshold and today is a normal NYSE session -> market order AGAINST the overnight move
+//   hard stop-loss RiskUsd (default $1.50 = 15 index points at 0.1 unit), no profit target
+//   16:00 New York: close the position.  Never held overnight / over a weekend.
+// Attach to: US Small Cap 2000, timeframe H1 (Hour). One instance. Backtest status: NOT QUALIFIED (see NOTES.md).
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using cAlgo.API;
 using cAlgo.API.Internals;
@@ -21,112 +17,187 @@ namespace cAlgo.Robots
     [Robot(TimeZone = TimeZones.UTC, AccessRights = AccessRights.None)]
     public class CharlieBot : Robot
     {
-        [Parameter("Band period", DefaultValue = 20, MinValue = 5)] public int BandPeriod { get; set; }
-        [Parameter("ATR period", DefaultValue = 14, MinValue = 2)] public int AtrPeriod { get; set; }
-        [Parameter("Z threshold", DefaultValue = 2.0, MinValue = 0.5)] public double ZThreshold { get; set; }
-        [Parameter("Limit offset (ATR)", DefaultValue = 0.5, MinValue = 0)] public double OffsetAtr { get; set; }
-        [Parameter("Stop (ATR)", DefaultValue = 1.5, MinValue = 0.1)] public double StopAtr { get; set; }
-        [Parameter("Stop cap (pips)", DefaultValue = 22.0, MinValue = 1)] public double StopCapPips { get; set; }
-        [Parameter("Min take-profit (ATR)", DefaultValue = 0.3, MinValue = 0)] public double TpMinAtr { get; set; }
-        [Parameter("Order valid (minutes)", DefaultValue = 30, MinValue = 1)] public int ValidMinutes { get; set; }
-        [Parameter("Max hold (minutes)", DefaultValue = 90, MinValue = 1)] public int HoldMinutes { get; set; }
-        [Parameter("Session start (NY hour)", DefaultValue = 8.0)] public double StartHour { get; set; }
-        [Parameter("Session end (NY hour)", DefaultValue = 12.0)] public double EndHour { get; set; }
-        [Parameter("Volume in units (0 = symbol minimum)", DefaultValue = 0.0, MinValue = 0)] public double VolumeUnits { get; set; }
-        [Parameter("Max spread (pips)", DefaultValue = 2.1, MinValue = 0)] public double MaxSpreadPips { get; set; }
-        [Parameter("Daily loss limit (account ccy)", DefaultValue = 1.5, MinValue = 0)] public double DailyLossLimit { get; set; }
-        [Parameter("Max drawdown kill switch (account ccy)", DefaultValue = 9.0, MinValue = 0)] public double MaxDrawdown { get; set; }
-        [Parameter("Label", DefaultValue = "CHARLIE-FX")] public string Label { get; set; }
+        [Parameter("Volume (units, 0 = symbol minimum)", DefaultValue = 0, MinValue = 0)]
+        public double VolumeUnits { get; set; }
 
+        [Parameter("Gap threshold (x daily vol)", DefaultValue = 0.5, MinValue = 0)]
+        public double Threshold { get; set; }
+
+        [Parameter("Vol window (days)", DefaultValue = 20, MinValue = 5)]
+        public int VolWindow { get; set; }
+
+        [Parameter("Signal bar hour (New York)", DefaultValue = 8, MinValue = 0, MaxValue = 23)]
+        public int SignalHourNy { get; set; }
+
+        [Parameter("Exit hour (New York)", DefaultValue = 16, MinValue = 1, MaxValue = 23)]
+        public int ExitHourNy { get; set; }
+
+        [Parameter("Stop-loss risk per trade (USD)", DefaultValue = 1.5, MinValue = 0.1)]
+        public double RiskUsd { get; set; }
+
+        [Parameter("Max spread (price units)", DefaultValue = 1.0, MinValue = 0)]
+        public double MaxSpread { get; set; }
+
+        [Parameter("Daily loss limit (USD)", DefaultValue = 1.6, MinValue = 0)]
+        public double DailyLossLimit { get; set; }
+
+        [Parameter("Max drawdown kill-switch (USD)", DefaultValue = 12.0, MinValue = 0)]
+        public double MaxDrawdownUsd { get; set; }
+
+        private const string Label = "CharlieBot";
+        private TimeZoneInfo _ny;
         private double _peakEquity;
         private bool _killed;
-        private TimeZoneInfo _ny;
+        private DateTime _dayStartDate = DateTime.MinValue;
+        private double _dayStartBalance;
+
+        // NYSE full holidays and early-close days (published calendar): no trade.
+        private static readonly HashSet<DateTime> NyseOff = new HashSet<DateTime>(new[]
+        {
+            "2024-01-01","2024-01-15","2024-02-19","2024-03-29","2024-05-27","2024-06-19","2024-07-03","2024-07-04","2024-09-02",
+            "2024-11-28","2024-11-29","2024-12-24","2024-12-25",
+            "2025-01-01","2025-01-09","2025-01-20","2025-02-17","2025-04-18","2025-05-26","2025-06-19","2025-07-03","2025-07-04",
+            "2025-09-01","2025-11-27","2025-11-28","2025-12-24","2025-12-25",
+            "2026-01-01","2026-01-19","2026-02-16","2026-04-03","2026-05-25","2026-06-19","2026-07-03","2026-09-07","2026-11-26",
+            "2026-11-27","2026-12-24","2026-12-25",
+            "2027-01-01","2027-01-18","2027-02-15","2027-03-26","2027-05-31","2027-06-18","2027-07-05","2027-09-06","2027-11-25",
+            "2027-11-26","2027-12-24"
+        }.Select(s => DateTime.ParseExact(s, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)));
 
         protected override void OnStart()
         {
-            _peakEquity = Account.Equity;
             try { _ny = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time"); }
             catch (Exception) { _ny = TimeZoneInfo.FindSystemTimeZoneById("America/New_York"); }
-            if (TimeFrame != TimeFrame.Minute15) Print("WARNING: researched on M15 bars; current timeframe is {0}", TimeFrame);
-            Timer.Start(60);
+            _peakEquity = Account.Equity;
+            _dayStartBalance = Account.Balance;
+            if (TimeFrame != TimeFrame.Hour)
+                Print("WARNING: CharlieBot is designed for the H1 timeframe.");
+            Timer.Start(TimeSpan.FromSeconds(30));
         }
 
-        private Position Pos() { return Positions.FirstOrDefault(p => p.Label == Label && p.SymbolName == SymbolName); }
-        private PendingOrder Pend() { return PendingOrders.FirstOrDefault(o => o.Label == Label && o.SymbolName == SymbolName); }
-
-        private void CheckKill()
+        private DateTime ToNy(DateTime utc)
         {
-            if (_killed) return;
-            _peakEquity = Math.Max(_peakEquity, Account.Equity);
-            if (MaxDrawdown > 0 && _peakEquity - Account.Equity >= MaxDrawdown)
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), _ny);
+        }
+
+        private Position MyPosition()
+        {
+            return Positions.FirstOrDefault(p => p.Label == Label && p.SymbolName == SymbolName);
+        }
+
+        private void CloseMine(string why)
+        {
+            foreach (var p in Positions.Where(p => p.Label == Label && p.SymbolName == SymbolName).ToArray())
+            {
+                ClosePosition(p);
+                Print("Closed: {0}", why);
+            }
+        }
+
+        private void RiskChecks()
+        {
+            var nyNow = ToNy(Server.Time);
+            if (nyNow.Date != _dayStartDate)
+            {
+                _dayStartDate = nyNow.Date;
+                _dayStartBalance = Account.Balance;
+            }
+            if (Account.Equity > _peakEquity) _peakEquity = Account.Equity;
+            if (!_killed && MaxDrawdownUsd > 0 && _peakEquity - Account.Equity >= MaxDrawdownUsd)
             {
                 _killed = true;
-                Print("KILL SWITCH: drawdown {0:F2} >= {1:F2}", _peakEquity - Account.Equity, MaxDrawdown);
-                var o = Pend(); if (o != null) CancelPendingOrder(o);
-                var p = Pos(); if (p != null) ClosePosition(p);
+                CloseMine("max drawdown kill-switch");
+                Print("KILL-SWITCH: drawdown {0:F2} >= {1:F2}. Bot stops trading.", _peakEquity - Account.Equity, MaxDrawdownUsd);
                 Stop();
             }
         }
 
-        private double TodayNet()
+        private bool DailyLossHit()
         {
-            var today = Server.Time.Date;
-            double closed = History.Where(h => h.Label == Label && h.SymbolName == SymbolName && h.ClosingTime.Date == today).Sum(h => h.NetProfit);
-            var p = Pos();
-            return closed + (p != null ? p.NetProfit : 0.0);
+            return DailyLossLimit > 0 && _dayStartBalance - Account.Equity >= DailyLossLimit;
         }
-
-        protected override void OnTick() { CheckKill(); }
 
         protected override void OnTimer()
         {
-            // time exit: 90 minutes after the fill
-            var p = Pos();
-            if (p != null && (Server.Time - p.EntryTime).TotalMinutes >= HoldMinutes) ClosePosition(p);
+            RiskChecks();
+            // time exit safety net: flat at/after the exit hour (also covers a missing 15:00 bar)
+            var p = MyPosition();
+            if (p != null)
+            {
+                var nyNow = ToNy(Server.Time);
+                var nyEntry = ToNy(p.EntryTime);
+                if (nyNow.Date > nyEntry.Date || nyNow.Hour >= ExitHourNy)
+                    CloseMine("time exit " + ExitHourNy + ":00 New York");
+            }
         }
 
         protected override void OnBar()
         {
-            CheckKill();
+            RiskChecks();
             if (_killed) return;
-            int i = Bars.Count - 2;                                   // bar that has just closed
-            if (i < Math.Max(BandPeriod, AtrPeriod) + 1) return;
-            if (Pos() != null || Pend() != null) return;              // one position / order at a time
-            if (DailyLossLimit > 0 && TodayNet() <= -DailyLossLimit) return;
+            int last = Bars.Count - 2;                 // the bar that has just closed
+            if (last < 30) return;
+            var nyOpen = ToNy(Bars.OpenTimes[last]);
 
-            DateTime ny = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(Bars.OpenTimes[i], DateTimeKind.Utc), _ny);
-            double hour = ny.Hour + ny.Minute / 60.0;
-            if (ny.DayOfWeek == DayOfWeek.Saturday || ny.DayOfWeek == DayOfWeek.Sunday) return;
-            if (hour < StartHour || hour >= EndHour) return;
+            // time exit: the 15:00-16:00 NY bar has closed
+            if (nyOpen.Hour == ExitHourNy - 1)
+                CloseMine("time exit " + ExitHourNy + ":00 New York");
 
-            double sum = 0, sum2 = 0;
-            for (int j = i - BandPeriod + 1; j <= i; j++) { double x = Bars.ClosePrices[j]; sum += x; sum2 += x * x; }
-            double mean = sum / BandPeriod;
-            double sd = Math.Sqrt(Math.Max(0.0, (sum2 - BandPeriod * mean * mean) / (BandPeriod - 1)));   // sample stdev (pandas default)
-            if (sd <= 0) return;
-            double atr = 0;
-            for (int j = i - AtrPeriod + 1; j <= i; j++)
+            if (nyOpen.Hour != SignalHourNy) return;
+            var today = nyOpen.Date;
+            if (today.DayOfWeek == DayOfWeek.Saturday || today.DayOfWeek == DayOfWeek.Sunday) return;
+            if (NyseOff.Contains(today)) return;
+            if (MyPosition() != null) return;
+            if (DailyLossHit()) { Print("Daily loss limit reached - no trade today."); return; }
+
+            // collect the last VolWindow+1 cash closes (close of the 15:00 NY bar) before today
+            var closes = new List<double>();
+            DateTime lastCloseDay = DateTime.MinValue;
+            for (int i = last - 1; i >= 0 && closes.Count < VolWindow + 1; i--)
             {
-                double pc = Bars.ClosePrices[j - 1];
-                atr += Math.Max(Bars.HighPrices[j] - Bars.LowPrices[j], Math.Max(Math.Abs(Bars.HighPrices[j] - pc), Math.Abs(Bars.LowPrices[j] - pc)));
+                var t = ToNy(Bars.OpenTimes[i]);
+                if (t.Hour == ExitHourNy - 1 && t.Date < today)
+                {
+                    if (closes.Count == 0) lastCloseDay = t.Date;
+                    closes.Add(Bars.ClosePrices[i]);
+                }
             }
-            atr /= AtrPeriod;
-            double c = Bars.ClosePrices[i];
-            double z = (c - mean) / sd;
-            if (Math.Abs(z) <= ZThreshold) return;
-            if (Symbol.Spread > MaxSpreadPips * Symbol.PipSize) { Print("Signal skipped: spread {0}", Symbol.Spread); return; }
+            if (closes.Count < VolWindow + 1) return;
+            if ((today - lastCloseDay).TotalDays > 4) return;      // stale reference
 
-            double vol = VolumeUnits > 0 ? Symbol.NormalizeVolumeInUnits(VolumeUnits, RoundingMode.Down) : Symbol.VolumeInUnitsMin;
-            if (vol < Symbol.VolumeInUnitsMin) vol = Symbol.VolumeInUnitsMin;
-            double slPips = Math.Min(StopAtr * atr / Symbol.PipSize, StopCapPips);
-            double tpPips = Math.Max(Math.Abs(c - mean), TpMinAtr * atr) / Symbol.PipSize;
-            DateTime expiry = Server.Time.AddMinutes(ValidMinutes);
-            TradeResult res;
-            if (z < 0)
-                res = PlaceLimitOrder(TradeType.Buy, SymbolName, vol, Math.Round(c - OffsetAtr * atr, Symbol.Digits), Label, slPips, tpPips, expiry);
+            var rets = new double[VolWindow];
+            for (int k = 0; k < VolWindow; k++) rets[k] = Math.Log(closes[k] / closes[k + 1]);
+            double mean = rets.Average();
+            double vol = Math.Sqrt(rets.Sum(r => (r - mean) * (r - mean)) / (VolWindow - 1));   // sample std, as pandas
+            if (vol <= 0) return;
+
+            double price = Bars.ClosePrices[last];
+            double on = Math.Log(price / closes[0]);
+            double z = on / vol;
+            if (Math.Abs(z) <= Threshold) return;
+
+            if (Symbol.Spread > MaxSpread)
+            {
+                Print("Spread {0} > {1} - signal skipped.", Symbol.Spread, MaxSpread);
+                return;
+            }
+
+            double units = VolumeUnits > 0 ? VolumeUnits : Symbol.VolumeInUnitsMin;
+            units = Symbol.NormalizeVolumeInUnits(units, RoundingMode.Down);
+            if (units < Symbol.VolumeInUnitsMin) units = Symbol.VolumeInUnitsMin;
+            double slDistance = RiskUsd / units;                    // price units (USD-quoted index)
+            double slPips = Math.Round(slDistance / Symbol.PipSize, 1);
+            var side = on > 0 ? TradeType.Sell : TradeType.Buy;     // fade the overnight move
+            var res = ExecuteMarketOrder(side, SymbolName, units, Label, slPips, null);
+            if (res.IsSuccessful)
+                Print("{0} {1} units, z={2:F2}, SL {3} pips", side, units, z, slPips);
             else
-                res = PlaceLimitOrder(TradeType.Sell, SymbolName, vol, Math.Round(c + Symbol.Spread + OffsetAtr * atr, Symbol.Digits), Label, slPips, tpPips, expiry);
-            if (!res.IsSuccessful) Print("Order failed: {0}", res.Error);
+                Print("Order failed: {0}", res.Error);
+        }
+
+        protected override void OnStop()
+        {
+            // positions keep their hard stop; nothing else to do
         }
     }
 }
