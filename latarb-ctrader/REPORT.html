@@ -1,0 +1,616 @@
+<title>cTrader BTC Lag Test</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: report column (max 780px) with a sticky contents rail on wide screens; charts span the column. */
+:root {
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --sunk: #eef1f4;
+  --ink: #12161c;
+  --ink-2: #48515e;
+  --muted: #747d8b;
+  --line: #dfe4ea;
+  --axis: #c3c9d1;
+  --accent: #2a78d6;
+  --accent-ink: #1c5cab;
+  --good: #0a7a0a;
+  --good-bg: #e3f3e3;
+  --bad: #c62f2f;
+  --bad-bg: #fbe6e6;
+  --warn: #8a5a00;
+  --warn-bg: #fdf1d8;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+  --seq-lo: #e8f1fc; --seq-hi: #1c5cab;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1114; --surface: #161a1f; --sunk: #1d2228; --ink: #eef1f4; --ink-2: #b7bfca; --muted: #828b98;
+    --line: #2a3038; --axis: #3a414b; --accent: #3987e5; --accent-ink: #86b6ef;
+    --good: #3dbb3d; --good-bg: #13291a; --bad: #ec6b6b; --bad-bg: #2e1718; --warn: #e2a63a; --warn-bg: #2d2412;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    --seq-lo: #1b2533; --seq-hi: #5598e7;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1114; --surface: #161a1f; --sunk: #1d2228; --ink: #eef1f4; --ink-2: #b7bfca; --muted: #828b98;
+  --line: #2a3038; --axis: #3a414b; --accent: #3987e5; --accent-ink: #86b6ef;
+  --good: #3dbb3d; --good-bg: #13291a; --bad: #ec6b6b; --bad-bg: #2e1718; --warn: #e2a63a; --warn-bg: #2d2412;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+  --seq-lo: #1b2533; --seq-hi: #5598e7;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.shell { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 48px; padding-block: 40px 96px; }
+nav.toc { position: sticky; top: calc(24px + env(safe-area-inset-top, 0px)); align-self: start; font-size: 13px; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: s; }
+nav.toc li { counter-increment: s; }
+nav.toc a { display: flex; gap: 8px; color: var(--ink-2); text-decoration: none; padding: 3px 8px; border-radius: 4px; }
+nav.toc a::before { content: counter(s, decimal-leading-zero); font-family: var(--f-mono); color: var(--muted); font-size: 11px; padding-top: 2px; }
+nav.toc a:hover, nav.toc a:focus-visible { background: var(--sunk); color: var(--ink); outline: none; }
+nav.toc .label { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-size: 12px; margin: 0 0 8px 8px; }
+main { min-width: 0; max-width: 780px; }
+h1, h2, h3 { font-family: var(--f-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(34px, 6vw, 52px); font-weight: 700; letter-spacing: -.01em; }
+h2 { font-size: 28px; font-weight: 600; margin-bottom: 14px; }
+h3 { font-size: 19px; font-weight: 600; margin: 28px 0 8px; }
+p { margin: 0 0 14px; }
+.lede { font-size: 18px; color: var(--ink-2); max-width: 62ch; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; color: var(--muted); letter-spacing: .04em; margin-bottom: 14px; }
+section { padding-top: 56px; scroll-margin-top: 16px; }
+section > h2 { display: flex; align-items: baseline; gap: 12px; }
+section > h2 .n { font-family: var(--f-mono); font-size: 14px; color: var(--muted); font-weight: 400; }
+code, .mono { font-family: var(--f-mono); font-size: .88em; }
+code { background: var(--sunk); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+a { color: var(--accent-ink); }
+ul.tight { margin: 0 0 14px; padding-left: 20px; } ul.tight li { margin: 4px 0; }
+.num { font-variant-numeric: tabular-nums; }
+/* verdict */
+.verdict { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 28px 0 8px; }
+.vcard { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; min-width: 0; }
+.vcard .q { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.vcard .a { font-family: var(--f-display); font-size: 22px; font-weight: 600; line-height: 1.2; margin-bottom: 8px; }
+.vcard p { font-size: 14px; color: var(--ink-2); margin: 0; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-mono); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.pill.bad { color: var(--bad); background: var(--bad-bg); }
+.pill.good { color: var(--good); background: var(--good-bg); }
+.pill.warn { color: var(--warn); background: var(--warn-bg); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin: 20px 0; }
+.kpi { background: var(--surface); padding: 14px 16px; min-width: 0; }
+.kpi .v { font-family: var(--f-mono); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.kpi .k { font-size: 12px; color: var(--muted); }
+/* figures */
+figure { margin: 22px 0 26px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 16px 12px; min-width: 0; }
+figure .ft { font-weight: 600; font-size: 15px; }
+figure .fs { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.chart { width: 100%; position: relative; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart svg text { font-family: var(--f-body); font-size: 11px; fill: var(--muted); }
+.chart svg text.lbl { fill: var(--ink-2); font-size: 12px; }
+.chart svg text.val { fill: var(--ink); font-family: var(--f-mono); font-size: 11px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--ink-2); margin: 2px 0 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.pair > div { min-width: 0; }
+details.data { margin-top: 8px; font-size: 13px; }
+details.data summary { cursor: pointer; color: var(--accent-ink); width: max-content; }
+.tw { overflow-x: auto; margin: 8px 0 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+.tbl { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; margin: 18px 0 24px; }
+.tbl table td:first-child, .tbl table th:first-child { padding-left: 14px; }
+.tbl tr:last-child td { border-bottom: 0; }
+.pos { color: var(--good); } .neg { color: var(--bad); }
+/* heatmap */
+table.heat td.c { text-align: center; font-family: var(--f-mono); font-size: 13px; padding: 9px 4px; border: 2px solid var(--surface); border-radius: 4px; }
+table.heat th { text-align: center; }
+table.heat td.rh { font-family: var(--f-mono); font-size: 13px; white-space: nowrap; color: var(--ink-2); }
+/* callouts */
+.note { border-left: 3px solid var(--warn); background: var(--warn-bg); padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 18px 0; font-size: 15px; }
+.note.bad { border-color: var(--bad); background: var(--bad-bg); }
+.note strong { color: var(--ink); }
+/* steps */
+ol.steps { list-style: none; padding: 0; margin: 18px 0; counter-reset: st; display: grid; gap: 14px; }
+ol.steps > li { counter-increment: st; display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; }
+ol.steps > li::before { content: counter(st); font-family: var(--f-mono); font-weight: 500; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--axis); display: grid; place-items: center; font-size: 13px; color: var(--ink-2); }
+ol.steps h4 { margin: 3px 0 4px; font-size: 16px; }
+ol.steps p { margin: 0 0 8px; color: var(--ink-2); font-size: 15px; }
+.code { position: relative; background: var(--sunk); border: 1px solid var(--line); border-radius: 6px; margin: 8px 0 12px; }
+.code pre { margin: 0; padding: 12px 14px; overflow-x: auto; font-family: var(--f-mono); font-size: 13px; line-height: 1.55; }
+.code button { position: absolute; top: 6px; right: 6px; font: 12px var(--f-body); background: var(--surface); color: var(--ink-2); border: 1px solid var(--line); border-radius: 4px; padding: 3px 9px; cursor: pointer; }
+.code button:hover, .code button:focus-visible { color: var(--ink); border-color: var(--axis); }
+.profiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+.profile { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px; min-width: 0; }
+.profile h4 { margin: 0 0 2px; font-family: var(--f-display); font-size: 18px; }
+.profile .sub { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+pre.mermaid { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 18px 0; }
+#tip { position: fixed; z-index: 20; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12px; line-height: 1.45; padding: 7px 10px; border-radius: 6px; max-width: 260px; font-variant-numeric: tabular-nums; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+#tip b { font-weight: 600; }
+#tip .sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 1000px) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 0; padding-block: 24px 72px; }
+  nav.toc { display: none; }
+}
+@media (max-width: 680px) {
+  .verdict, .profiles, .pair { grid-template-columns: minmax(0, 1fr); }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  h2 { font-size: 24px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <p class="label">Contents</p>
+  <ol>
+    <li><a href="#summary">Summary</a></li>
+    <li><a href="#mapping">From Polymarket to cTrader</a></li>
+    <li><a href="#facts">Account facts</a></li>
+    <li><a href="#lag">Test 1 · Does Deriv lag?</a></li>
+    <li><a href="#moves">Test 2 · Fast moves</a></li>
+    <li><a href="#replay">Test 3 · Latency replay</a></li>
+    <li><a href="#fivemin">Test 4 · 5-minute windows</a></li>
+    <li><a href="#demo">Test 5 · Demo trades</a></li>
+    <li><a href="#small">Small account</a></li>
+    <li><a href="#bot">The bot</a></li>
+    <li><a href="#method">Method &amp; parameters</a></li>
+    <li><a href="#verdict">Verdict &amp; next steps</a></li>
+  </ol>
+</nav>
+<main>
+<header>
+  <p class="eyebrow">DERIV cTRADER DEMO #2601018 · BTCUSD (ID 101) · TESTED 16 NOV 2026</p>
+  <h1>cTrader BTC Lag Test</h1>
+  <p class="lede">Can the Polymarket strategy, which bought BTC Up/Down shares when their price lagged the exchanges, work on a cTrader broker instead? This report covers every test I ran on your Deriv cTrader demo account, the data behind each one, and the bot that came out of it.</p>
+</header>
+
+<section id="summary">
+  <h2><span class="n">01</span>Summary</h2>
+  <div class="verdict">
+    <div class="vcard"><div class="q">Does Deriv's BTC price lag the exchanges?</div><div class="a">Barely: ≤ 0.5 s</div><p><span class="pill warn">tiny window</span></p><p style="margin-top:8px">Polymarket's books trailed BTC by seconds. Deriv's quote follows the exchanges within half a second.</p></div>
+    <div class="vcard"><div class="q">The 5-minute version</div><div class="a">No edge</div><p><span class="pill bad">0 of 18 rules profitable</span></p><p style="margin-top:8px">Every 5-minute rule tested on 90 days lost money, in-sample and out-of-sample. The spread costs more than any rule earned.</p></div>
+    <div class="vcard"><div class="q">The sub-second version</div><div class="a">Only if you're faster than Deriv</div><p><span class="pill warn">unproven</span></p><p style="margin-top:8px">In replay it pays only when your order lands before Deriv's feed catches up. A home connection likely can't. The bot measures this in paper mode.</p></div>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="v num" id="kpi-lag">≤ 0.5 s</div><div class="k">Deriv lag behind exchanges</div></div>
+    <div class="kpi"><div class="v num">$18.42</div><div class="k">spread per 1 BTC (0.03%)</div></div>
+    <div class="kpi"><div class="v num">$0.82</div><div class="k">margin for 0.01 BTC (min size)</div></div>
+    <div class="kpi"><div class="v num">0 / 18</div><div class="k">5-minute rules with an edge</div></div>
+  </div>
+  <p><strong>Bottom line:</strong> the method does not carry over in its 5-minute form, and only a very narrow sub-second version remains possible. I built that version as a cTrader bot (<a href="#bot">§10</a>) that starts in <strong>paper mode</strong>. It logs what it would have earned using Deriv's real quotes on your own machine and connection, the one measurement I could not make from this server. Do not fund it until that log shows a positive average over 100+ signals.</p>
+</section>
+
+<section id="mapping">
+  <h2><span class="n">02</span>From Polymarket to cTrader</h2>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>Polymarket bot</th><th>cTrader version</th></tr></thead>
+    <tbody>
+      <tr><td>What is traded</td><td>Up/Down shares paying $1 if BTC ends a 5- or 15-min window higher</td><td>Deriv BTCUSD CFD, which moves dollar for dollar with BTC</td></tr>
+      <tr><td>Leading price</td><td>Coinbase, Kraken, OKX, Binance</td><td>Same exchanges (OKX in the bot)</td></tr>
+      <tr><td>The inefficiency</td><td>Share prices on Polymarket's book were seconds stale</td><td>Deriv's BTC quote is at most about half a second stale</td></tr>
+      <tr><td>Cost to trade</td><td>Fee up to 3.5% of stake, spread ~1–2¢ per share</td><td>No commission; spread $18.42 per BTC (0.03%)</td></tr>
+      <tr><td>Minimum size</td><td>5 shares (~$2.50)</td><td>0.01 BTC (~$653 exposure, $0.82 margin)</td></tr>
+      <tr><td>Payoff</td><td>Bounded: lose at most the stake</td><td>Linear: losses grow with the move, so a stop is required</td></tr>
+    </tbody>
+  </table></div>
+  <p>Two tests follow from this. Does Deriv's quote lag enough to beat the spread (Tests 1–3)? Without the lag, can the "5-minute window" idea itself predict BTC well enough to pay for the spread (Test 4)?</p>
+</section>
+
+<section id="facts">
+  <h2><span class="n">03</span>Account and instrument facts (measured)</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Item</th><th>Value</th><th>How measured</th></tr></thead>
+    <tbody>
+      <tr><td>Account</td><td>Deriv cTrader demo #2601018, USD, balance $9,871.73 after tests</td><td><code>get_session_status</code>, <code>get_balance</code></td></tr>
+      <tr><td>Symbol</td><td>BTCUSD, id 101, quotes 24/7</td><td>Symbol list</td></tr>
+      <tr><td>Minimum volume</td><td><strong>0.01 BTC</strong> (API volume 1)</td><td>Probe limit order at $32,000 accepted, then cancelled</td></tr>
+      <tr><td>Spread</td><td>$18.42 typical; $18.60–$19.42 seen during moves</td><td>27 live quotes</td></tr>
+      <tr><td>Commission</td><td>$0</td><td>Two demo round trips</td></tr>
+      <tr><td>Margin, 0.01 BTC</td><td><strong>$0.82</strong> (about 1:800)</td><td>Equity − free margin with one position open</td></tr>
+      <tr><td>Price offset</td><td>Deriv bid ≈ Binance BTCUSDT − $40, ≈ Coinbase BTC-USD + $25</td><td>1,000 one-minute bars</td></tr>
+      <tr><td>Quote updates</td><td>About every 0.4–3 s when quiet</td><td>Timestamps on live quotes</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="lag">
+  <h2><span class="n">04</span>Test 1 · Does Deriv's price lag the exchanges?</h2>
+  <h3>Minute by minute</h3>
+  <p>I compared 1,000 one-minute Deriv BTCUSD bars (16.7 hours) with Binance and Coinbase over the same minutes. If Deriv lagged by several seconds, part of each exchange move would show up in Deriv's <em>next</em> minute.</p>
+  <figure>
+    <div class="ft">Correlation of Deriv's 1-minute moves with each exchange, by minute offset</div>
+    <div class="fs">Offset 0 = same minute. Offset +1 = the exchange's move one minute earlier.</div>
+    <div class="legend" id="lg-m1"></div>
+    <div class="chart" id="ch-m1"></div>
+  </figure>
+  <p>Same-minute correlation is <strong>0.994</strong> with both exchanges. A regression of Deriv's moves on this minute's and last minute's exchange moves implies a lag of <strong id="m1lag">about 0.4 s</strong>. There's no minute-scale lag to trade.</p>
+  <h3>Quote by quote</h3>
+  <p>For finer resolution I took <span id="nsamp">26</span> individual Deriv quotes, each stamped to the millisecond by Deriv's server, and lined them up against exchange quotes I recorded at the same time. For each candidate lag I measured how well Deriv's price matched the exchange price shifted by that lag: the lower the scatter, the better the fit.</p>
+  <figure>
+    <div class="ft">Fit of Deriv's quote to each exchange, by assumed lag</div>
+    <div class="fs">Scatter (standard deviation, $) between Deriv's mid and the exchange mid shifted by the lag. Lowest point = best estimate of Deriv's lag behind that exchange.</div>
+    <div class="legend" id="lg-lag"></div>
+    <div class="chart" id="ch-lag"></div>
+    <details class="data"><summary>Show best fits</summary><div class="tw" id="tb-lag"></div></details>
+  </figure>
+  <p>Deriv's quote sits about $1.30–$2 from each exchange. Best fits: about <strong>0.4–0.5 s behind OKX and Kraken</strong>, and slightly <em>ahead</em> of Binance and Coinbase (−0.4 to −0.5 s). Each exchange stamps time with its own clock, so the honest reading is that Deriv is <strong>within half a second of the market</strong>, at most 0.5 s behind its fastest sources. With 26 matched quotes the exact figure is uncertain by a few hundred milliseconds.</p>
+</section>
+
+<section id="moves">
+  <h2><span class="n">05</span>Test 2 · How often does BTC move more than the spread that fast?</h2>
+  <p>A lag only pays when BTC moves further than the $18.42 spread inside it. Using tick data I recorded from OKX, I counted how often the price moved more than $18.42 within short windows.</p>
+  <figure>
+    <div class="ft">Share of time BTC moved more than $18.42 within the window</div>
+    <div class="fs">OKX ticks recorded on 16 Nov, <span id="okxh">—</span> hours in total</div>
+    <div class="chart" id="ch-moves"></div>
+  </figure>
+  <p id="moves-text"></p>
+</section>
+
+<section id="replay">
+  <h2><span class="n">06</span>Test 3 · Latency replay</h2>
+  <p>This replays the recorded OKX ticks with Deriv modelled as OKX delayed by the lag, plus $1.34 of noise, as measured in Test 1. When OKX is ahead of the modelled Deriv quote by more than the spread plus $5, the bot buys or sells 0.01 BTC at Deriv's quote as it stands after your execution delay, and closes 3 seconds later at Deriv's quote then.</p>
+  <figure>
+    <div class="ft">P&amp;L per hour at 0.01 BTC, $18.42 spread</div>
+    <div class="fs">Rows: how far Deriv lags. Columns: how long your order takes to reach Deriv. Blue = profit, red = loss.</div>
+    <div class="tw" id="tb-replay"></div>
+  </figure>
+  <figure>
+    <div class="ft">Same, if Deriv widens its spread to $25 during fast moves</div>
+    <div class="fs">Deriv's spread was seen widening to $19.42 during a move; brokers often widen further in fast markets.</div>
+    <div class="tw" id="tb-replay25"></div>
+  </figure>
+  <p id="replay-text"></p>
+  <details class="data"><summary>Show every simulated trade (0.5 s lag, 150 ms execution)</summary><div class="tw" id="tb-trades"></div></details>
+</section>
+
+<section id="fivemin">
+  <h2><span class="n">07</span>Test 4 · The 5-minute window strategy</h2>
+  <p>This is the direct translation of Polymarket's 5-minute Up/Down windows. At every 5-minute boundary the rule looks at BTC's move over the last K minutes. If it was larger than Z times normal volatility, it trades 0.01 BTC with the move (momentum) or against it (fade) and closes 5 minutes later. Spread $18.42 per trade.</p>
+  <p>Data: 90 days of Binance 1-minute BTC (129,604 bars), used because Deriv's own history moves with it at 0.994 correlation. Rules were chosen on the first 70% of days and checked on the last 30%. Three variables (direction, K = 1/3/5 min, Z = 1.0/1.5/2.0) give 18 rules, and all 18 are reported.</p>
+  <figure>
+    <div class="ft">Out-of-sample P&amp;L for each rule, 0.01 BTC</div>
+    <div class="fs">Last 27 days. Every rule lost money.</div>
+    <div class="chart" id="ch-five"></div>
+  </figure>
+  <figure>
+    <div class="ft">Average result per trade before and after the spread</div>
+    <div class="fs">Out-of-sample, the four best rules by in-sample P&amp;L. The spread costs $0.18 per trade; the best rule earned $0.11 per trade before it.</div>
+    <div class="chart" id="ch-gross"></div>
+  </figure>
+  <details class="data"><summary>Show all 18 rules (in-sample and out-of-sample)</summary><div class="tw" id="tb-five"></div></details>
+  <div class="note bad"><strong>No 5-minute rule has an edge.</strong> Before the spread, results hover around zero (±$0.12 per trade at most), which is what a random coin flip on BTC direction looks like. On a CFD, unlike Polymarket, there is no mispriced contract to exploit at this horizon: you are simply betting on BTC's direction.</div>
+</section>
+
+<section id="demo">
+  <h2><span class="n">08</span>Test 5 · Demo account trades</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Order</th><th>Side</th><th class="r">Size</th><th class="r">Price</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr><td>Size probe (limit)</td><td>Buy</td><td class="r">0.01 BTC</td><td class="r">32,000.00</td><td>Accepted, then cancelled: minimum size confirmed</td></tr>
+      <tr><td>Round trip 1</td><td>Buy → Sell</td><td class="r">0.01 BTC</td><td class="r">65,372.66 → 65,357.55</td><td class="neg">−$0.15 (spread + 30 s of price move)</td></tr>
+      <tr><td>Round trip 2</td><td>Sell → Buy</td><td class="r">0.01 BTC</td><td class="r">65,311.23 → 65,319.26</td><td class="neg">−$0.08; margin read at $0.82 while open</td></tr>
+    </tbody>
+  </table></div>
+  <p>These trades confirm sizing, costs and margin. They are not a latency test: each order went through this assistant's tool connection, which takes seconds per call, far slower than the half-second window. Latency can only be tested by a bot running inside cTrader, which is what the cBot's paper mode does.</p>
+</section>
+
+<section id="small">
+  <h2><span class="n">09</span>Small account ($15–$30)</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Question</th><th>Answer at 0.01 BTC</th></tr></thead>
+    <tbody>
+      <tr><td>Can $15 hold the minimum position?</td><td>Yes. Margin is $0.82.</td></tr>
+      <tr><td>What does each $1 BTC move do?</td><td>$0.01 to the account. A $100 BTC move is $1.</td></tr>
+      <tr><td>Cost per trade</td><td>$0.18 spread, about 1.2% of a $15 account</td></tr>
+      <tr><td>Bot's protective stop</td><td>$60 of BTC = $0.60 = 4% of $15</td></tr>
+      <tr><td>Daily loss limit (default)</td><td>$1.50 = 10% of $15</td></tr>
+      <tr><td>Kill switch (default)</td><td>$4.50 = 30% of $15</td></tr>
+      <tr><td>Best modelled case (§6)</td><td>About $0.10–$0.20 per trade, a few trades an hour, only if you're faster than Deriv's lag</td></tr>
+    </tbody>
+  </table></div>
+  <p>The 0.01 BTC minimum is small enough for $15 to trade with tight risk limits. The binding problem is edge, not capital: spending $0.18 per trade with no proven advantage drains $15 quickly.</p>
+</section>
+
+<section id="bot">
+  <h2><span class="n">10</span>The bot: LatArbBot for cTrader</h2>
+  <p>A cTrader Automate cBot in C#, at <code>latarb-ctrader/LatArbBot.cs</code> on branch <code>claude/polymarket-btc-arbitrage-0avqt1</code>. It runs inside cTrader on your computer, so it sees Deriv's real ticks and your real connection speed.</p>
+  <ol class="steps">
+    <li><div><h4>Leading price</h4><p>Opens a WebSocket to OKX (<code>bbo-tbt</code>, BTC-USDT) and keeps the best bid/ask mid.</p></div></li>
+    <li><div><h4>Offset</h4><p>Learns the normal OKX-vs-Deriv price offset slowly (EWMA weight 0.01), only while OKX is still, so fast moves don't leak into it.</p></div></li>
+    <li><div><h4>Signal</h4><p><code>gap = (OKX − offset) − Deriv mid</code>. Trades when <code>|gap| ≥ Deriv spread + $5</code>, in the gap's direction.</p></div></li>
+    <li><div><h4>Exit</h4><p>Closes after 3 s, or at the $60 protective stop.</p></div></li>
+    <li><div><h4>Limits</h4><p>One position at a time, minimum volume, 2 s cooldown, at most 30 trades a day, $1.50 daily loss limit, $4.50 kill switch, skips when the spread is over $25 or OKX is silent for 1.5 s.</p></div></li>
+    <li><div><h4>Paper mode (default)</h4><p>Sends no orders. Logs each signal with Deriv's real bid/ask at entry and 3 s later, and keeps a running P&amp;L total.</p></div></li>
+  </ol>
+  <h3>Install</h3>
+  <div class="code"><button type="button" class="copy">Copy</button><pre>1. cTrader desktop → Algo → cBots → New → paste LatArbBot.cs → Build
+2. Add an instance on BTCUSD, approve Full Access (needed for the OKX WebSocket)
+3. Keep "Paper mode" = Yes and run it for several days, including busy US hours
+4. Read the log: "PAPER close ... total +x.xx" is the running hypothetical P&amp;L</pre></div>
+  <h3>When to consider live mode</h3>
+  <ul class="tight">
+    <li>At least 100 paper trades, with a clearly positive average after the spread.</li>
+    <li>Switch to live on the <strong>demo</strong> account first and compare real fills with the paper log.</li>
+    <li>Read Deriv's terms first: most CFD brokers prohibit latency arbitrage and can cancel trades or close accounts that use it.</li>
+  </ul>
+  <h3>Parameters</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Parameter</th><th class="r">Default</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>Paper mode</td><td class="r">Yes</td><td>Log only, no orders</td></tr>
+      <tr><td>Extra edge over spread</td><td class="r">$5</td><td>Trade only when the gap exceeds spread + this</td></tr>
+      <tr><td>Hold time</td><td class="r">3000 ms</td><td>Close after this long</td></tr>
+      <tr><td>Protective stop</td><td class="r">$60</td><td>Hard stop distance in BTC dollars ($0.60 at 0.01 BTC)</td></tr>
+      <tr><td>Take profit</td><td class="r">0</td><td>Optional; 0 = none</td></tr>
+      <tr><td>Volume in units</td><td class="r">0</td><td>0 = broker minimum (0.01 BTC)</td></tr>
+      <tr><td>Max spread</td><td class="r">$25</td><td>Skip when Deriv widens beyond this</td></tr>
+      <tr><td>Cooldown</td><td class="r">2000 ms</td><td>Minimum gap between trades</td></tr>
+      <tr><td>Max trades per day</td><td class="r">30</td><td></td></tr>
+      <tr><td>Daily loss limit</td><td class="r">1.5</td><td>Account currency; no new trades until 00:00 UTC</td></tr>
+      <tr><td>Max drawdown kill switch</td><td class="r">4.5</td><td>Account currency; stops trading</td></tr>
+      <tr><td>Lead feed stale after</td><td class="r">1500 ms</td><td>Ignore OKX if silent this long</td></tr>
+      <tr><td>Offset EWMA weight</td><td class="r">0.01</td><td>Speed of learning the OKX-vs-Deriv offset</td></tr>
+      <tr><td>OKX instrument</td><td class="r">BTC-USDT</td><td>Leading price</td></tr>
+    </tbody>
+  </table></div>
+  <p>The bot compiles against the standard cTrader Automate API but has not been built or run in cTrader. This server has no cTrader runtime, so expect possible small compile fixes on first build.</p>
+</section>
+
+<section id="method">
+  <h2><span class="n">11</span>Method, data and every parameter used</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Test</th><th>Data</th><th>Settings</th><th>Trials</th></tr></thead>
+    <tbody id="tb-method"></tbody>
+  </table></div>
+  <h3>Assumptions and limits</h3>
+  <ul class="tight">
+    <li>The replay models Deriv as a delayed copy of OKX. The real Deriv feed could react differently in fast markets, for example by widening its spread or pausing quotes. The $25-spread table shows how sensitive the result is.</li>
+    <li>The lag estimate rests on 26 matched quotes and was taken in a quiet market, so its uncertainty is a few hundred milliseconds.</li>
+    <li>The 5-minute test uses Binance prices as a stand-in for Deriv history (0.994 correlation measured), with Deriv's spread charged on every trade.</li>
+    <li>No swap or overnight financing is modelled; every hold here is seconds to minutes.</li>
+  </ul>
+</section>
+
+<section id="verdict">
+  <h2><span class="n">12</span>Verdict and next steps</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Idea</th><th>Status</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>5-minute Up/Down as CFD trades</td><td><span class="pill bad">rejected</span></td><td>0 of 18 rules profitable over 90 days; spread exceeds any predictive edge</td></tr>
+      <tr><td>Minute-scale lag arbitrage</td><td><span class="pill bad">rejected</span></td><td>Deriv tracks exchanges within the same minute (0.994)</td></tr>
+      <tr><td>Sub-second lag arbitrage</td><td><span class="pill warn">unproven</span></td><td>Pays in replay only if your execution beats Deriv's ≤0.5 s lag; must be measured on your machine</td></tr>
+    </tbody>
+  </table></div>
+  <ol class="steps">
+    <li><div><h4>Run the bot in paper mode for a week</h4><p>On the computer and connection you'd actually trade from.</p></div></li>
+    <li><div><h4>Judge the paper log</h4><p>Positive average per trade after 100+ signals: move to live mode on the demo account. Otherwise stop here; the idea doesn't work on your setup.</p></div></li>
+    <li><div><h4>Check the broker's terms</h4><p>Before any real money, confirm that this kind of trading is allowed.</p></div></li>
+  </ol>
+  <footer>Data: Deriv cTrader demo quotes, trendbars and trades; Binance, Coinbase, Kraken and OKX public market data; 16 Nov 2026. Account balance before tests $9,871.96, after $9,871.73. No positions or orders left open.</footer>
+</section>
+</main>
+</div>
+<div id="tip" hidden></div>
+
+<script>
+const D = {"m1corr":{"binance":[[-2,0.004],[-1,0.086],[0,0.994],[1,0.088],[2,-0.002]],"coinbase":[[-2,0.003],[-1,0.1],[0,0.994],[1,0.091],[2,-0.004]]},"lag":{"okx":{"best":400,"sd":1.39,"curve":[[-2000,3.25],[-1900,3.25],[-1800,3.04],[-1700,3.04],[-1600,3.2],[-1500,3.2],[-1400,3.2],[-1300,2.85],[-1200,2.85],[-1100,2.85],[-1000,1.89],[-900,1.81],[-800,1.81],[-700,1.81],[-600,1.43],[-500,1.65],[-400,1.78],[-300,1.78],[-200,1.78],[-100,1.78],[0,1.39],[100,1.39],[200,1.39],[300,1.39],[400,1.39],[500,1.39],[600,1.39],[700,1.39],[800,1.39],[900,1.39],[1000,1.58],[1100,1.96],[1200,2.46],[1300,2.75],[1400,2.75],[1500,2.76],[1600,3.04],[1700,3.35],[1800,3.35],[1900,3.35],[2000,3.56],[2100,4.11],[2200,4.11],[2300,4.16],[2400,3.97],[2500,3.92],[2600,3.92],[2700,3.92],[2800,3.84],[2900,3.77],[3000,3.77]]},"binance":{"best":-500,"sd":1.98,"curve":[[-2000,3.1],[-1900,3.1],[-1800,3.19],[-1700,3.17],[-1600,3.22],[-1500,3.22],[-1400,3.22],[-1300,3.28],[-1200,3.28],[-1100,2.67],[-1000,2.68],[-900,2.68],[-800,2.68],[-700,2.66],[-600,2.1],[-500,1.98],[-400,1.98],[-300,2.07],[-200,2.07],[-100,2.07],[0,2.07],[100,2.07],[200,2.07],[300,2.07],[400,2.07],[500,2.07],[600,2.06],[700,2.06],[800,2.11],[900,2.15],[1000,2.29],[1100,2.97],[1200,3.34],[1300,3.34],[1400,3.34],[1500,3.79],[1600,3.88],[1700,3.98],[1800,3.98],[1900,4.06],[2000,4.63],[2100,4.63],[2200,4.45],[2300,4.42],[2400,4.35],[2500,4.25],[2600,4.03],[2700,4.03],[2800,3.91],[2900,3.82],[3000,3.86]]},"coinbase":{"best":-400,"sd":1.33,"curve":[[-2000,2.58],[-1900,2.44],[-1800,2.45],[-1700,2.46],[-1600,2.31],[-1500,2.18],[-1400,2.16],[-1300,2.21],[-1200,2.14],[-1100,1.97],[-1000,1.94],[-900,1.87],[-800,1.85],[-700,1.57],[-600,1.51],[-500,1.38],[-400,1.33],[-300,1.4],[-200,1.47],[-100,1.47],[0,1.47],[100,1.47],[200,1.49],[300,1.49],[400,1.55],[500,1.68],[600,1.7],[700,1.75],[800,1.75],[900,1.75],[1000,1.94],[1100,2.23],[1200,2.98],[1300,2.98],[1400,2.99],[1500,3.27],[1600,3.57],[1700,3.83],[1800,3.83],[1900,3.89],[2000,4.36],[2100,4.4],[2200,4.4],[2300,4.23],[2400,4.02],[2500,3.86],[2600,3.86],[2700,3.84],[2800,3.64],[2900,3.5],[3000,3.5]]},"kraken":{"best":500,"sd":1.85,"curve":[[-2000,3.27],[-1900,3.29],[-1800,3.27],[-1700,3.27],[-1600,3.27],[-1500,3.28],[-1400,3.1],[-1300,2.69],[-1200,2.69],[-1100,2.6],[-1000,2.56],[-900,2.56],[-800,2.06],[-700,2.06],[-600,2.06],[-500,1.93],[-400,1.93],[-300,1.93],[-200,1.93],[-100,1.86],[0,1.86],[100,1.86],[200,1.86],[300,1.86],[400,1.86],[500,1.85],[600,1.85],[700,1.85],[800,1.85],[900,2.13],[1000,2.02],[1100,2.02],[1200,2.18],[1300,2.18],[1400,2.18],[1500,2.18],[1600,2.18],[1700,2.18],[1800,2.6],[1900,2.6],[2000,3.04],[2100,3.04],[2200,3.04],[2300,3.0],[2400,3.0],[2500,3.0],[2600,3.0],[2700,3.0],[2800,3.0],[2900,3.0],[3000,3.0]]}},"nsamp":27,"moves":[[250,0.105],[500,0.299],[1000,0.848],[2000,2.364]],"okxHours":0.9759683333333333,"movesText":"In the recording, BTC moved more than the spread within half a second 0.30% of the time. Over the last 2.0 days of Binance 1-second candles, the high-to-low range of a single second exceeded $18.42 in <strong>5,480 seconds (2,737 a day, 3.17% of all seconds)</strong>. Fast moves happen, but they cluster in bursts and each one lasts only a moment, so a bot must react inside Deriv's lag to catch any of it.","grid":[{"spread":18.42,"lag":0,"exec":50,"hold":1000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":50,"hold":1000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":50,"hold":1000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":50,"hold":3000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":50,"hold":3000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":50,"hold":3000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":50,"hold":10000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":50,"hold":10000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":50,"hold":10000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":150,"hold":1000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":150,"hold":1000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":150,"hold":1000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":150,"hold":3000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":150,"hold":3000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":150,"hold":3000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":150,"hold":10000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":150,"hold":10000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":150,"hold":10000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":300,"hold":1000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":300,"hold":1000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":300,"hold":1000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":300,"hold":3000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":300,"hold":3000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":300,"hold":3000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":300,"hold":10000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":300,"hold":10000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":300,"hold":10000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":600,"hold":1000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":600,"hold":1000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":600,"hold":1000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":600,"hold":3000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":600,"hold":3000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":600,"hold":3000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":600,"hold":10000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":600,"hold":10000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":0,"exec":600,"hold":10000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":18.42,"lag":250,"exec":50,"hold":1000,"margin":0,"n":27,"pnl":1.372,"avg":0.0508,"win":66.7},{"spread":18.42,"lag":250,"exec":50,"hold":1000,"margin":5,"n":7,"pnl":1.025,"avg":0.1465,"win":85.7},{"spread":18.42,"lag":250,"exec":50,"hold":1000,"margin":15,"n":2,"pnl":0.541,"avg":0.2707,"win":100.0},{"spread":18.42,"lag":250,"exec":50,"hold":3000,"margin":0,"n":27,"pnl":1.202,"avg":0.0445,"win":63.0},{"spread":18.42,"lag":250,"exec":50,"hold":3000,"margin":5,"n":7,"pnl":1.306,"avg":0.1866,"win":100.0},{"spread":18.42,"lag":250,"exec":50,"hold":3000,"margin":15,"n":2,"pnl":0.723,"avg":0.3613,"win":100.0},{"spread":18.42,"lag":250,"exec":50,"hold":10000,"margin":0,"n":23,"pnl":0.292,"avg":0.0127,"win":47.8},{"spread":18.42,"lag":250,"exec":50,"hold":10000,"margin":5,"n":7,"pnl":-0.007,"avg":-0.001,"win":71.4},{"spread":18.42,"lag":250,"exec":50,"hold":10000,"margin":15,"n":2,"pnl":0.475,"avg":0.2375,"win":100.0},{"spread":18.42,"lag":250,"exec":150,"hold":1000,"margin":0,"n":27,"pnl":0.16,"avg":0.0059,"win":40.7},{"spread":18.42,"lag":250,"exec":150,"hold":1000,"margin":5,"n":7,"pnl":0.948,"avg":0.1355,"win":71.4},{"spread":18.42,"lag":250,"exec":150,"hold":1000,"margin":15,"n":2,"pnl":0.567,"avg":0.2837,"win":100.0},{"spread":18.42,"lag":250,"exec":150,"hold":3000,"margin":0,"n":27,"pnl":0.035,"avg":0.0013,"win":59.3},{"spread":18.42,"lag":250,"exec":150,"hold":3000,"margin":5,"n":7,"pnl":1.052,"avg":0.1502,"win":71.4},{"spread":18.42,"lag":250,"exec":150,"hold":3000,"margin":15,"n":2,"pnl":0.734,"avg":0.3669,"win":100.0},{"spread":18.42,"lag":250,"exec":150,"hold":10000,"margin":0,"n":23,"pnl":-0.501,"avg":-0.0218,"win":30.4},{"spread":18.42,"lag":250,"exec":150,"hold":10000,"margin":5,"n":7,"pnl":-0.016,"avg":-0.0023,"win":57.1},{"spread":18.42,"lag":250,"exec":150,"hold":10000,"margin":15,"n":2,"pnl":0.453,"avg":0.2267,"win":100.0},{"spread":18.42,"lag":250,"exec":300,"hold":1000,"margin":0,"n":27,"pnl":-4.842,"avg":-0.1793,"win":0.0},{"spread":18.42,"lag":250,"exec":300,"hold":1000,"margin":5,"n":7,"pnl":-1.423,"avg":-0.2033,"win":0.0},{"spread":18.42,"lag":250,"exec":300,"hold":1000,"margin":15,"n":2,"pnl":-0.568,"avg":-0.2838,"win":0.0},{"spread":18.42,"lag":250,"exec":300,"hold":3000,"margin":0,"n":27,"pnl":-4.892,"avg":-0.1812,"win":3.7},{"spread":18.42,"lag":250,"exec":300,"hold":3000,"margin":5,"n":7,"pnl":-1.298,"avg":-0.1855,"win":0.0},{"spread":18.42,"lag":250,"exec":300,"hold":3000,"margin":15,"n":2,"pnl":-0.353,"avg":-0.1765,"win":0.0},{"spread":18.42,"lag":250,"exec":300,"hold":10000,"margin":0,"n":23,"pnl":-4.84,"avg":-0.2104,"win":8.7},{"spread":18.42,"lag":250,"exec":300,"hold":10000,"margin":5,"n":7,"pnl":-2.461,"avg":-0.3515,"win":0.0},{"spread":18.42,"lag":250,"exec":300,"hold":10000,"margin":15,"n":2,"pnl":-0.59,"avg":-0.295,"win":0.0},{"spread":18.42,"lag":250,"exec":600,"hold":1000,"margin":0,"n":27,"pnl":-4.803,"avg":-0.1779,"win":0.0},{"spread":18.42,"lag":250,"exec":600,"hold":1000,"margin":5,"n":7,"pnl":-1.187,"avg":-0.1696,"win":0.0},{"spread":18.42,"lag":250,"exec":600,"hold":1000,"margin":15,"n":2,"pnl":-0.286,"avg":-0.143,"win":0.0},{"spread":18.42,"lag":250,"exec":600,"hold":3000,"margin":0,"n":26,"pnl":-4.704,"avg":-0.1809,"win":7.7},{"spread":18.42,"lag":250,"exec":600,"hold":3000,"margin":5,"n":7,"pnl":-1.19,"avg":-0.17,"win":0.0},{"spread":18.42,"lag":250,"exec":600,"hold":3000,"margin":15,"n":2,"pnl":-0.241,"avg":-0.1204,"win":0.0},{"spread":18.42,"lag":250,"exec":600,"hold":10000,"margin":0,"n":23,"pnl":-4.866,"avg":-0.2116,"win":8.7},{"spread":18.42,"lag":250,"exec":600,"hold":10000,"margin":5,"n":7,"pnl":-2.127,"avg":-0.3039,"win":0.0},{"spread":18.42,"lag":250,"exec":600,"hold":10000,"margin":15,"n":2,"pnl":-0.384,"avg":-0.1919,"win":0.0},{"spread":18.42,"lag":500,"exec":50,"hold":1000,"margin":0,"n":37,"pnl":1.634,"avg":0.0442,"win":75.7},{"spread":18.42,"lag":500,"exec":50,"hold":1000,"margin":5,"n":12,"pnl":1.309,"avg":0.1091,"win":100.0},{"spread":18.42,"lag":500,"exec":50,"hold":1000,"margin":15,"n":3,"pnl":0.678,"avg":0.226,"win":66.7},{"spread":18.42,"lag":500,"exec":50,"hold":3000,"margin":0,"n":37,"pnl":2.042,"avg":0.0552,"win":64.9},{"spread":18.42,"lag":500,"exec":50,"hold":3000,"margin":5,"n":12,"pnl":1.802,"avg":0.1502,"win":83.3},{"spread":18.42,"lag":500,"exec":50,"hold":3000,"margin":15,"n":3,"pnl":0.987,"avg":0.3291,"win":100.0},{"spread":18.42,"lag":500,"exec":50,"hold":10000,"margin":0,"n":31,"pnl":1.231,"avg":0.0397,"win":54.8},{"spread":18.42,"lag":500,"exec":50,"hold":10000,"margin":5,"n":12,"pnl":0.829,"avg":0.0691,"win":66.7},{"spread":18.42,"lag":500,"exec":50,"hold":10000,"margin":15,"n":3,"pnl":0.597,"avg":0.1989,"win":100.0},{"spread":18.42,"lag":500,"exec":150,"hold":1000,"margin":0,"n":37,"pnl":0.872,"avg":0.0236,"win":64.9},{"spread":18.42,"lag":500,"exec":150,"hold":1000,"margin":5,"n":12,"pnl":1.072,"avg":0.0894,"win":75.0},{"spread":18.42,"lag":500,"exec":150,"hold":1000,"margin":15,"n":3,"pnl":0.718,"avg":0.2392,"win":100.0},{"spread":18.42,"lag":500,"exec":150,"hold":3000,"margin":0,"n":37,"pnl":1.292,"avg":0.0349,"win":62.2},{"spread":18.42,"lag":500,"exec":150,"hold":3000,"margin":5,"n":12,"pnl":1.477,"avg":0.1231,"win":83.3},{"spread":18.42,"lag":500,"exec":150,"hold":3000,"margin":15,"n":3,"pnl":0.958,"avg":0.3192,"win":100.0},{"spread":18.42,"lag":500,"exec":150,"hold":10000,"margin":0,"n":31,"pnl":0.816,"avg":0.0263,"win":51.6},{"spread":18.42,"lag":500,"exec":150,"hold":10000,"margin":5,"n":12,"pnl":0.641,"avg":0.0534,"win":58.3},{"spread":18.42,"lag":500,"exec":150,"hold":10000,"margin":15,"n":3,"pnl":0.563,"avg":0.1878,"win":100.0},{"spread":18.42,"lag":500,"exec":300,"hold":1000,"margin":0,"n":37,"pnl":0.611,"avg":0.0165,"win":51.4},{"spread":18.42,"lag":500,"exec":300,"hold":1000,"margin":5,"n":12,"pnl":0.624,"avg":0.052,"win":58.3},{"spread":18.42,"lag":500,"exec":300,"hold":1000,"margin":15,"n":3,"pnl":0.733,"avg":0.2444,"win":66.7},{"spread":18.42,"lag":500,"exec":300,"hold":3000,"margin":0,"n":37,"pnl":0.611,"avg":0.0165,"win":45.9},{"spread":18.42,"lag":500,"exec":300,"hold":3000,"margin":5,"n":12,"pnl":1.22,"avg":0.1016,"win":75.0},{"spread":18.42,"lag":500,"exec":300,"hold":3000,"margin":15,"n":3,"pnl":0.92,"avg":0.3066,"win":100.0},{"spread":18.42,"lag":500,"exec":300,"hold":10000,"margin":0,"n":31,"pnl":0.474,"avg":0.0153,"win":51.6},{"spread":18.42,"lag":500,"exec":300,"hold":10000,"margin":5,"n":12,"pnl":0.213,"avg":0.0178,"win":58.3},{"spread":18.42,"lag":500,"exec":300,"hold":10000,"margin":15,"n":3,"pnl":0.51,"avg":0.1699,"win":100.0},{"spread":18.42,"lag":500,"exec":600,"hold":1000,"margin":0,"n":37,"pnl":-6.08,"avg":-0.1643,"win":2.7},{"spread":18.42,"lag":500,"exec":600,"hold":1000,"margin":5,"n":12,"pnl":-2.082,"avg":-0.1735,"win":0.0},{"spread":18.42,"lag":500,"exec":600,"hold":1000,"margin":15,"n":3,"pnl":-0.535,"avg":-0.1782,"win":0.0},{"spread":18.42,"lag":500,"exec":600,"hold":3000,"margin":0,"n":37,"pnl":-6.245,"avg":-0.1688,"win":5.4},{"spread":18.42,"lag":500,"exec":600,"hold":3000,"margin":5,"n":12,"pnl":-1.997,"avg":-0.1664,"win":8.3},{"spread":18.42,"lag":500,"exec":600,"hold":3000,"margin":15,"n":3,"pnl":-0.485,"avg":-0.1618,"win":0.0},{"spread":18.42,"lag":500,"exec":600,"hold":10000,"margin":0,"n":31,"pnl":-5.13,"avg":-0.1655,"win":16.1},{"spread":18.42,"lag":500,"exec":600,"hold":10000,"margin":5,"n":12,"pnl":-2.675,"avg":-0.2229,"win":25.0},{"spread":18.42,"lag":500,"exec":600,"hold":10000,"margin":15,"n":3,"pnl":-0.723,"avg":-0.241,"win":0.0},{"spread":18.42,"lag":1000,"exec":50,"hold":1000,"margin":0,"n":52,"pnl":1.639,"avg":0.0315,"win":71.2},{"spread":18.42,"lag":1000,"exec":50,"hold":1000,"margin":5,"n":16,"pnl":1.877,"avg":0.1173,"win":93.8},{"spread":18.42,"lag":1000,"exec":50,"hold":1000,"margin":15,"n":6,"pnl":1.553,"avg":0.2588,"win":100.0},{"spread":18.42,"lag":1000,"exec":50,"hold":3000,"margin":0,"n":47,"pnl":1.751,"avg":0.0373,"win":59.6},{"spread":18.42,"lag":1000,"exec":50,"hold":3000,"margin":5,"n":16,"pnl":2.125,"avg":0.1328,"win":93.8},{"spread":18.42,"lag":1000,"exec":50,"hold":3000,"margin":15,"n":6,"pnl":1.462,"avg":0.2436,"win":100.0},{"spread":18.42,"lag":1000,"exec":50,"hold":10000,"margin":0,"n":37,"pnl":1.654,"avg":0.0447,"win":54.1},{"spread":18.42,"lag":1000,"exec":50,"hold":10000,"margin":5,"n":15,"pnl":1.475,"avg":0.0983,"win":66.7},{"spread":18.42,"lag":1000,"exec":50,"hold":10000,"margin":15,"n":6,"pnl":1.256,"avg":0.2094,"win":83.3},{"spread":18.42,"lag":1000,"exec":150,"hold":1000,"margin":0,"n":52,"pnl":1.507,"avg":0.029,"win":59.6},{"spread":18.42,"lag":1000,"exec":150,"hold":1000,"margin":5,"n":16,"pnl":1.514,"avg":0.0946,"win":81.2},{"spread":18.42,"lag":1000,"exec":150,"hold":1000,"margin":15,"n":6,"pnl":1.341,"avg":0.2235,"win":100.0},{"spread":18.42,"lag":1000,"exec":150,"hold":3000,"margin":0,"n":47,"pnl":1.753,"avg":0.0373,"win":68.1},{"spread":18.42,"lag":1000,"exec":150,"hold":3000,"margin":5,"n":16,"pnl":1.838,"avg":0.1149,"win":75.0},{"spread":18.42,"lag":1000,"exec":150,"hold":3000,"margin":15,"n":6,"pnl":1.567,"avg":0.2611,"win":100.0},{"spread":18.42,"lag":1000,"exec":150,"hold":10000,"margin":0,"n":37,"pnl":1.304,"avg":0.0352,"win":51.4},{"spread":18.42,"lag":1000,"exec":150,"hold":10000,"margin":5,"n":15,"pnl":1.243,"avg":0.0829,"win":60.0},{"spread":18.42,"lag":1000,"exec":150,"hold":10000,"margin":15,"n":6,"pnl":1.157,"avg":0.1928,"win":83.3},{"spread":18.42,"lag":1000,"exec":300,"hold":1000,"margin":0,"n":51,"pnl":1.103,"avg":0.0216,"win":66.7},{"spread":18.42,"lag":1000,"exec":300,"hold":1000,"margin":5,"n":16,"pnl":1.661,"avg":0.1038,"win":87.5},{"spread":18.42,"lag":1000,"exec":300,"hold":1000,"margin":15,"n":6,"pnl":1.38,"avg":0.2299,"win":100.0},{"spread":18.42,"lag":1000,"exec":300,"hold":3000,"margin":0,"n":47,"pnl":1.32,"avg":0.0281,"win":63.8},{"spread":18.42,"lag":1000,"exec":300,"hold":3000,"margin":5,"n":16,"pnl":2.003,"avg":0.1252,"win":81.2},{"spread":18.42,"lag":1000,"exec":300,"hold":3000,"margin":15,"n":6,"pnl":1.713,"avg":0.2855,"win":100.0},{"spread":18.42,"lag":1000,"exec":300,"hold":10000,"margin":0,"n":37,"pnl":1.616,"avg":0.0437,"win":51.4},{"spread":18.42,"lag":1000,"exec":300,"hold":10000,"margin":5,"n":15,"pnl":1.246,"avg":0.0831,"win":60.0},{"spread":18.42,"lag":1000,"exec":300,"hold":10000,"margin":15,"n":6,"pnl":1.021,"avg":0.1701,"win":83.3},{"spread":18.42,"lag":1000,"exec":600,"hold":1000,"margin":0,"n":50,"pnl":0.027,"avg":0.0005,"win":54.0},{"spread":18.42,"lag":1000,"exec":600,"hold":1000,"margin":5,"n":16,"pnl":0.976,"avg":0.061,"win":75.0},{"spread":18.42,"lag":1000,"exec":600,"hold":1000,"margin":15,"n":6,"pnl":0.614,"avg":0.1023,"win":83.3},{"spread":18.42,"lag":1000,"exec":600,"hold":3000,"margin":0,"n":47,"pnl":-0.18,"avg":-0.0038,"win":51.1},{"spread":18.42,"lag":1000,"exec":600,"hold":3000,"margin":5,"n":16,"pnl":1.434,"avg":0.0896,"win":75.0},{"spread":18.42,"lag":1000,"exec":600,"hold":3000,"margin":15,"n":6,"pnl":1.055,"avg":0.1758,"win":66.7},{"spread":18.42,"lag":1000,"exec":600,"hold":10000,"margin":0,"n":37,"pnl":0.727,"avg":0.0197,"win":48.6},{"spread":18.42,"lag":1000,"exec":600,"hold":10000,"margin":5,"n":15,"pnl":0.715,"avg":0.0477,"win":60.0},{"spread":18.42,"lag":1000,"exec":600,"hold":10000,"margin":15,"n":6,"pnl":0.524,"avg":0.0873,"win":83.3},{"spread":25.0,"lag":0,"exec":50,"hold":1000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":50,"hold":1000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":50,"hold":1000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":50,"hold":3000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":50,"hold":3000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":50,"hold":3000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":50,"hold":10000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":50,"hold":10000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":50,"hold":10000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":150,"hold":1000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":150,"hold":1000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":150,"hold":1000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":150,"hold":3000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":150,"hold":3000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":150,"hold":3000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":150,"hold":10000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":150,"hold":10000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":150,"hold":10000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":300,"hold":1000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":300,"hold":1000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":300,"hold":1000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":300,"hold":3000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":300,"hold":3000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":300,"hold":3000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":300,"hold":10000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":300,"hold":10000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":300,"hold":10000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":600,"hold":1000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":600,"hold":1000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":600,"hold":1000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":600,"hold":3000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":600,"hold":3000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":600,"hold":3000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":600,"hold":10000,"margin":0,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":600,"hold":10000,"margin":5,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":0,"exec":600,"hold":10000,"margin":15,"n":0,"pnl":0.0,"avg":0.0,"win":0.0},{"spread":25.0,"lag":250,"exec":50,"hold":1000,"margin":0,"n":7,"pnl":0.5,"avg":0.0714,"win":71.4},{"spread":25.0,"lag":250,"exec":50,"hold":1000,"margin":5,"n":3,"pnl":0.517,"avg":0.1725,"win":66.7},{"spread":25.0,"lag":250,"exec":50,"hold":1000,"margin":15,"n":1,"pnl":0.495,"avg":0.4952,"win":100.0},{"spread":25.0,"lag":250,"exec":50,"hold":3000,"margin":0,"n":7,"pnl":0.699,"avg":0.0998,"win":71.4},{"spread":25.0,"lag":250,"exec":50,"hold":3000,"margin":5,"n":3,"pnl":0.741,"avg":0.2469,"win":100.0},{"spread":25.0,"lag":250,"exec":50,"hold":3000,"margin":15,"n":1,"pnl":0.479,"avg":0.4792,"win":100.0},{"spread":25.0,"lag":250,"exec":50,"hold":10000,"margin":0,"n":7,"pnl":-0.507,"avg":-0.0724,"win":28.6},{"spread":25.0,"lag":250,"exec":50,"hold":10000,"margin":5,"n":3,"pnl":0.324,"avg":0.1081,"win":66.7},{"spread":25.0,"lag":250,"exec":50,"hold":10000,"margin":15,"n":1,"pnl":0.32,"avg":0.32,"win":100.0},{"spread":25.0,"lag":250,"exec":150,"hold":1000,"margin":0,"n":7,"pnl":0.412,"avg":0.0588,"win":42.9},{"spread":25.0,"lag":250,"exec":150,"hold":1000,"margin":5,"n":3,"pnl":0.57,"avg":0.1901,"win":66.7},{"spread":25.0,"lag":250,"exec":150,"hold":1000,"margin":15,"n":1,"pnl":0.472,"avg":0.4718,"win":100.0},{"spread":25.0,"lag":250,"exec":150,"hold":3000,"margin":0,"n":7,"pnl":0.47,"avg":0.0672,"win":57.1},{"spread":25.0,"lag":250,"exec":150,"hold":3000,"margin":5,"n":3,"pnl":0.711,"avg":0.2369,"win":100.0},{"spread":25.0,"lag":250,"exec":150,"hold":3000,"margin":15,"n":1,"pnl":0.48,"avg":0.4802,"win":100.0},{"spread":25.0,"lag":250,"exec":150,"hold":10000,"margin":0,"n":7,"pnl":-0.625,"avg":-0.0892,"win":28.6},{"spread":25.0,"lag":250,"exec":150,"hold":10000,"margin":5,"n":3,"pnl":0.37,"avg":0.1234,"win":100.0},{"spread":25.0,"lag":250,"exec":150,"hold":10000,"margin":15,"n":1,"pnl":0.308,"avg":0.3084,"win":100.0},{"spread":25.0,"lag":250,"exec":300,"hold":1000,"margin":0,"n":7,"pnl":-1.823,"avg":-0.2604,"win":0.0},{"spread":25.0,"lag":250,"exec":300,"hold":1000,"margin":5,"n":3,"pnl":-0.842,"avg":-0.2806,"win":0.0},{"spread":25.0,"lag":250,"exec":300,"hold":1000,"margin":15,"n":1,"pnl":-0.251,"avg":-0.2511,"win":0.0},{"spread":25.0,"lag":250,"exec":300,"hold":3000,"margin":0,"n":7,"pnl":-1.682,"avg":-0.2403,"win":0.0},{"spread":25.0,"lag":250,"exec":300,"hold":3000,"margin":5,"n":3,"pnl":-0.763,"avg":-0.2542,"win":0.0},{"spread":25.0,"lag":250,"exec":300,"hold":3000,"margin":15,"n":1,"pnl":-0.252,"avg":-0.252,"win":0.0},{"spread":25.0,"lag":250,"exec":300,"hold":10000,"margin":0,"n":7,"pnl":-2.919,"avg":-0.4169,"win":0.0},{"spread":25.0,"lag":250,"exec":300,"hold":10000,"margin":5,"n":3,"pnl":-1.087,"avg":-0.3622,"win":0.0},{"spread":25.0,"lag":250,"exec":300,"hold":10000,"margin":15,"n":1,"pnl":-0.413,"avg":-0.4127,"win":0.0},{"spread":25.0,"lag":250,"exec":600,"hold":1000,"margin":0,"n":7,"pnl":-1.646,"avg":-0.2352,"win":0.0},{"spread":25.0,"lag":250,"exec":600,"hold":1000,"margin":5,"n":3,"pnl":-0.733,"avg":-0.2442,"win":0.0},{"spread":25.0,"lag":250,"exec":600,"hold":1000,"margin":15,"n":1,"pnl":-0.151,"avg":-0.1507,"win":0.0},{"spread":25.0,"lag":250,"exec":600,"hold":3000,"margin":0,"n":7,"pnl":-1.775,"avg":-0.2536,"win":0.0},{"spread":25.0,"lag":250,"exec":600,"hold":3000,"margin":5,"n":3,"pnl":-0.682,"avg":-0.2274,"win":0.0},{"spread":25.0,"lag":250,"exec":600,"hold":3000,"margin":15,"n":1,"pnl":-0.156,"avg":-0.1563,"win":0.0},{"spread":25.0,"lag":250,"exec":600,"hold":10000,"margin":0,"n":7,"pnl":-2.606,"avg":-0.3723,"win":0.0},{"spread":25.0,"lag":250,"exec":600,"hold":10000,"margin":5,"n":3,"pnl":-0.887,"avg":-0.2957,"win":0.0},{"spread":25.0,"lag":250,"exec":600,"hold":10000,"margin":15,"n":1,"pnl":-0.315,"avg":-0.3147,"win":0.0},{"spread":25.0,"lag":500,"exec":50,"hold":1000,"margin":0,"n":9,"pnl":0.613,"avg":0.0681,"win":55.6},{"spread":25.0,"lag":500,"exec":50,"hold":1000,"margin":5,"n":4,"pnl":0.554,"avg":0.1385,"win":75.0},{"spread":25.0,"lag":500,"exec":50,"hold":1000,"margin":15,"n":2,"pnl":0.557,"avg":0.2786,"win":100.0},{"spread":25.0,"lag":500,"exec":50,"hold":3000,"margin":0,"n":9,"pnl":1.066,"avg":0.1184,"win":66.7},{"spread":25.0,"lag":500,"exec":50,"hold":3000,"margin":5,"n":4,"pnl":0.867,"avg":0.2167,"win":100.0},{"spread":25.0,"lag":500,"exec":50,"hold":3000,"margin":15,"n":2,"pnl":0.669,"avg":0.3344,"win":100.0},{"spread":25.0,"lag":500,"exec":50,"hold":10000,"margin":0,"n":9,"pnl":0.054,"avg":0.006,"win":44.4},{"spread":25.0,"lag":500,"exec":50,"hold":10000,"margin":5,"n":4,"pnl":0.655,"avg":0.1637,"win":75.0},{"spread":25.0,"lag":500,"exec":50,"hold":10000,"margin":15,"n":2,"pnl":0.349,"avg":0.1743,"win":100.0},{"spread":25.0,"lag":500,"exec":150,"hold":1000,"margin":0,"n":9,"pnl":0.688,"avg":0.0764,"win":55.6},{"spread":25.0,"lag":500,"exec":150,"hold":1000,"margin":5,"n":4,"pnl":0.407,"avg":0.1017,"win":50.0},{"spread":25.0,"lag":500,"exec":150,"hold":1000,"margin":15,"n":2,"pnl":0.577,"avg":0.2886,"win":100.0},{"spread":25.0,"lag":500,"exec":150,"hold":3000,"margin":0,"n":9,"pnl":1.048,"avg":0.1165,"win":77.8},{"spread":25.0,"lag":500,"exec":150,"hold":3000,"margin":5,"n":4,"pnl":0.619,"avg":0.1547,"win":75.0},{"spread":25.0,"lag":500,"exec":150,"hold":3000,"margin":15,"n":2,"pnl":0.567,"avg":0.2837,"win":100.0},{"spread":25.0,"lag":500,"exec":150,"hold":10000,"margin":0,"n":9,"pnl":-0.041,"avg":-0.0045,"win":44.4},{"spread":25.0,"lag":500,"exec":150,"hold":10000,"margin":5,"n":4,"pnl":0.434,"avg":0.1084,"win":100.0},{"spread":25.0,"lag":500,"exec":150,"hold":10000,"margin":15,"n":2,"pnl":0.286,"avg":0.1428,"win":50.0},{"spread":25.0,"lag":500,"exec":300,"hold":1000,"margin":0,"n":9,"pnl":0.41,"avg":0.0456,"win":55.6},{"spread":25.0,"lag":500,"exec":300,"hold":1000,"margin":5,"n":4,"pnl":0.365,"avg":0.0913,"win":50.0},{"spread":25.0,"lag":500,"exec":300,"hold":1000,"margin":15,"n":2,"pnl":0.591,"avg":0.2953,"win":100.0},{"spread":25.0,"lag":500,"exec":300,"hold":3000,"margin":0,"n":9,"pnl":0.723,"avg":0.0804,"win":66.7},{"spread":25.0,"lag":500,"exec":300,"hold":3000,"margin":5,"n":4,"pnl":0.607,"avg":0.1518,"win":75.0},{"spread":25.0,"lag":500,"exec":300,"hold":3000,"margin":15,"n":2,"pnl":0.517,"avg":0.2587,"win":100.0},{"spread":25.0,"lag":500,"exec":300,"hold":10000,"margin":0,"n":9,"pnl":-0.227,"avg":-0.0252,"win":44.4},{"spread":25.0,"lag":500,"exec":300,"hold":10000,"margin":5,"n":4,"pnl":0.405,"avg":0.1013,"win":100.0},{"spread":25.0,"lag":500,"exec":300,"hold":10000,"margin":15,"n":2,"pnl":0.297,"avg":0.1485,"win":50.0},{"spread":25.0,"lag":500,"exec":600,"hold":1000,"margin":0,"n":9,"pnl":-1.878,"avg":-0.2087,"win":0.0},{"spread":25.0,"lag":500,"exec":600,"hold":1000,"margin":5,"n":4,"pnl":-0.975,"avg":-0.2438,"win":0.0},{"spread":25.0,"lag":500,"exec":600,"hold":1000,"margin":15,"n":2,"pnl":-0.42,"avg":-0.2098,"win":0.0},{"spread":25.0,"lag":500,"exec":600,"hold":3000,"margin":0,"n":9,"pnl":-1.898,"avg":-0.2109,"win":11.1},{"spread":25.0,"lag":500,"exec":600,"hold":3000,"margin":5,"n":4,"pnl":-0.881,"avg":-0.2201,"win":0.0},{"spread":25.0,"lag":500,"exec":600,"hold":3000,"margin":15,"n":2,"pnl":-0.523,"avg":-0.2614,"win":0.0},{"spread":25.0,"lag":500,"exec":600,"hold":10000,"margin":0,"n":9,"pnl":-2.686,"avg":-0.2985,"win":11.1},{"spread":25.0,"lag":500,"exec":600,"hold":10000,"margin":5,"n":4,"pnl":-0.96,"avg":-0.24,"win":0.0},{"spread":25.0,"lag":500,"exec":600,"hold":10000,"margin":15,"n":2,"pnl":-0.748,"avg":-0.3741,"win":0.0},{"spread":25.0,"lag":1000,"exec":50,"hold":1000,"margin":0,"n":12,"pnl":1.047,"avg":0.0872,"win":83.3},{"spread":25.0,"lag":1000,"exec":50,"hold":1000,"margin":5,"n":7,"pnl":1.024,"avg":0.1464,"win":100.0},{"spread":25.0,"lag":1000,"exec":50,"hold":1000,"margin":15,"n":2,"pnl":0.693,"avg":0.3464,"win":100.0},{"spread":25.0,"lag":1000,"exec":50,"hold":3000,"margin":0,"n":12,"pnl":1.287,"avg":0.1073,"win":83.3},{"spread":25.0,"lag":1000,"exec":50,"hold":3000,"margin":5,"n":7,"pnl":1.103,"avg":0.1576,"win":100.0},{"spread":25.0,"lag":1000,"exec":50,"hold":3000,"margin":15,"n":2,"pnl":0.716,"avg":0.3579,"win":100.0},{"spread":25.0,"lag":1000,"exec":50,"hold":10000,"margin":0,"n":11,"pnl":0.564,"avg":0.0512,"win":54.5},{"spread":25.0,"lag":1000,"exec":50,"hold":10000,"margin":5,"n":7,"pnl":1.051,"avg":0.1501,"win":71.4},{"spread":25.0,"lag":1000,"exec":50,"hold":10000,"margin":15,"n":2,"pnl":0.653,"avg":0.3263,"win":100.0},{"spread":25.0,"lag":1000,"exec":150,"hold":1000,"margin":0,"n":12,"pnl":0.733,"avg":0.0611,"win":66.7},{"spread":25.0,"lag":1000,"exec":150,"hold":1000,"margin":5,"n":7,"pnl":0.901,"avg":0.1286,"win":100.0},{"spread":25.0,"lag":1000,"exec":150,"hold":1000,"margin":15,"n":2,"pnl":0.682,"avg":0.3411,"win":100.0},{"spread":25.0,"lag":1000,"exec":150,"hold":3000,"margin":0,"n":12,"pnl":1.032,"avg":0.086,"win":75.0},{"spread":25.0,"lag":1000,"exec":150,"hold":3000,"margin":5,"n":7,"pnl":1.108,"avg":0.1582,"win":100.0},{"spread":25.0,"lag":1000,"exec":150,"hold":3000,"margin":15,"n":2,"pnl":0.719,"avg":0.3597,"win":100.0},{"spread":25.0,"lag":1000,"exec":150,"hold":10000,"margin":0,"n":11,"pnl":0.225,"avg":0.0205,"win":54.5},{"spread":25.0,"lag":1000,"exec":150,"hold":10000,"margin":5,"n":7,"pnl":0.932,"avg":0.1331,"win":71.4},{"spread":25.0,"lag":1000,"exec":150,"hold":10000,"margin":15,"n":2,"pnl":0.521,"avg":0.2605,"win":100.0},{"spread":25.0,"lag":1000,"exec":300,"hold":1000,"margin":0,"n":12,"pnl":0.819,"avg":0.0682,"win":58.3},{"spread":25.0,"lag":1000,"exec":300,"hold":1000,"margin":5,"n":7,"pnl":0.851,"avg":0.1216,"win":71.4},{"spread":25.0,"lag":1000,"exec":300,"hold":1000,"margin":15,"n":2,"pnl":0.683,"avg":0.3414,"win":100.0},{"spread":25.0,"lag":1000,"exec":300,"hold":3000,"margin":0,"n":12,"pnl":1.217,"avg":0.1014,"win":75.0},{"spread":25.0,"lag":1000,"exec":300,"hold":3000,"margin":5,"n":7,"pnl":1.366,"avg":0.1952,"win":85.7},{"spread":25.0,"lag":1000,"exec":300,"hold":3000,"margin":15,"n":2,"pnl":0.743,"avg":0.3716,"win":100.0},{"spread":25.0,"lag":1000,"exec":300,"hold":10000,"margin":0,"n":11,"pnl":0.351,"avg":0.0319,"win":63.6},{"spread":25.0,"lag":1000,"exec":300,"hold":10000,"margin":5,"n":7,"pnl":0.964,"avg":0.1377,"win":71.4},{"spread":25.0,"lag":1000,"exec":300,"hold":10000,"margin":15,"n":2,"pnl":0.454,"avg":0.2269,"win":100.0},{"spread":25.0,"lag":1000,"exec":600,"hold":1000,"margin":0,"n":12,"pnl":0.178,"avg":0.0148,"win":50.0},{"spread":25.0,"lag":1000,"exec":600,"hold":1000,"margin":5,"n":7,"pnl":0.525,"avg":0.075,"win":57.1},{"spread":25.0,"lag":1000,"exec":600,"hold":1000,"margin":15,"n":2,"pnl":0.498,"avg":0.2491,"win":100.0},{"spread":25.0,"lag":1000,"exec":600,"hold":3000,"margin":0,"n":12,"pnl":0.889,"avg":0.0741,"win":66.7},{"spread":25.0,"lag":1000,"exec":600,"hold":3000,"margin":5,"n":7,"pnl":1.096,"avg":0.1565,"win":85.7},{"spread":25.0,"lag":1000,"exec":600,"hold":3000,"margin":15,"n":2,"pnl":0.583,"avg":0.2915,"win":100.0},{"spread":25.0,"lag":1000,"exec":600,"hold":10000,"margin":0,"n":11,"pnl":0.001,"avg":0.0001,"win":45.5},{"spread":25.0,"lag":1000,"exec":600,"hold":10000,"margin":5,"n":7,"pnl":0.664,"avg":0.0949,"win":57.1},{"spread":25.0,"lag":1000,"exec":600,"hold":10000,"margin":15,"n":2,"pnl":0.306,"avg":0.1529,"win":50.0}],"replayHours":0.9759683333333333,"trades":[[1794865341295,1,27.0,65292.7,65329.18,0.1805],[1794868823887,1,41.35,65363.87,65398.79,0.1649],[1794869124707,1,24.1,65492.42,65504.73,-0.0611],[1794870001557,-1,-29.85,65311.54,65265.58,0.2754],[1794870017777,1,26.05,65245.89,65270.79,0.0647],[1794870055907,1,23.6,65231.14,65242.85,-0.0671],[1794870093657,1,25.6,65325.93,65351.23,0.0688],[1794870211517,-1,-24.15,65264.8,65239.56,0.0682],[1794870308697,1,28.6,65235.67,65276.57,0.2248],[1794870934423,1,27.8,65315.69,65335.16,0.0105],[1794871259743,-1,-25.0,65250.48,65229.53,0.0253],[1794871689853,1,42.45,65196.77,65267.41,0.5222]],"replayText":"Reading the table: with Deriv 0.5 s behind and your order arriving in 150 ms, the model made 12 trades for +$1.48 (average +0.123 per trade). At 600 ms execution the same lag gives 12 trades and \u2212$2.00. If Deriv doesn't lag at all, there are 0 signals and nothing to earn. With a $25 spread at 0.5 s lag and 150 ms execution: 4 trades, +$0.62. The profitable cells all need your order to reach Deriv faster than Deriv's own feed catches up.","five":[{"mode":"momentum","K":1,"Z":1.0,"IS":{"n":4102,"pnl":-877.83,"avg":-0.214,"win":35.7,"pf":0.55,"maxdd":894.96,"gross_avg":-0.0298},"OOS":{"n":1744,"pnl":-394.75,"avg":-0.2263,"win":35.0,"pf":0.55,"maxdd":394.82,"gross_avg":-0.0421}},{"mode":"momentum","K":1,"Z":1.5,"IS":{"n":1926,"pnl":-399.44,"avg":-0.2074,"win":35.6,"pf":0.59,"maxdd":429.24,"gross_avg":-0.0232},"OOS":{"n":772,"pnl":-178.38,"avg":-0.2311,"win":35.1,"pf":0.58,"maxdd":182.28,"gross_avg":-0.0469}},{"mode":"momentum","K":1,"Z":2.0,"IS":{"n":903,"pnl":-183.84,"avg":-0.2036,"win":35.7,"pf":0.64,"maxdd":204.36,"gross_avg":-0.0194},"OOS":{"n":370,"pnl":-107.34,"avg":-0.2901,"win":34.6,"pf":0.54,"maxdd":107.86,"gross_avg":-0.1059}},{"mode":"momentum","K":3,"Z":1.0,"IS":{"n":4541,"pnl":-851.54,"avg":-0.1875,"win":36.4,"pf":0.6,"maxdd":879.62,"gross_avg":-0.0033},"OOS":{"n":1856,"pnl":-424.0,"avg":-0.2284,"win":34.8,"pf":0.55,"maxdd":424.52,"gross_avg":-0.0442}},{"mode":"momentum","K":3,"Z":1.5,"IS":{"n":2077,"pnl":-362.91,"avg":-0.1747,"win":37.5,"pf":0.66,"maxdd":388.36,"gross_avg":0.0095},"OOS":{"n":823,"pnl":-199.84,"avg":-0.2428,"win":35.2,"pf":0.57,"maxdd":200.71,"gross_avg":-0.0586}},{"mode":"momentum","K":3,"Z":2.0,"IS":{"n":985,"pnl":-167.95,"avg":-0.1705,"win":37.9,"pf":0.71,"maxdd":199.39,"gross_avg":0.0137},"OOS":{"n":398,"pnl":-120.77,"avg":-0.3034,"win":33.9,"pf":0.52,"maxdd":123.75,"gross_avg":-0.1192}},{"mode":"momentum","K":5,"Z":1.0,"IS":{"n":4727,"pnl":-969.98,"avg":-0.2052,"win":35.5,"pf":0.57,"maxdd":989.07,"gross_avg":-0.021},"OOS":{"n":2011,"pnl":-412.87,"avg":-0.2053,"win":35.6,"pf":0.59,"maxdd":426.42,"gross_avg":-0.0211}},{"mode":"momentum","K":5,"Z":1.5,"IS":{"n":2197,"pnl":-492.6,"avg":-0.2242,"win":35.1,"pf":0.58,"maxdd":524.23,"gross_avg":-0.04},"OOS":{"n":903,"pnl":-196.96,"avg":-0.2181,"win":37.5,"pf":0.61,"maxdd":205.45,"gross_avg":-0.0339}},{"mode":"momentum","K":5,"Z":2.0,"IS":{"n":1088,"pnl":-274.06,"avg":-0.2519,"win":34.7,"pf":0.6,"maxdd":303.29,"gross_avg":-0.0677},"OOS":{"n":416,"pnl":-63.06,"avg":-0.1516,"win":39.7,"pf":0.73,"maxdd":67.87,"gross_avg":0.0326}},{"mode":"fade","K":1,"Z":1.0,"IS":{"n":4102,"pnl":-633.35,"avg":-0.1544,"win":39.7,"pf":0.65,"maxdd":633.12,"gross_avg":0.0298},"OOS":{"n":1744,"pnl":-247.74,"avg":-0.1421,"win":42.1,"pf":0.68,"maxdd":256.3,"gross_avg":0.0421}},{"mode":"fade","K":1,"Z":1.5,"IS":{"n":1926,"pnl":-310.1,"avg":-0.161,"win":41.5,"pf":0.66,"maxdd":310.44,"gross_avg":0.0232},"OOS":{"n":772,"pnl":-106.02,"avg":-0.1373,"win":43.9,"pf":0.72,"maxdd":117.62,"gross_avg":0.0469}},{"mode":"fade","K":1,"Z":2.0,"IS":{"n":903,"pnl":-148.83,"avg":-0.1648,"win":42.9,"pf":0.69,"maxdd":160.53,"gross_avg":0.0194},"OOS":{"n":370,"pnl":-28.96,"avg":-0.0783,"win":48.9,"pf":0.84,"maxdd":44.45,"gross_avg":0.1059}},{"mode":"fade","K":3,"Z":1.0,"IS":{"n":4541,"pnl":-821.36,"avg":-0.1809,"win":40.6,"pf":0.61,"maxdd":821.01,"gross_avg":0.0033},"OOS":{"n":1856,"pnl":-259.75,"avg":-0.14,"win":42.8,"pf":0.68,"maxdd":267.52,"gross_avg":0.0442}},{"mode":"fade","K":3,"Z":1.5,"IS":{"n":2077,"pnl":-402.26,"avg":-0.1937,"win":41.6,"pf":0.62,"maxdd":404.54,"gross_avg":-0.0095},"OOS":{"n":823,"pnl":-103.36,"avg":-0.1256,"win":45.4,"pf":0.74,"maxdd":116.51,"gross_avg":0.0586}},{"mode":"fade","K":3,"Z":2.0,"IS":{"n":985,"pnl":-194.92,"avg":-0.1979,"win":42.1,"pf":0.66,"maxdd":206.59,"gross_avg":-0.0137},"OOS":{"n":398,"pnl":-25.86,"avg":-0.065,"win":49.5,"pf":0.86,"maxdd":38.79,"gross_avg":0.1192}},{"mode":"fade","K":5,"Z":1.0,"IS":{"n":4727,"pnl":-771.45,"avg":-0.1632,"win":41.0,"pf":0.64,"maxdd":773.57,"gross_avg":0.021},"OOS":{"n":2011,"pnl":-327.98,"avg":-0.1631,"win":41.9,"pf":0.65,"maxdd":329.47,"gross_avg":0.0211}},{"mode":"fade","K":5,"Z":1.5,"IS":{"n":2197,"pnl":-316.78,"avg":-0.1442,"win":43.2,"pf":0.7,"maxdd":319.83,"gross_avg":0.04},"OOS":{"n":903,"pnl":-135.7,"avg":-0.1503,"win":44.0,"pf":0.7,"maxdd":142.9,"gross_avg":0.0339}},{"mode":"fade","K":5,"Z":2.0,"IS":{"n":1088,"pnl":-126.76,"avg":-0.1165,"win":45.3,"pf":0.79,"maxdd":129.56,"gross_avg":0.0677},"OOS":{"n":416,"pnl":-90.19,"avg":-0.2168,"win":43.5,"pf":0.63,"maxdd":95.85,"gross_avg":-0.0326}}],"method":[["1 \u00b7 Minute lag","1,000 Deriv M1 bars (16.7 h) + Binance and Coinbase M1 for the same minutes","Correlation of 1-min log returns at offsets \u22122\u2026+2; two-lag regression","1"],["1 \u00b7 Quote lag","27 Deriv quotes with server ms timestamps; exchange quotes recorded in parallel","Lag scanned \u22122 s\u2026+3 s in 100 ms steps; scatter of de-meaned price differences","1 per exchange"],["2 \u00b7 Fast moves","0.98 h of OKX ticks; 2.0 days of Binance 1-s candles","Threshold $18.42 (Deriv spread); windows 0.25/0.5/1/2 s","\u2014"],["3 \u00b7 Replay","0.98 h of OKX ticks, 30,458 quotes","Deriv = OKX delayed by lag + N(0,$1.34); lag 0/250/500/1000 ms; execution 50/150/300/600 ms; hold 1/3/10 s; margin $0/5/15; spread $18.42/$25; 0.01 BTC","384 combinations (shown: hold 3 s, margin $5)"],["4 \u00b7 5-minute","90 days Binance BTCUSDT 1-min (129,604 bars); first 70% of days in-sample","Decide at 5-min boundary; momentum or fade; K=1/3/5 min; Z=1.0/1.5/2.0 \u00d7 rolling 240-min \u03c3; hold 5 min; spread $18.42; 0.01 BTC","18 (all reported)"],["5 \u00b7 Demo trades","Deriv cTrader demo #2601018","Limit probe at $32,000 (cancelled); two market round trips at 0.01 BTC","3 orders"]]};
+const NS = "http://www.w3.org/2000/svg";
+const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const tip = document.getElementById("tip");
+function el(tag, a, p) { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; }
+function txt(p, x, y, s, a = {}) { const t = el("text", Object.assign({ x, y }, a), p); t.textContent = s; return t; }
+function showTip(html, ev) {
+  tip.innerHTML = html; tip.hidden = false;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + w > innerWidth - 8) x = ev.clientX - w - 14;
+  if (y + h > innerHeight - 8) y = ev.clientY - h - 14;
+  tip.style.left = Math.max(8, x) + "px"; tip.style.top = Math.max(8, y) + "px";
+}
+const hideTip = () => { tip.hidden = true; };
+function ticks(min, max, n = 5) {
+  const span = (max - min) || 1, raw = span / n, mag = 10 ** Math.floor(Math.log10(raw)), e = raw / mag;
+  const step = (e >= 7.5 ? 10 : e >= 3.5 ? 5 : e >= 1.5 ? 2 : 1) * mag;
+  const out = []; for (let v = Math.floor(min / step) * step; v <= max + step * 1e-9; v += step) out.push(+v.toFixed(10));
+  if (out[out.length - 1] < max) out.push(+(out[out.length - 1] + step).toFixed(10));
+  return out;
+}
+const money = (v, d = 2) => (v < 0 ? "−$" : "$") + Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const smoney = v => (v > 0 ? "+" : "") + money(v);
+const sw = c => `<span class="sw" style="background:${c}"></span>`;
+
+function legend(id, series) {
+  const L = document.getElementById(id); if (!L) return;
+  L.innerHTML = series.map(s => `<span><i style="background:${cssv(s.color)}"></i>${s.name}</span>`).join("");
+}
+
+function lineChart(id, o) {
+  const box = document.getElementById(id); box.innerHTML = "";
+  const W = box.clientWidth, H = o.height || 300, wide = W > 560;
+  const m = { l: o.ml || 58, r: wide && o.endLabels ? 104 : 14, t: 12, b: 34 };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, height: H, role: "img", "aria-label": o.aria || "" }, box);
+  const all = o.series.flatMap(s => s.pts);
+  const xs = all.map(p => p[0]), ys = all.map(p => p[1]).concat(o.yInclude || []);
+  const x0 = o.xMin ?? Math.min(...xs), x1 = o.xMax ?? Math.max(...xs);
+  const yt = ticks(Math.min(...ys), Math.max(...ys), o.yTicks || 5), y0 = yt[0], y1 = yt[yt.length - 1];
+  const X = v => m.l + (W - m.l - m.r) * (v - x0) / ((x1 - x0) || 1);
+  const Y = v => m.t + (H - m.t - m.b) * (1 - (v - y0) / ((y1 - y0) || 1));
+  const grid = cssv("--line"), axis = cssv("--axis");
+  for (const v of yt) { el("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: v === 0 && o.zero ? axis : grid, "stroke-width": 1 }, svg); txt(svg, m.l - 8, Y(v) + 4, o.yFmt(v), { "text-anchor": "end" }); }
+  const xt = o.xTicks ? o.xTicks : ticks(x0, x1, wide ? 7 : 4).filter(v => v >= x0 && v <= x1);
+  for (const v of xt) { el("line", { x1: X(v), x2: X(v), y1: H - m.b, y2: H - m.b + 4, stroke: axis }, svg); txt(svg, X(v), H - m.b + 17, o.xFmt(v), { "text-anchor": "middle" }); }
+  if (o.xLabel) txt(svg, W - m.r, H - 2, o.xLabel, { "text-anchor": "end" });
+  if (o.vlines) for (const v of o.vlines) if (v > x0 && v < x1) el("line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: grid, "stroke-dasharray": "3 3" }, svg);
+  el("line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: axis }, svg);
+  const ends = [];
+  for (const s of o.series) {
+    const c = cssv(s.color); let d = "";
+    s.pts.forEach((p, i) => {
+      if (i === 0) d += `M${X(p[0])},${Y(p[1])}`;
+      else if (s.step) d += `H${X(p[0])}V${Y(p[1])}`;
+      else d += `L${X(p[0])},${Y(p[1])}`;
+    });
+    if (s.step && s.extend != null) d += `H${X(s.extend)}`;
+    el("path", { d, fill: "none", stroke: c, "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+    const last = s.pts[s.pts.length - 1], lx = s.step && s.extend != null ? s.extend : last[0];
+    el("circle", { cx: X(lx), cy: Y(last[1]), r: 4, fill: c, stroke: cssv("--surface"), "stroke-width": 2 }, svg);
+    ends.push({ y: Y(last[1]), x: X(lx), s, v: last[1] });
+  }
+  if (wide && o.endLabels) {
+    ends.sort((a, b) => a.y - b.y);
+    for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 28) ends[i].y = ends[i - 1].y + 28;
+    for (const e of ends) { txt(svg, e.x + 10, e.y - 1, e.s.short || e.s.name, { class: "lbl" }); txt(svg, e.x + 10, e.y + 13, o.yFmt(e.v, true), { class: "val" }); }
+  }
+  const cross = el("line", { y1: m.t, y2: H - m.b, stroke: axis, visibility: "hidden" }, svg);
+  const dots = o.series.map(s => el("circle", { r: 4, fill: cssv(s.color), stroke: cssv("--surface"), "stroke-width": 2, visibility: "hidden" }, svg));
+  const hit = el("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent" }, svg);
+  const valAt = (s, xv) => {
+    if (s.step) { let v = null; for (const p of s.pts) { if (p[0] <= xv) v = p[1]; else break; } return (s.extend == null && xv > s.pts[s.pts.length - 1][0]) ? null : v; }
+    let best = null, bd = Infinity; for (const p of s.pts) { const dd = Math.abs(p[0] - xv); if (dd < bd) { bd = dd; best = p[1]; } } return best;
+  };
+  hit.addEventListener("pointermove", ev => {
+    const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * (W / r.width);
+    const xv = x0 + (px - m.l) / (W - m.l - m.r) * (x1 - x0);
+    cross.setAttribute("x1", px); cross.setAttribute("x2", px); cross.setAttribute("visibility", "visible");
+    let rows = "";
+    o.series.forEach((s, i) => {
+      const v = valAt(s, xv);
+      if (v == null || xv > (s.extend ?? s.pts[s.pts.length - 1][0])) { dots[i].setAttribute("visibility", "hidden"); return; }
+      dots[i].setAttribute("cx", px); dots[i].setAttribute("cy", Y(v)); dots[i].setAttribute("visibility", "visible");
+      rows += `<div>${sw(cssv(s.color))}${s.name}: <b>${o.yFmt(v, true)}</b></div>`;
+    });
+    showTip(`<div><b>${o.xFmt(xv, true)}</b></div>${rows}`, ev);
+  });
+  hit.addEventListener("pointerleave", () => { hideTip(); cross.setAttribute("visibility", "hidden"); dots.forEach(d => d.setAttribute("visibility", "hidden")); });
+}
+
+function barChart(id, o) {
+  const box = document.getElementById(id); box.innerHTML = "";
+  const W = box.clientWidth, H = o.height || 240;
+  const n = o.items.length, showVals = o.values !== false && n <= 10;
+  const m = { l: o.ml || 48, r: 10, t: showVals ? 20 : 10, b: o.mb || 40 };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, height: H, role: "img", "aria-label": o.aria || "" }, box);
+  const vals = o.items.map(d => d.v);
+  const yt = ticks(Math.min(0, ...vals), Math.max(0, ...vals), 4), y0 = yt[0], y1 = yt[yt.length - 1];
+  const Y = v => m.t + (H - m.t - m.b) * (1 - (v - y0) / ((y1 - y0) || 1));
+  const grid = cssv("--line"), axis = cssv("--axis");
+  for (const v of yt) { el("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: v === 0 ? axis : grid }, svg); txt(svg, m.l - 8, Y(v) + 4, o.yFmt(v), { "text-anchor": "end" }); }
+  const band = (W - m.l - m.r) / n, gap = Math.max(2, Math.min(band * 0.28, 22)), bw = band - gap;
+  const every = Math.ceil(n / Math.max(1, Math.floor((W - m.l) / 46)));
+  o.items.forEach((d, i) => {
+    const x = m.l + i * band + gap / 2, top = Y(Math.max(0, d.v)), bot = Y(Math.min(0, d.v)), h = Math.max(bot - top, d.v === 0 ? 0 : 1.5);
+    const c = cssv(d.color || o.color || "--s1"), r = Math.min(4, bw / 2, h);
+    const up = d.v >= 0;
+    const path = up
+      ? `M${x},${bot}V${top + r}Q${x},${top} ${x + r},${top}H${x + bw - r}Q${x + bw},${top} ${x + bw},${top + r}V${bot}Z`
+      : `M${x},${top}V${bot - r}Q${x},${bot} ${x + r},${bot}H${x + bw - r}Q${x + bw},${bot} ${x + bw},${bot - r}V${top}Z`;
+    el("path", { d: path, fill: c }, svg);
+    if (i % every === 0 || o.allLabels) txt(svg, x + bw / 2, H - m.b + (o.stagger && i % 2 ? 30 : 16), d.label, { "text-anchor": "middle", class: o.labelClass || "" });
+    if (d.sub) txt(svg, x + bw / 2, H - m.b + 30, d.sub, { "text-anchor": "middle" });
+    if (showVals) txt(svg, x + bw / 2, up ? top - 6 : bot + 14, o.vFmt ? o.vFmt(d.v) : o.yFmt(d.v), { "text-anchor": "middle", class: "val" });
+    const hr = el("rect", { x: m.l + i * band, y: m.t, width: band, height: H - m.t - m.b, fill: "transparent" }, svg);
+    hr.addEventListener("pointermove", ev => showTip(o.tip ? o.tip(d) : `<b>${d.label}</b><div>${o.vFmt ? o.vFmt(d.v) : o.yFmt(d.v)}</div>`, ev));
+    hr.addEventListener("pointerleave", hideTip);
+  });
+}
+
+function hbar(id, o) {
+  const box = document.getElementById(id); box.innerHTML = "";
+  const W = box.clientWidth, narrow = W < 520, row = narrow ? 46 : 34, H = o.items.length * row + 8;
+  const lw = narrow ? 0 : Math.min(300, W * 0.45), m = { l: lw, r: 56 };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, height: H, role: "img", "aria-label": o.aria || "" }, box);
+  const X = v => m.l + (W - m.l - m.r) * v / o.max;
+  o.items.forEach((d, i) => {
+    const y = i * row + 4, by = narrow ? y + 20 : y + 6, bh = narrow ? 14 : 18;
+    txt(svg, narrow ? 0 : lw - 12, narrow ? y + 13 : y + 19, d.label, { "text-anchor": narrow ? "start" : "end", class: "lbl" });
+    el("rect", { x: m.l, y: by, width: W - m.l - m.r, height: bh, fill: cssv("--sunk"), rx: 3 }, svg);
+    el("rect", { x: m.l, y: by, width: Math.max(0, X(d.v) - m.l), height: bh, fill: cssv(d.color), rx: 3 }, svg);
+    txt(svg, W - m.r + 8, by + bh - 4, `${d.v} / ${o.max}`, { class: "val" });
+    const hr = el("rect", { x: 0, y, width: W, height: row, fill: "transparent" }, svg);
+    hr.addEventListener("pointermove", ev => showTip(`<b>${d.label}</b><div>${d.v} of ${o.max} windows correct</div>`, ev));
+    hr.addEventListener("pointerleave", hideTip);
+  });
+}
+
+function table(id, head, rows, rcols = []) {
+  const t = document.getElementById(id); if (!t) return;
+  t.innerHTML = `<table><thead><tr>${head.map((h, i) => `<th class="${rcols.includes(i) ? "r" : ""}">${h}</th>`).join("")}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((c, i) => `<td class="${rcols.includes(i) ? "r" : ""}">${c}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+}
+
+
+const smoney2 = v => (v > 0 ? "+" : v < 0 ? "−" : "") + "$" + Math.abs(v).toFixed(2);
+function heat(id, grid, spread) {
+  const lags = [0, 250, 500, 1000], ex = [50, 150, 300, 600];
+  let mx = 0; for (const g of grid) if (g.spread === spread && g.hold === 3000 && g.margin === 5) mx = Math.max(mx, Math.abs(g.pnl / D.replayHours));
+  let h = `<table class="heat"><thead><tr><th style="text-align:left">Deriv lag</th>${ex.map(e => `<th>${e} ms</th>`).join("")}</tr></thead><tbody>`;
+  for (const L of lags) {
+    h += `<tr><td class="rh">${L === 0 ? "none" : L >= 1000 ? L / 1000 + " s" : L + " ms"}</td>`;
+    for (const e of ex) {
+      const g = grid.find(g => g.spread === spread && g.lag === L && g.exec === e && g.hold === 3000 && g.margin === 5);
+      const v = g.pnl / D.replayHours, t = mx ? Math.min(1, Math.abs(v) / mx) : 0;
+      const bg = v >= 0 ? `color-mix(in srgb, var(--s1) ${Math.round(t * 85)}%, var(--surface))` : `color-mix(in srgb, var(--bad) ${Math.round(t * 70)}%, var(--surface))`;
+      const fg = t > 0.55 ? "#ffffff" : "var(--ink)";
+      h += `<td class="c" style="background:${bg};color:${fg}" title="${g.n} trades, ${g.win}% won, avg ${smoney2(g.avg)} per trade">${smoney2(v)}<br><span style="font-size:11px;opacity:.8">${g.n} tr</span></td>`;
+    }
+    h += "</tr>";
+  }
+  document.getElementById(id).innerHTML = h + `</tbody></table><p style="font-size:13px;color:var(--muted);margin:8px 0 0">Columns: your order's delay to Deriv. Hover a cell for trade count and average. ${D.replayHours.toFixed(2)} h of ticks.</p>`;
+}
+function renderStatic() {
+  heat("tb-replay", D.grid, 18.42); heat("tb-replay25", D.grid, 25);
+  table("tb-lag", ["Exchange", "Best-fit lag", "Scatter at best fit"], Object.entries(D.lag).map(([n, v]) => [n, (v.best > 0 ? "+" : "") + v.best + " ms", "$" + v.sd]), [1, 2]);
+  table("tb-trades", ["Time (UTC)", "Side", "Gap seen", "Deriv in", "Deriv out", "P&L"], D.trades.map(t => [new Date(t[0]).toISOString().slice(11, 23), t[1] > 0 ? "Buy" : "Sell", "$" + t[2].toFixed(2), t[3].toFixed(2), t[4].toFixed(2), `<span class="${t[5] >= 0 ? "pos" : "neg"}">${smoney2(t[5])}</span>`]), [2, 3, 4, 5]);
+  const fmt = s => s.n ? [s.n, `<span class="${s.pnl >= 0 ? "pos" : "neg"}">${smoney2(s.pnl)}</span>`, s.pf ?? "—", s.win + "%"] : [0, "—", "—", "—"];
+  table("tb-five", ["Rule", "IS trades", "IS P&L", "IS PF", "IS win", "OOS trades", "OOS P&L", "OOS PF", "OOS win"], D.five.map(r => [`${r.mode} K=${r.K} Z=${r.Z}`, ...fmt(r.IS), ...fmt(r.OOS)]), [1, 2, 3, 4, 5, 6, 7, 8]);
+  document.getElementById("tb-method").innerHTML = D.method.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("");
+  document.getElementById("okxh").textContent = D.okxHours.toFixed(2);
+  document.getElementById("nsamp").textContent = D.nsamp;
+  document.getElementById("moves-text").innerHTML = D.movesText;
+  document.getElementById("replay-text").innerHTML = D.replayText;
+}
+function renderCharts() {
+  const M = [{ name: "Binance", color: "--s1", k: "binance" }, { name: "Coinbase", color: "--s2", k: "coinbase" }];
+  legend("lg-m1", M);
+  barGroup("ch-m1", D.m1corr, M);
+  const V = [{ name: "OKX", color: "--s1", k: "okx" }, { name: "Coinbase", color: "--s2", k: "coinbase" }, { name: "Kraken", color: "--s3", k: "kraken" }, { name: "Binance", color: "--s4", k: "binance" }];
+  legend("lg-lag", V);
+  lineChart("ch-lag", { series: V.map(v => ({ ...v, short: v.name, pts: D.lag[v.k].curve.map(p => [p[0] / 1000, p[1]]) })), yFmt: (v, t) => "$" + (t ? v.toFixed(2) : v), xFmt: (v, t) => (v > 0 ? "+" : "") + (t ? v.toFixed(1) : v) + " s", xLabel: "assumed Deriv lag (+ = Deriv behind)", endLabels: true, aria: "Lag fit curves" });
+  barChart("ch-moves", { items: D.moves.map(m => ({ label: m[0] >= 1000 ? m[0] / 1000 + " s" : m[0] + " ms", v: m[1] })), yFmt: v => v + "%", vFmt: v => v.toFixed(2) + "%", height: 220, allLabels: true, tip: d => `<b>Within ${d.label}</b><div>${d.v.toFixed(3)}% of the time</div>`, aria: "Fast move frequency" });
+  barChart("ch-five", { items: D.five.map(r => ({ label: `${r.mode === "fade" ? "F" : "M"}${r.K}·${r.Z}`, v: r.OOS.pnl, color: "--s2", r })), yFmt: v => "$" + v, values: false, allLabels: true, height: 240, mb: 30,
+    tip: d => `<b>${d.r.mode} K=${d.r.K} Z=${d.r.Z}</b><div>OOS ${smoney2(d.r.OOS.pnl)} over ${d.r.OOS.n} trades</div><div>IS ${smoney2(d.r.IS.pnl)}</div>`, aria: "OOS P&L per rule" });
+  const top = [...D.five].sort((a, b) => b.IS.pnl - a.IS.pnl).slice(0, 4);
+  const items = []; top.forEach(r => { items.push({ label: `${r.mode === "fade" ? "Fade" : "Mom."} ${r.K}m`, sub: "before", v: r.OOS.gross_avg, color: "--s1", r }); items.push({ label: "", sub: "after", v: r.OOS.avg, color: "--s2", r }); });
+  barChart("ch-gross", { items, yFmt: v => "$" + v.toFixed(2), vFmt: v => smoney2(v), height: 250, mb: 44, allLabels: true, tip: d => `<b>${d.r.mode} K=${d.r.K} Z=${d.r.Z}</b><div>${d.sub} spread: ${smoney2(d.v)} per trade</div>`, aria: "Gross vs net per trade" });
+}
+function barGroup(id, data, series) {
+  // grouped bars: data = {binance:[[L,c],...], coinbase:[...]}
+  const items = []; const Ls = data[series[0].k].map(p => p[0]);
+  Ls.forEach((L, i) => series.forEach((s, j) => items.push({ label: j === 0 ? (L > 0 ? "+" : "") + L + " min" : "", v: data[s.k][i][1], color: s.color, name: s.name, L })));
+  barChart(id, { items, yFmt: v => v.toFixed(1), vFmt: v => v.toFixed(3), height: 240, allLabels: true, values: false, tip: d => `<b>${d.name}, offset ${d.L} min</b><div>correlation ${d.v.toFixed(3)}</div>`, aria: "Minute correlation by offset" });
+}
+function renderAll() { renderStatic(); renderCharts(); }
+renderAll();
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(renderCharts, 120); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderAll);
+new MutationObserver(renderAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+for (const b of document.querySelectorAll("button.copy")) b.addEventListener("click", () => {
+  const pre = b.parentElement.querySelector("pre"), done = () => { b.textContent = "Copied"; setTimeout(() => b.textContent = "Copy", 1500); };
+  navigator.clipboard.writeText(pre.textContent).then(done).catch(() => { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = "Selected"; });
+});
+
+</script>
