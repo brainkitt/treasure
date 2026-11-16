@@ -1,3 +1,4 @@
+mod approve;
 mod book;
 mod config;
 mod dashboard;
@@ -29,6 +30,12 @@ enum Cmd {
         #[arg(long)]
         live: bool,
     },
+    /// One-time token approvals for a plain (EOA) wallet. Needs POL for gas.
+    Approve {
+        /// Only show balances and approval status; send nothing.
+        #[arg(long)]
+        check: bool,
+    },
     /// Offline simulation against a synthetic market whose quotes lag spot.
     Sim {
         #[arg(long, default_value_t = 24.0)]
@@ -53,6 +60,7 @@ async fn main() -> anyhow::Result<()> {
     let cfg = config::Config::load(cli.config.as_deref())?;
     match cli.cmd {
         Cmd::Run { live } => run::run(cfg, live).await?,
+        Cmd::Approve { check } => approve::run(check).await?,
         Cmd::Sim { hours, lag_ms, seed, serve } => {
             let p = sim::SimParams { hours, lag_ms, seed, ..Default::default() };
             let addr = cfg.dashboard_addr.clone();

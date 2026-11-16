@@ -7,6 +7,7 @@ publish = false
 
 [dependencies]
 polymarket-client-sdk = { version = "0.4.4", features = ["clob", "gamma"] }
+alloy = { version = "1.6", default-features = false, features = ["contract", "providers", "sol-types", "signer-local", "reqwest", "reqwest-rustls-tls"] }
 tokio = { version = "1", features = ["full"] }
 tokio-tungstenite = { version = "0.28", features = ["rustls-tls-native-roots"] }
 futures = "0.3"

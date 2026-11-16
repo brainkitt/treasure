@@ -9,7 +9,8 @@ use std::time::{Duration, Instant};
 use anyhow::Context as _;
 use futures::{SinkExt as _, StreamExt as _};
 use polymarket_client_sdk::auth::{LocalSigner, Signer as _};
-use polymarket_client_sdk::clob::types::{OrderType, Side, SignatureType};
+use polymarket_client_sdk::clob::types::request::BalanceAllowanceRequest;
+use polymarket_client_sdk::clob::types::{OrderStatusType, OrderType, Side, SignatureType};
 use polymarket_client_sdk::gamma::types::request::MarketBySlugRequest;
 use polymarket_client_sdk::types::{Address, Decimal, U256};
 use polymarket_client_sdk::{POLYGON, PRIVATE_KEY_VAR, clob, gamma};
@@ -285,6 +286,20 @@ pub async fn live_executor(cfg: Config, mut rx: Receiver<ExecMsg>, tx: Sender<Ev
     });
     let client = auth.authenticate().await.context("CLOB authentication failed")?;
     tracing::info!("live executor authenticated as {}", signer.address());
+    match client.balance_allowance(BalanceAllowanceRequest::default()).await {
+        Ok(b) => {
+            // The API reports collateral in base units (6 decimals).
+            let usd = f(b.balance) / 1e6;
+            tracing::info!("wallet collateral balance ${usd:.2} (raw {}); configured bankroll ${:.2}", b.balance, cfg.bankroll);
+            if usd + 1e-9 < cfg.bankroll {
+                tracing::warn!("configured bankroll is larger than the wallet balance: set bankroll = {usd:.2} in config.toml");
+            }
+            if b.allowances.values().all(|a| a.trim_start_matches('0').is_empty()) {
+                tracing::warn!("no exchange allowance set for collateral: orders will be rejected until approvals are done");
+            }
+        }
+        Err(e) => tracing::warn!("could not read wallet balance: {e}"),
+    }
 
     while let Some(msg) = rx.recv().await {
         let (client, signer, tx) = (client.clone(), signer.clone(), tx.clone());
@@ -317,6 +332,13 @@ pub async fn live_executor(cfg: Config, mut rx: Receiver<ExecMsg>, tx: Sender<Ev
                     .await;
                     let latency_ms = t0.elapsed().as_secs_f64() * 1000.0;
                     let report = match res {
+                        Ok(r) if r.success && matches!(r.status, OrderStatusType::Delayed | OrderStatusType::Live) => {
+                            // Accepted but not matched yet (matching delay). It may still
+                            // fill, so wait for its final state instead of calling it missed.
+                            let (shares, avg_px) = settle_pending(&client, &r.order_id, intent.limit).await;
+                            tracing::info!(order = %r.order_id, shares, "delayed order settled");
+                            FillReport { intent, shares, avg_px, latency_ms: t0.elapsed().as_secs_f64() * 1000.0, error: None }
+                        }
                         Ok(r) => {
                             // Buy: maker gives USDC, takes shares. Sell: the reverse.
                             let (shares, usdc) = match intent.action {
@@ -335,6 +357,34 @@ pub async fn live_executor(cfg: Config, mut rx: Receiver<ExecMsg>, tx: Sender<Ev
         }
     }
     Ok(())
+}
+
+/// Poll an accepted-but-unmatched order until it reaches a final state.
+/// Cancels it if it is still open after ~10s. Returns (shares filled, price);
+/// the limit price stands in for the fill price, which is never better for us.
+async fn settle_pending<K: polymarket_client_sdk::auth::Kind>(
+    client: &clob::Client<polymarket_client_sdk::auth::state::Authenticated<K>>,
+    order_id: &str,
+    limit: f64,
+) -> (f64, f64) {
+    let mut matched = 0.0;
+    for _ in 0..20 {
+        tokio::time::sleep(Duration::from_millis(500)).await;
+        match client.order(order_id).await {
+            Ok(o) => {
+                matched = f(o.size_matched);
+                if !matches!(o.status, OrderStatusType::Delayed | OrderStatusType::Live) {
+                    return (matched, if matched > 0.0 { limit } else { 0.0 });
+                }
+            }
+            Err(e) => tracing::debug!(order = %order_id, "order status: {e}"),
+        }
+    }
+    let _ = client.cancel_order(order_id).await;
+    if let Ok(o) = client.order(order_id).await {
+        matched = f(o.size_matched);
+    }
+    (matched, if matched > 0.0 { limit } else { 0.0 })
 }
 
 #[cfg(test)]
