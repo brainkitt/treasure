@@ -12,6 +12,7 @@ min_secs_elapsed = 5.0
 slippage_ticks  = 1.0
 cooldown_ms     = 1500
 max_spot_age_ms = 3000
+max_book_age_ms = 5000     # ignore an order book with no update for this long (0 = off)
 max_ref_age_ms  = 10000    # stand aside if the Chainlink stream is older than this
 fee_rate        = 0.07     # taker fee/share = fee_rate * (p(1-p))^fee_exponent
 fee_exponent    = 1.0

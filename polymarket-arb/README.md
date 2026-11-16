@@ -96,4 +96,23 @@ quiet hour and say nothing reliable about expected profit.
   market-data-only host, and runs fine on any subset of feeds.
 - Polymarket restricts access from some jurisdictions, including the US.
 
-RESULTS_PLACEHOLDER
+## RESULTS — live paper trading, 16 Nov 2026, 08:18–09:18 UTC
+
+$1,000 paper bankroll, default settings (about $5 per trade), fills taken
+from the real order book after the stated delay, fees included.
+
+| Run | Fill delay | Length | Buys filled | Orders missed | P&L |
+| - | - | - | - | - | - |
+| A | 80 ms | 45 min | 70 | 12 | +$31.96 |
+| B | 80 ms | 30 min | 74 | 11 | +$42.25 |
+| C | 500 ms | 30 min | 42 | 55 | +$31.56 |
+| D | 1500 ms | 30 min | 32 | 100 | +$16.36 |
+
+B, C and D ran side by side on the same data. Nearly all profit came from
+selling within seconds once the book caught up; the few positions held to
+resolution lost money overall. Slower fills miss more orders but the edge did
+not vanish in this sample.
+
+This is one hour of one morning, with clips too small to move the book and
+no real orders. Treat it as evidence the pipeline works, not as an expected
+return.

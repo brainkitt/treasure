@@ -81,7 +81,7 @@ impl Default for Config {
             min_secs_elapsed: 5.0,
             slippage_ticks: 1.0,
             cooldown_ms: 1500,
-            max_book_age_ms: 0,
+            max_book_age_ms: 5000,
             max_spot_age_ms: 3000,
             max_ref_age_ms: 10_000,
             fee_rate: 0.07,
