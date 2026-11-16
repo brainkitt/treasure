@@ -42,6 +42,19 @@ impl Book {
         self.updated_ms = ts_ms;
     }
 
+    /// Reconcile with the exchange's own top of book: drop any local level
+    /// that is better than the reported best. Returns true if we were wrong.
+    pub fn reconcile(&mut self, best_bid: f64, best_ask: f64) -> bool {
+        let (nb, na) = (self.bids.len(), self.asks.len());
+        if best_bid > 0.0 {
+            self.bids.retain(|k, _| *k <= key(best_bid));
+        }
+        if best_ask > 0.0 {
+            self.asks.retain(|k, _| *k >= key(best_ask));
+        }
+        nb != self.bids.len() || na != self.asks.len()
+    }
+
     pub fn best_bid(&self) -> Option<(f64, f64)> {
         self.bids.iter().next_back().map(|(k, s)| (*k as f64 / SCALE, *s))
     }
@@ -97,5 +110,8 @@ mod tests {
         assert_eq!(b.take_bids(0.48, 500.0).0, 100.0);
         b.set_level(BookSide::Ask, 0.50, 0.0, 2);
         assert_eq!(b.best_ask(), Some((0.51, 100.0)));
+        assert!(!b.reconcile(0.48, 0.51));
+        assert!(b.reconcile(0.47, 0.51));
+        assert_eq!(b.best_bid(), Some((0.47, 50.0)));
     }
 }

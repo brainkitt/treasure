@@ -7,6 +7,7 @@ mod polymarket;
 mod run;
 mod sim;
 mod spot;
+mod ws;
 
 use clap::{Parser, Subcommand};
 

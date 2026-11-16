@@ -12,12 +12,14 @@ min_secs_elapsed = 5.0
 slippage_ticks  = 1.0
 cooldown_ms     = 1500
 max_spot_age_ms = 3000
-fee_rate        = 0.25     # taker fee/share = fee_rate * p * (p(1-p))^fee_exponent
-fee_exponent    = 2.0
+max_ref_age_ms  = 10000    # stand aside if the Chainlink stream is older than this
+fee_rate        = 0.07     # taker fee/share = fee_rate * (p(1-p))^fee_exponent
+fee_exponent    = 1.0
+twap_window_s   = 60.0     # markets resolve on Chainlink's 60s TWAP stream
 vol_mult        = 1.0      # >1 makes fair values more conservative
 paper_latency_ms = 80
 intervals_min   = [5, 15]
-feeds           = ["binance", "coinbase", "kraken", "okx"]
+feeds           = ["coinbase", "kraken", "okx", "binance"]
 dashboard_addr  = "127.0.0.1:8787"
 
 [live]

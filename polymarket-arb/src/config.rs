@@ -31,9 +31,13 @@ pub struct Config {
     pub max_book_age_ms: i64,
     /// Ignore the spot composite when older than this.
     pub max_spot_age_ms: i64,
-    /// Taker-fee curve: fee/share = fee_rate * p * (p(1-p))^fee_exponent.
+    /// Stand aside when the Chainlink reference stream is older than this.
+    pub max_ref_age_ms: i64,
+    /// Taker-fee curve: fee/share = fee_rate * (p(1-p))^fee_exponent.
     pub fee_rate: f64,
     pub fee_exponent: f64,
+    /// Markets resolve on a TWAP of this many seconds (0 = spot print).
+    pub twap_window_s: f64,
     /// Polymarket minimums.
     pub min_order_usd: f64,
     /// Volatility estimator.
@@ -79,8 +83,10 @@ impl Default for Config {
             cooldown_ms: 1500,
             max_book_age_ms: 0,
             max_spot_age_ms: 3000,
-            fee_rate: 0.25,
-            fee_exponent: 2.0,
+            max_ref_age_ms: 10_000,
+            fee_rate: 0.07,
+            fee_exponent: 1.0,
+            twap_window_s: 60.0,
             min_order_usd: 1.0,
             vol_init_annual: 0.5,
             vol_floor_annual: 0.15,
@@ -88,7 +94,7 @@ impl Default for Config {
             vol_mult: 1.0,
             paper_latency_ms: 80,
             intervals_min: vec![5, 15],
-            feeds: ["binance", "coinbase", "kraken", "okx"].map(String::from).to_vec(),
+            feeds: ["coinbase", "kraken", "okx", "binance"].map(String::from).to_vec(),
             dashboard_addr: "127.0.0.1:8787".into(),
             live: Live::default(),
         }

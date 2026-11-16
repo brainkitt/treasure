@@ -22,7 +22,8 @@ pub fn feed(name: &str) -> Option<Feed> {
     Some(match name {
         "binance" => Feed {
             name: "binance",
-            url: "wss://stream.binance.com:9443/ws/btcusdt@bookTicker",
+            // Market-data-only endpoint; same stream as stream.binance.com.
+            url: "wss://data-stream.binance.vision/ws/btcusdt@bookTicker",
             subscribe: None,
             text_ping: None,
             parse: parse_binance,
@@ -37,13 +38,13 @@ pub fn feed(name: &str) -> Option<Feed> {
         "kraken" => Feed {
             name: "kraken",
             url: "wss://ws.kraken.com/v2",
-            subscribe: Some(r#"{"method":"subscribe","params":{"channel":"ticker","symbol":["BTC/USD"]}}"#),
+            subscribe: Some(r#"{"method":"subscribe","params":{"channel":"ticker","symbol":["BTC/USD"],"event_trigger":"bbo"}}"#),
             text_ping: None,
             parse: parse_kraken,
         },
         "okx" => Feed {
             name: "okx",
-            url: "wss://ws.okx.com:8443/ws/v5/public",
+            url: "wss://ws.okx.com/ws/v5/public",
             subscribe: Some(r#"{"op":"subscribe","args":[{"channel":"bbo-tbt","instId":"BTC-USDT"}]}"#),
             text_ping: Some("ping"),
             parse: parse_okx,
@@ -106,7 +107,7 @@ pub async fn run_feed(idx: usize, f: Feed, tx: Sender<Event>) {
 }
 
 async fn session(idx: usize, f: &Feed, tx: &Sender<Event>) -> anyhow::Result<()> {
-    let (mut ws, _) = tokio_tungstenite::connect_async(f.url).await?;
+    let mut ws = crate::ws::connect(f.url).await?;
     if let Some(sub) = f.subscribe {
         ws.send(Message::text(sub)).await?;
     }

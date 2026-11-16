@@ -5,7 +5,6 @@ use std::collections::VecDeque;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-use polymarket_client_sdk::clob;
 use tokio::sync::mpsc;
 
 use crate::book::BookSide;
@@ -16,10 +15,15 @@ use crate::{dashboard, spot};
 
 pub enum Event {
     Spot { src: usize, px: f64 },
-    Chainlink { ts_ms: i64, px: f64 },
+    /// Chainlink BTC/USD print.
+    Ref { ts_ms: i64, px: f64 },
+    /// Chainlink 60s TWAP print (the resolution stream).
+    Twap { ts_ms: i64, px: f64 },
     Market(MarketDef),
     BookSnap { token: String, bids: Vec<(f64, f64)>, asks: Vec<(f64, f64)> },
     BookLevel { token: String, side: BookSide, price: f64, size: f64 },
+    /// Exchange-reported best bid/ask after a book change.
+    BookTop { token: String, best_bid: f64, best_ask: f64 },
     Fill(FillReport),
 }
 
@@ -82,7 +86,7 @@ impl Composite {
     }
 }
 
-/// Strike = first Chainlink print at or after the window start, accepted
+/// Strike = first TWAP print at or after the window start, accepted
 /// only if we were already receiving prints before the start (so a bot that
 /// boots mid-window never guesses).
 pub fn strike_from(ticks: &VecDeque<(i64, f64)>, start_ms: i64) -> Option<f64> {
@@ -105,7 +109,7 @@ pub async fn run(cfg: Config, live: bool) -> anyhow::Result<()> {
     for (i, f) in feeds.into_iter().enumerate() {
         tokio::spawn(spot::run_feed(i, f, tx.clone()));
     }
-    tokio::spawn(polymarket::chainlink(tx.clone()));
+    tokio::spawn(polymarket::reference_prices(tx.clone()));
     tokio::spawn(polymarket::discover(cfg.clone(), tx.clone()));
 
     let listener = tokio::net::TcpListener::bind(&cfg.dashboard_addr).await?;
@@ -120,7 +124,6 @@ pub async fn run(cfg: Config, live: bool) -> anyhow::Result<()> {
         tokio::spawn(std::future::pending())
     };
 
-    let ws = clob::ws::Client::default();
     let mut engine = Engine::new(cfg.clone(), if live { Mode::Live } else { Mode::Paper }, now_ms());
     let mut comp = Composite::new(names.len() - 1, cfg.max_spot_age_ms);
     let mut ticks: VecDeque<(i64, f64)> = VecDeque::new();
@@ -141,10 +144,18 @@ pub async fn run(cfg: Config, live: bool) -> anyhow::Result<()> {
                             engine.on_spot(now, v);
                         }
                     }
-                    Event::Chainlink { ts_ms, px } => {
-                        last_cl_ms = now;
-                        comp.on_chainlink(px, now);
-                        ticks.push_back((ts_ms, px));
+                    Event::Ref { ts_ms, px } => {
+                        if now - ts_ms < 5000 {
+                            last_cl_ms = now;
+                            comp.on_chainlink(px, now);
+                        }
+                        engine.on_ref(ts_ms, px);
+                    }
+                    Event::Twap { ts_ms, px } => {
+                        engine.on_twap(ts_ms, px);
+                        if ticks.back().is_none_or(|t| t.0 < ts_ms) {
+                            ticks.push_back((ts_ms, px));
+                        }
                         while ticks.front().is_some_and(|t| t.0 < ts_ms - 1_200_000) {
                             ticks.pop_front();
                         }
@@ -159,12 +170,13 @@ pub async fn run(cfg: Config, live: bool) -> anyhow::Result<()> {
                             if live {
                                 let _ = exec_tx.try_send(ExecMsg::Warm(vec![def.up_token.clone(), def.down_token.clone()]));
                             }
-                            tokio::spawn(polymarket::stream_books(ws.clone(), def.clone(), tx.clone()));
+                            tokio::spawn(polymarket::stream_books(def.clone(), tx.clone()));
                             engine.add_market(def, None);
                         }
                     }
                     Event::BookSnap { token, bids, asks } => engine.on_book_snapshot(now, &token, &bids, &asks),
                     Event::BookLevel { token, side, price, size } => engine.on_book_level(now, &token, side, price, size),
+                    Event::BookTop { token, best_bid, best_ask } => engine.on_book_top(&token, best_bid, best_ask),
                     Event::Fill(r) => engine.on_fill(r),
                 }
             }

@@ -6,7 +6,7 @@ use std::collections::VecDeque;
 
 use crate::config::Config;
 use crate::engine::{Engine, MarketDef, Mode};
-use crate::model::fair_up;
+use crate::model::fair_up_twap;
 
 #[derive(Debug, Clone)]
 pub struct SimParams {
@@ -69,6 +69,8 @@ pub fn run(cfg: Config, p: &SimParams) -> Engine {
     let mut spot = 100_000.0;
     let mut hist: VecDeque<(i64, f64)> = VecDeque::new();
     let mut cur: Option<(MarketDef, f64)> = None;
+    let mut secs: VecDeque<f64> = VecDeque::new(); // 1s reference prints
+    let mut twap = spot;
 
     let mut t = t0;
     while t < end {
@@ -80,6 +82,16 @@ pub fn run(cfg: Config, p: &SimParams) -> Engine {
         hist.push_back((t, spot));
         while hist.front().is_some_and(|h| h.0 < t - p.lag_ms) {
             hist.pop_front();
+        }
+
+        if (t - t0) % 1000 == 0 {
+            secs.push_back(spot);
+            if secs.len() > 60 {
+                secs.pop_front();
+            }
+            twap = secs.iter().sum::<f64>() / secs.len() as f64;
+            engine.on_ref(t, spot);
+            engine.on_twap(t, twap);
         }
 
         if (t - t0) % window_ms == 0 {
@@ -94,8 +106,8 @@ pub fn run(cfg: Config, p: &SimParams) -> Engine {
                 tick: 0.01,
                 min_size: 5.0,
             };
-            engine.add_market(def.clone(), Some(spot));
-            cur = Some((def, spot));
+            engine.add_market(def.clone(), Some(twap));
+            cur = Some((def, twap));
         }
 
         if (t - t0) % 50 == 0 {
@@ -106,7 +118,10 @@ pub fn run(cfg: Config, p: &SimParams) -> Engine {
             && let Some((def, strike)) = &cur {
                 let lagged = hist.front().map_or(spot, |h| h.1);
                 let secs_left = (def.end_ms - t) as f64 / 1000.0;
-                let f = fair_up(lagged, *strike, sigma, secs_left);
+                let w = engine.cfg.twap_window_s;
+                let n = ((w - secs_left).ceil().max(0.0) as usize).min(secs.len());
+                let realized = (n > 0).then(|| (n as f64, secs.iter().rev().take(n).sum::<f64>() / n as f64));
+                let f = fair_up_twap(lagged, *strike, sigma, secs_left, w, realized);
                 let bid = (((f - p.half_spread) * 100.0).floor() / 100.0).clamp(0.01, 0.98);
                 let ask = (((f + p.half_spread) * 100.0).ceil() / 100.0).clamp(bid + 0.01, 0.99);
                 engine.on_book_snapshot(t, &def.up_token, &[(bid, p.depth)], &[(ask, p.depth)]);
@@ -117,6 +132,7 @@ pub fn run(cfg: Config, p: &SimParams) -> Engine {
         t += DT_MS;
     }
     engine.on_spot(end, spot);
+    engine.on_twap(end, twap);
     engine.on_timer(end + 1000);
     engine
 }

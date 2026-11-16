@@ -29,14 +29,41 @@ pub fn fair_up(spot: f64, strike: f64, sigma: f64, secs_left: f64) -> f64 {
     norm_cdf((spot / strike).ln() / denom)
 }
 
+/// Probability of Up when the market resolves on a `window`-second TWAP of
+/// the reference price (end TWAP >= strike).
+///
+/// With more than `window` seconds left the final average behaves like spot
+/// with 2/3 of a window less variance. Inside the final window part of the
+/// average is already fixed: `realized` is (seconds observed, their mean).
+pub fn fair_up_twap(spot: f64, strike: f64, sigma: f64, secs_left: f64, window: f64, realized: Option<(f64, f64)>) -> f64 {
+    if window <= 0.0 {
+        return fair_up(spot, strike, sigma, secs_left);
+    }
+    if secs_left >= window {
+        return fair_up(spot, strike, sigma, secs_left - window * 2.0 / 3.0);
+    }
+    let tau = secs_left.max(0.0);
+    let (a, m) = realized.unwrap_or((0.0, spot));
+    let a = a.clamp(0.0, window);
+    if a + tau <= 0.0 || spot <= 0.0 {
+        return 0.5;
+    }
+    let mean = (a * m + tau * spot) / (a + tau);
+    let sd = spot * sigma * (tau / (a + tau)) * (tau / 3.0).sqrt();
+    if sd < 1e-9 {
+        return if mean >= strike { 1.0 } else { 0.0 };
+    }
+    norm_cdf((mean - strike) / sd)
+}
+
 /// Polymarket taker fee per share, in USDC, for a fill at price `p`:
-/// `fee_rate * p * (p * (1 - p))^exponent`. With the crypto-market
-/// parameters (0.25, 2) this peaks at 1.56% of notional at p = 0.50.
+/// `fee_rate * (p * (1 - p))^exponent`. Crypto markets use (0.07, 1):
+/// 1.75c per share at p = 0.50, i.e. 3.5% of notional.
 pub fn fee_per_share(p: f64, fee_rate: f64, exponent: f64) -> f64 {
     if fee_rate <= 0.0 {
         return 0.0;
     }
-    fee_rate * p * (p * (1.0 - p)).max(0.0).powf(exponent)
+    fee_rate * (p * (1.0 - p)).max(0.0).powf(exponent)
 }
 
 /// EWMA realized-volatility estimator on ~1s samples.
@@ -117,11 +144,27 @@ mod tests {
     }
 
     #[test]
-    fn fee_peaks_at_half() {
-        let f = fee_per_share(0.5, 0.25, 2.0);
-        assert!((f - 0.007_812_5).abs() < 1e-12); // 1.5625% of 0.50
-        assert!(fee_per_share(0.9, 0.25, 2.0) < f);
-        assert_eq!(fee_per_share(0.5, 0.0, 2.0), 0.0);
+    fn fee_matches_published_table() {
+        // docs.polymarket.com/trading/fees: crypto, 100 shares.
+        let f = |p: f64| 100.0 * fee_per_share(p, 0.07, 1.0);
+        assert!((f(0.50) - 1.75).abs() < 0.005);
+        assert!((f(0.30) - 1.47).abs() < 0.005);
+        assert!((f(0.90) - 0.63).abs() < 0.005);
+        assert_eq!(fee_per_share(0.5, 0.0, 1.0), 0.0);
+    }
+
+    #[test]
+    fn twap_fair() {
+        let s = 1e-4;
+        // Far from expiry: slightly more decisive than the spot model.
+        let (plain, twap) = (fair_up(100.1, 100.0, s, 300.0), fair_up_twap(100.1, 100.0, s, 300.0, 60.0, None));
+        assert!(twap > plain && twap - plain < 0.03);
+        // 10s left, 50s of the average already printed well above strike:
+        // a spot dip below strike cannot drag the average under.
+        assert!(fair_up_twap(99.99, 100.0, s, 10.0, 60.0, Some((50.0, 100.2))) > 0.999);
+        // Same dip with the realised part at the strike is a coin flip leaning down.
+        assert!(fair_up_twap(99.99, 100.0, s, 10.0, 60.0, Some((50.0, 100.0))) < 0.5);
+        assert_eq!(fair_up_twap(100.0, 100.0, s, 0.0, 60.0, Some((60.0, 100.1))), 1.0);
     }
 
     #[test]

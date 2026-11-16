@@ -1,18 +1,20 @@
-//! Polymarket I/O via the official Rust SDK: market discovery (Gamma),
-//! order books (CLOB WebSocket), the Chainlink reference price (RTDS) and
-//! live order placement (CLOB REST).
+//! Polymarket I/O: market discovery (Gamma) and live order placement (CLOB
+//! REST) through the official Rust SDK; order books (CLOB WebSocket) and the
+//! Chainlink reference prices (RTDS WebSocket) through our own sockets.
 
 use std::collections::HashSet;
 use std::str::FromStr as _;
 use std::time::{Duration, Instant};
 
 use anyhow::Context as _;
-use futures::StreamExt as _;
+use futures::{SinkExt as _, StreamExt as _};
 use polymarket_client_sdk::auth::{LocalSigner, Signer as _};
 use polymarket_client_sdk::clob::types::{OrderType, Side, SignatureType};
 use polymarket_client_sdk::gamma::types::request::MarketBySlugRequest;
 use polymarket_client_sdk::types::{Address, Decimal, U256};
-use polymarket_client_sdk::{POLYGON, PRIVATE_KEY_VAR, clob, gamma, rtds};
+use polymarket_client_sdk::{POLYGON, PRIVATE_KEY_VAR, clob, gamma};
+use serde_json::Value;
+use tokio_tungstenite::tungstenite::Message;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::book::BookSide;
@@ -82,78 +84,171 @@ fn market_def(slug: &str, mins: u32, start_s: i64, m: &gamma::types::response::M
     })
 }
 
-/// Stream both outcome books of one market until its window has ended.
-pub async fn stream_books(ws: clob::ws::Client, def: MarketDef, tx: Sender<Event>) {
-    let (Ok(up), Ok(down)) = (U256::from_str(&def.up_token), U256::from_str(&def.down_token)) else {
-        tracing::warn!(slug = %def.slug, "bad token id");
-        return;
-    };
-    let ids = vec![up, down];
-    let (snaps, changes) = match (ws.subscribe_orderbook(ids.clone()), ws.subscribe_prices(ids.clone())) {
-        (Ok(a), Ok(b)) => (a, b),
-        (Err(e), _) | (_, Err(e)) => {
-            tracing::warn!(slug = %def.slug, "book subscription failed: {e}");
-            return;
+const CLOB_WS: &str = "wss://ws-subscriptions-clob.polymarket.com/ws/market";
+const RTDS_WS: &str = "wss://ws-live-data.polymarket.com";
+
+fn num(v: &Value) -> Option<f64> {
+    match v {
+        Value::String(s) => s.parse().ok(),
+        Value::Number(n) => n.as_f64(),
+        _ => None,
+    }
+}
+
+fn levels(v: Option<&Value>) -> Vec<(f64, f64)> {
+    v.and_then(Value::as_array)
+        .map(|a| a.iter().filter_map(|l| Some((num(l.get("price")?)?, num(l.get("size")?)?))).collect())
+        .unwrap_or_default()
+}
+
+/// Translate one CLOB market-channel message into engine events.
+pub fn parse_clob(v: &Value, out: &mut Vec<Event>) {
+    if let Some(arr) = v.as_array() {
+        arr.iter().for_each(|x| parse_clob(x, out));
+    } else if let Some(changes) = v.get("price_changes").and_then(Value::as_array) {
+        for c in changes {
+            let side = match c.get("side").and_then(Value::as_str) {
+                Some("BUY") => BookSide::Bid,
+                Some("SELL") => BookSide::Ask,
+                _ => continue,
+            };
+            if let (Some(token), Some(price), Some(size)) =
+                (c.get("asset_id").and_then(Value::as_str), c.get("price").and_then(num), c.get("size").and_then(num))
+            {
+                out.push(Event::BookLevel { token: token.to_owned(), side, price, size });
+            }
         }
-    };
-    let (mut snaps, mut changes) = (Box::pin(snaps), Box::pin(changes));
-    let deadline = tokio::time::sleep(Duration::from_millis((def.end_ms - now_ms() + 5000).max(0) as u64));
-    tokio::pin!(deadline);
-    loop {
-        let ev = tokio::select! {
-            () = &mut deadline => break,
-            Some(s) = snaps.next() => match s {
-                Ok(b) => vec![Event::BookSnap {
-                    token: b.asset_id.to_string(),
-                    bids: b.bids.iter().map(|l| (f(l.price), f(l.size))).collect(),
-                    asks: b.asks.iter().map(|l| (f(l.price), f(l.size))).collect(),
-                }],
-                Err(e) => { tracing::debug!("book stream: {e}"); continue }
-            },
-            Some(c) = changes.next() => match c {
-                Ok(c) => c.price_changes.iter().filter_map(|e| Some(Event::BookLevel {
-                    token: e.asset_id.to_string(),
-                    side: match e.side { Side::Buy => BookSide::Bid, Side::Sell => BookSide::Ask, _ => return None },
-                    price: f(e.price),
-                    size: f(e.size?),
-                })).collect(),
-                Err(e) => { tracing::debug!("price stream: {e}"); continue }
-            },
-            else => break,
-        };
-        for e in ev {
-            if tx.send(e).await.is_err() {
-                return;
+        // After all levels are applied, check each token against the reported top of book.
+        let mut seen: Vec<&str> = Vec::new();
+        for c in changes.iter().rev() {
+            if let (Some(token), Some(best_bid), Some(best_ask)) =
+                (c.get("asset_id").and_then(Value::as_str), c.get("best_bid").and_then(num), c.get("best_ask").and_then(num))
+                && !seen.contains(&token)
+            {
+                seen.push(token);
+                out.push(Event::BookTop { token: token.to_owned(), best_bid, best_ask });
+            }
+        }
+    } else if (v.get("bids").is_some() || v.get("asks").is_some())
+        && let Some(token) = v.get("asset_id").and_then(Value::as_str) {
+            out.push(Event::BookSnap { token: token.to_owned(), bids: levels(v.get("bids")), asks: levels(v.get("asks")) });
+        }
+}
+
+/// Stream both outcome books of one market until its window has ended.
+pub async fn stream_books(def: MarketDef, tx: Sender<Event>) {
+    let stop_ms = def.end_ms + 5000;
+    while now_ms() < stop_ms && !tx.is_closed() {
+        if let Err(e) = books_session(&def, &tx, stop_ms).await {
+            tracing::warn!(slug = %def.slug, "book stream: {e:#}");
+            tokio::time::sleep(Duration::from_secs(1)).await;
+        }
+    }
+}
+
+async fn books_session(def: &MarketDef, tx: &Sender<Event>, stop_ms: i64) -> anyhow::Result<()> {
+    let mut ws = crate::ws::connect(CLOB_WS).await?;
+    let sub = serde_json::json!({ "assets_ids": [def.up_token, def.down_token], "type": "market" });
+    ws.send(Message::text(sub.to_string())).await?;
+    let mut ping = tokio::time::interval(Duration::from_secs(10));
+    let mut out = Vec::new();
+    while now_ms() < stop_ms {
+        tokio::select! {
+            _ = ping.tick() => ws.send(Message::text("PING")).await?,
+            msg = tokio::time::timeout(Duration::from_secs(30), ws.next()) => {
+                match msg.map_err(|_| anyhow::anyhow!("no data for 30s"))?.ok_or_else(|| anyhow::anyhow!("closed"))?? {
+                    Message::Text(t) => {
+                        if let Ok(v) = serde_json::from_str::<Value>(&t) {
+                            parse_clob(&v, &mut out);
+                            for e in out.drain(..) {
+                                if tx.send(e).await.is_err() {
+                                    return Ok(());
+                                }
+                            }
+                        }
+                    }
+                    Message::Ping(p) => ws.send(Message::Pong(p)).await?,
+                    Message::Close(_) => anyhow::bail!("closed by server"),
+                    _ => {}
+                }
             }
         }
     }
-    let _ = ws.unsubscribe_orderbook(&ids);
-    let _ = ws.unsubscribe_prices(&ids);
+    Ok(())
 }
 
-/// Chainlink BTC/USD stream - the price these markets resolve against.
-pub async fn chainlink(tx: Sender<Event>) {
-    let client = rtds::Client::default();
+/// Translate one RTDS message into events: Chainlink BTC/USD prints and the
+/// 60s TWAP stream these markets resolve on. Handles both live updates and
+/// the history batch sent on subscribe.
+pub fn parse_rtds(v: &Value, out: &mut Vec<Event>) {
+    let Some(payload) = v.get("payload") else { return };
+    let twap = match v.get("topic").and_then(Value::as_str) {
+        Some("crypto_prices_chainlink") => false,
+        Some("crypto_prices_twap_sixty") => true,
+        _ => return,
+    };
+    let mut one = |p: &Value| {
+        if let (Some(ts_ms), Some(px)) = (p.get("timestamp").and_then(Value::as_i64), p.get("value").and_then(num)) {
+            out.push(if twap { Event::Twap { ts_ms, px } } else { Event::Ref { ts_ms, px } });
+        }
+    };
+    match payload.get("data").and_then(Value::as_array) {
+        Some(batch) => batch.iter().for_each(&mut one),
+        None => one(payload),
+    }
+}
+
+/// Chainlink BTC/USD spot and 60s-TWAP streams, reconnecting forever.
+pub async fn reference_prices(tx: Sender<Event>) {
+    while !tx.is_closed() {
+        if let Err(e) = rtds_session(&tx).await {
+            tracing::warn!("reference price stream: {e:#}");
+        }
+        tokio::time::sleep(Duration::from_millis(500)).await;
+    }
+}
+
+async fn rtds_session(tx: &Sender<Event>) -> anyhow::Result<()> {
+    let mut ws = crate::ws::connect(RTDS_WS).await?;
+    let filters = r#"{"symbol":"btc/usd"}"#;
+    let sub = serde_json::json!({ "action": "subscribe", "subscriptions": [
+        { "topic": "crypto_prices_chainlink", "type": "*", "filters": filters },
+        { "topic": "crypto_prices_twap_sixty", "type": "*", "filters": filters },
+    ]});
+    ws.send(Message::text(sub.to_string())).await?;
+    tracing::info!("reference price stream connected");
+    let mut ping = tokio::time::interval(Duration::from_secs(5));
+    let mut out = Vec::new();
+    // The socket can stay open (answering pings) while prices stop flowing,
+    // so staleness is judged on price messages, not on socket activity.
+    let mut last_price = Instant::now();
     loop {
-        match client.subscribe_chainlink_prices(Some("btc/usd".to_owned())) {
-            Ok(stream) => {
-                let mut stream = Box::pin(stream);
-                while let Ok(Some(item)) = tokio::time::timeout(Duration::from_secs(30), stream.next()).await {
-                    match item {
-                        Ok(p) => {
-                            if tx.send(Event::Chainlink { ts_ms: p.timestamp, px: f(p.value) }).await.is_err() {
-                                return;
+        tokio::select! {
+            _ = ping.tick() => {
+                anyhow::ensure!(last_price.elapsed() < Duration::from_secs(8), "no prices for 8s");
+                ws.send(Message::text("PING")).await?;
+            },
+            msg = tokio::time::timeout(Duration::from_secs(20), ws.next()) => {
+                match msg.map_err(|_| anyhow::anyhow!("no data for 20s"))?.ok_or_else(|| anyhow::anyhow!("closed"))?? {
+                    Message::Text(t) => {
+                        if let Ok(v) = serde_json::from_str::<Value>(&t) {
+                            parse_rtds(&v, &mut out);
+                            if !out.is_empty() {
+                                last_price = Instant::now();
+                            }
+                            for e in out.drain(..) {
+                                if tx.send(e).await.is_err() {
+                                    return Ok(());
+                                }
                             }
                         }
-                        Err(e) => tracing::debug!("chainlink stream: {e}"),
                     }
+                    Message::Ping(p) => ws.send(Message::Pong(p)).await?,
+                    Message::Close(_) => anyhow::bail!("closed by server"),
+                    _ => {}
                 }
-                tracing::warn!("chainlink stream stalled; resubscribing");
-                let _ = client.unsubscribe_chainlink_prices();
             }
-            Err(e) => tracing::warn!("chainlink subscribe failed: {e}"),
         }
-        tokio::time::sleep(Duration::from_secs(2)).await;
     }
 }
 
@@ -253,5 +348,37 @@ mod tests {
         assert_eq!(decimals(0.001), 3);
         assert_eq!(dec(0.53, 2).unwrap().to_string(), "0.53");
         assert_eq!(dec(12.5, 2).unwrap().to_string(), "12.5");
+    }
+}
+
+#[cfg(test)]
+mod wire_tests {
+    use super::*;
+
+    #[test]
+    fn clob_messages() {
+        let mut out = Vec::new();
+        // Shapes captured from the live market channel.
+        let snap: Value = serde_json::from_str(r#"[{"market":"0x2f","asset_id":"212","timestamp":"1794813936655","hash":"80","bids":[{"price":"0.01","size":"8370.82"},{"price":"0.54","size":"10"}],"asks":[{"price":"0.57","size":"25.5"}]}]"#).unwrap();
+        parse_clob(&snap, &mut out);
+        let chg: Value = serde_json::from_str(r#"{"market":"0x2f","price_changes":[{"asset_id":"104","price":"0.63","size":"297.6","side":"SELL","hash":"e1","best_bid":"0.43","best_ask":"0.46"},{"asset_id":"212","price":"0.37","size":"0","side":"BUY","hash":"31","best_bid":"0.54","best_ask":"0.57"}],"timestamp":"1794813936654","event_type":"price_change"}"#).unwrap();
+        parse_clob(&chg, &mut out);
+        assert_eq!(out.len(), 5);
+        assert!(matches!(&out[4], Event::BookTop { token, best_bid, best_ask } if token == "104" && *best_bid == 0.43 && *best_ask == 0.46));
+        assert!(matches!(&out[0], Event::BookSnap { token, bids, asks } if token == "212" && bids.len() == 2 && asks[0] == (0.57, 25.5)));
+        assert!(matches!(&out[1], Event::BookLevel { token, side: BookSide::Ask, price, size } if token == "104" && *price == 0.63 && *size == 297.6));
+        assert!(matches!(&out[2], Event::BookLevel { side: BookSide::Bid, size, .. } if *size == 0.0));
+    }
+
+    #[test]
+    fn rtds_messages() {
+        let mut out = Vec::new();
+        let upd: Value = serde_json::from_str(r#"{"connection_id":"x","payload":{"full_accuracy_value":"64547305067996552101888","symbol":"btc/usd","timestamp":1794813893000,"value":64547.30506799655,"window_s":60},"timestamp":1794813894023,"topic":"crypto_prices_twap_sixty","type":"update"}"#).unwrap();
+        parse_rtds(&upd, &mut out);
+        let batch: Value = serde_json::from_str(r#"{"payload":{"data":[{"timestamp":1794813832000,"value":64572.45},{"timestamp":1794813833000,"value":64572.62}],"symbol":"btc/usd"},"topic":"crypto_prices_chainlink","type":"subscribe"}"#).unwrap();
+        parse_rtds(&batch, &mut out);
+        assert!(matches!(out[0], Event::Twap { ts_ms: 1_794_813_893_000, px } if (px - 64547.305).abs() < 0.001));
+        assert!(matches!(out[2], Event::Ref { ts_ms: 1_794_813_833_000, .. }));
+        assert_eq!(out.len(), 3);
     }
 }

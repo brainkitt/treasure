@@ -11,7 +11,7 @@ use serde::Serialize;
 
 use crate::book::{Book, BookSide};
 use crate::config::Config;
-use crate::model::{VolEstimator, fair_up, fee_per_share};
+use crate::model::{VolEstimator, fair_up_twap, fee_per_share};
 
 #[derive(Debug, Clone)]
 pub struct MarketDef {
@@ -118,6 +118,8 @@ pub struct Snapshot {
     pub fair: f64,
     pub edge: f64,
     pub open_positions: u32,
+    pub book_checks: u64,
+    pub book_fixes: u64,
     pub feeds: Vec<(String, f64)>,
     pub equity_curve: Vec<(i64, f64)>,
     pub log: Vec<LogLine>,
@@ -130,6 +132,8 @@ pub struct Engine {
     token_index: HashMap<String, (String, Outcome)>,
     spot: f64,
     spot_ms: i64,
+    /// 1s prints of the reference (Chainlink) price, for the realised part of the final TWAP.
+    ref_ticks: VecDeque<(i64, f64)>,
     vol: VolEstimator,
     cash: f64,
     seed: f64,
@@ -149,6 +153,8 @@ pub struct Engine {
     started_ms: i64,
     now_ms: i64,
     halted_logged: bool,
+    book_checks: u64,
+    book_fixes: u64,
     pub feeds: Vec<(String, f64)>,
 }
 
@@ -166,6 +172,7 @@ impl Engine {
             token_index: HashMap::new(),
             spot: 0.0,
             spot_ms: 0,
+            ref_ticks: VecDeque::new(),
             vol,
             cash: seed,
             seed,
@@ -185,6 +192,8 @@ impl Engine {
             started_ms: now_ms,
             now_ms,
             halted_logged: false,
+            book_checks: 0,
+            book_fixes: 0,
             feeds: Vec::new(),
         }
     }
@@ -247,6 +256,27 @@ impl Engine {
         }
     }
 
+    /// A print of the reference price the resolution TWAP averages.
+    pub fn on_ref(&mut self, ts_ms: i64, px: f64) {
+        if self.ref_ticks.back().is_some_and(|t| t.0 >= ts_ms) {
+            return;
+        }
+        self.ref_ticks.push_back((ts_ms, px));
+        while self.ref_ticks.len() > 240 {
+            self.ref_ticks.pop_front();
+        }
+    }
+
+    /// A print of the resolution stream itself. The first one at or after a
+    /// market's end time is its final value.
+    pub fn on_twap(&mut self, ts_ms: i64, px: f64) {
+        for m in self.markets.values_mut() {
+            if m.final_spot.is_none() && ts_ms >= m.def.end_ms && ts_ms < m.def.end_ms + 30_000 {
+                m.final_spot = Some(px);
+            }
+        }
+    }
+
     pub fn on_book_snapshot(&mut self, ts_ms: i64, token: &str, bids: &[(f64, f64)], asks: &[(f64, f64)]) {
         self.advance(ts_ms);
         if let Some((slug, book)) = self.book_mut(token) {
@@ -261,6 +291,15 @@ impl Engine {
             book.set_level(side, price, size, ts_ms);
             self.evaluate(&slug);
         }
+    }
+
+    /// The exchange's own best bid/ask for a token, used to self-check the local book.
+    pub fn on_book_top(&mut self, token: &str, best_bid: f64, best_ask: f64) {
+        self.book_checks += 1;
+        if let Some((_, book)) = self.book_mut(token)
+            && book.reconcile(best_bid, best_ask) {
+                self.book_fixes += 1;
+            }
     }
 
     pub fn on_timer(&mut self, ts_ms: i64) {
@@ -347,6 +386,9 @@ impl Engine {
         if self.log.len() >= LOG_CAP {
             self.log.pop_front();
         }
+        if kind != "info" {
+            tracing::info!(target: "trade", "{text}");
+        }
         self.log.push_back(LogLine { ts_ms: self.now_ms, kind, text });
     }
 
@@ -404,10 +446,11 @@ impl Engine {
         let mut settle = Vec::new();
         for m in self.markets.values_mut() {
             if now >= m.def.end_ms {
-                if m.final_spot.is_none() && self.spot > 0.0 {
+                // No resolution print after a grace period: fall back to spot.
+                if m.final_spot.is_none() && now >= m.def.end_ms + 20_000 && self.spot > 0.0 {
                     m.final_spot = Some(self.spot);
                 }
-                if !m.in_flight {
+                if !m.in_flight && (m.final_spot.is_some() || now >= m.def.end_ms + 20_000) {
                     settle.push(m.def.slug.clone());
                 }
             }
@@ -476,7 +519,16 @@ impl Engine {
         if secs_left <= 0.0 || self.now_ms < m.def.start_ms {
             return None;
         }
-        Some((fair_up(self.spot, strike, self.vol.sigma() * self.cfg.vol_mult, secs_left), secs_left))
+        if self.cfg.twap_window_s > 0.0 && self.ref_ticks.back().is_none_or(|t| self.now_ms - t.0 > self.cfg.max_ref_age_ms) {
+            return None;
+        }
+        let w = self.cfg.twap_window_s;
+        let realized = (w > 0.0 && secs_left < w).then(|| {
+            let from = m.def.end_ms - (w * 1000.0) as i64;
+            let (n, sum) = self.ref_ticks.iter().filter(|t| t.0 > from).fold((0.0, 0.0), |(n, s), t| (n + 1.0, s + t.1));
+            (n, if n > 0.0 { sum / n } else { self.spot })
+        });
+        Some((fair_up_twap(self.spot, strike, self.vol.sigma() * self.cfg.vol_mult, secs_left, w, realized), secs_left))
     }
 
     fn evaluate(&mut self, slug: &str) {
@@ -618,6 +670,8 @@ impl Engine {
             fair,
             edge,
             open_positions: self.markets.values().filter(|m| m.pos.is_some()).count() as u32,
+            book_checks: self.book_checks,
+            book_fixes: self.book_fixes,
             feeds: self.feeds.clone(),
             equity_curve: self.curve.clone(),
             log: self.log.iter().rev().take(60).cloned().collect(),
