@@ -1,0 +1,838 @@
+<title>polyarb Test Report</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: report column (max 780px) with a sticky contents rail on wide screens; charts span the column. */
+:root {
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --sunk: #eef1f4;
+  --ink: #12161c;
+  --ink-2: #48515e;
+  --muted: #747d8b;
+  --line: #dfe4ea;
+  --axis: #c3c9d1;
+  --accent: #2a78d6;
+  --accent-ink: #1c5cab;
+  --good: #0a7a0a;
+  --good-bg: #e3f3e3;
+  --bad: #c62f2f;
+  --bad-bg: #fbe6e6;
+  --warn: #8a5a00;
+  --warn-bg: #fdf1d8;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+  --seq-lo: #e8f1fc; --seq-hi: #1c5cab;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1114; --surface: #161a1f; --sunk: #1d2228; --ink: #eef1f4; --ink-2: #b7bfca; --muted: #828b98;
+    --line: #2a3038; --axis: #3a414b; --accent: #3987e5; --accent-ink: #86b6ef;
+    --good: #3dbb3d; --good-bg: #13291a; --bad: #ec6b6b; --bad-bg: #2e1718; --warn: #e2a63a; --warn-bg: #2d2412;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    --seq-lo: #1b2533; --seq-hi: #5598e7;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1114; --surface: #161a1f; --sunk: #1d2228; --ink: #eef1f4; --ink-2: #b7bfca; --muted: #828b98;
+  --line: #2a3038; --axis: #3a414b; --accent: #3987e5; --accent-ink: #86b6ef;
+  --good: #3dbb3d; --good-bg: #13291a; --bad: #ec6b6b; --bad-bg: #2e1718; --warn: #e2a63a; --warn-bg: #2d2412;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+  --seq-lo: #1b2533; --seq-hi: #5598e7;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.shell { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 48px; padding-block: 40px 96px; }
+nav.toc { position: sticky; top: calc(24px + env(safe-area-inset-top, 0px)); align-self: start; font-size: 13px; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; counter-reset: s; }
+nav.toc li { counter-increment: s; }
+nav.toc a { display: flex; gap: 8px; color: var(--ink-2); text-decoration: none; padding: 3px 8px; border-radius: 4px; }
+nav.toc a::before { content: counter(s, decimal-leading-zero); font-family: var(--f-mono); color: var(--muted); font-size: 11px; padding-top: 2px; }
+nav.toc a:hover, nav.toc a:focus-visible { background: var(--sunk); color: var(--ink); outline: none; }
+nav.toc .label { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-size: 12px; margin: 0 0 8px 8px; }
+main { min-width: 0; max-width: 780px; }
+h1, h2, h3 { font-family: var(--f-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(34px, 6vw, 52px); font-weight: 700; letter-spacing: -.01em; }
+h2 { font-size: 28px; font-weight: 600; margin-bottom: 14px; }
+h3 { font-size: 19px; font-weight: 600; margin: 28px 0 8px; }
+p { margin: 0 0 14px; }
+.lede { font-size: 18px; color: var(--ink-2); max-width: 62ch; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; color: var(--muted); letter-spacing: .04em; margin-bottom: 14px; }
+section { padding-top: 56px; scroll-margin-top: 16px; }
+section > h2 { display: flex; align-items: baseline; gap: 12px; }
+section > h2 .n { font-family: var(--f-mono); font-size: 14px; color: var(--muted); font-weight: 400; }
+code, .mono { font-family: var(--f-mono); font-size: .88em; }
+code { background: var(--sunk); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+a { color: var(--accent-ink); }
+ul.tight { margin: 0 0 14px; padding-left: 20px; } ul.tight li { margin: 4px 0; }
+.num { font-variant-numeric: tabular-nums; }
+/* verdict */
+.verdict { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 28px 0 8px; }
+.vcard { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; min-width: 0; }
+.vcard .q { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.vcard .a { font-family: var(--f-display); font-size: 22px; font-weight: 600; line-height: 1.2; margin-bottom: 8px; }
+.vcard p { font-size: 14px; color: var(--ink-2); margin: 0; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-mono); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.pill.bad { color: var(--bad); background: var(--bad-bg); }
+.pill.good { color: var(--good); background: var(--good-bg); }
+.pill.warn { color: var(--warn); background: var(--warn-bg); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin: 20px 0; }
+.kpi { background: var(--surface); padding: 14px 16px; min-width: 0; }
+.kpi .v { font-family: var(--f-mono); font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.kpi .k { font-size: 12px; color: var(--muted); }
+/* figures */
+figure { margin: 22px 0 26px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 16px 12px; min-width: 0; }
+figure .ft { font-weight: 600; font-size: 15px; }
+figure .fs { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.chart { width: 100%; position: relative; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart svg text { font-family: var(--f-body); font-size: 11px; fill: var(--muted); }
+.chart svg text.lbl { fill: var(--ink-2); font-size: 12px; }
+.chart svg text.val { fill: var(--ink); font-family: var(--f-mono); font-size: 11px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--ink-2); margin: 2px 0 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.pair > div { min-width: 0; }
+details.data { margin-top: 8px; font-size: 13px; }
+details.data summary { cursor: pointer; color: var(--accent-ink); width: max-content; }
+.tw { overflow-x: auto; margin: 8px 0 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+.tbl { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; margin: 18px 0 24px; }
+.tbl table td:first-child, .tbl table th:first-child { padding-left: 14px; }
+.tbl tr:last-child td { border-bottom: 0; }
+.pos { color: var(--good); } .neg { color: var(--bad); }
+/* heatmap */
+table.heat td.c { text-align: center; font-family: var(--f-mono); font-size: 13px; padding: 9px 4px; border: 2px solid var(--surface); border-radius: 4px; }
+table.heat th { text-align: center; }
+table.heat td.rh { font-family: var(--f-mono); font-size: 13px; white-space: nowrap; color: var(--ink-2); }
+/* callouts */
+.note { border-left: 3px solid var(--warn); background: var(--warn-bg); padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 18px 0; font-size: 15px; }
+.note.bad { border-color: var(--bad); background: var(--bad-bg); }
+.note strong { color: var(--ink); }
+/* steps */
+ol.steps { list-style: none; padding: 0; margin: 18px 0; counter-reset: st; display: grid; gap: 14px; }
+ol.steps > li { counter-increment: st; display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; }
+ol.steps > li::before { content: counter(st); font-family: var(--f-mono); font-weight: 500; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--axis); display: grid; place-items: center; font-size: 13px; color: var(--ink-2); }
+ol.steps h4 { margin: 3px 0 4px; font-size: 16px; }
+ol.steps p { margin: 0 0 8px; color: var(--ink-2); font-size: 15px; }
+.code { position: relative; background: var(--sunk); border: 1px solid var(--line); border-radius: 6px; margin: 8px 0 12px; }
+.code pre { margin: 0; padding: 12px 14px; overflow-x: auto; font-family: var(--f-mono); font-size: 13px; line-height: 1.55; }
+.code button { position: absolute; top: 6px; right: 6px; font: 12px var(--f-body); background: var(--surface); color: var(--ink-2); border: 1px solid var(--line); border-radius: 4px; padding: 3px 9px; cursor: pointer; }
+.code button:hover, .code button:focus-visible { color: var(--ink); border-color: var(--axis); }
+.profiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+.profile { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px; min-width: 0; }
+.profile h4 { margin: 0 0 2px; font-family: var(--f-display); font-size: 18px; }
+.profile .sub { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+pre.mermaid { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 18px 0; }
+#tip { position: fixed; z-index: 20; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12px; line-height: 1.45; padding: 7px 10px; border-radius: 6px; max-width: 260px; font-variant-numeric: tabular-nums; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+#tip b { font-weight: 600; }
+#tip .sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 1000px) {
+  .shell { grid-template-columns: minmax(0, 1fr); gap: 0; padding-block: 24px 72px; }
+  nav.toc { display: none; }
+}
+@media (max-width: 680px) {
+  .verdict, .profiles, .pair { grid-template-columns: minmax(0, 1fr); }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  h2 { font-size: 24px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="shell">
+<nav class="toc" aria-label="Contents">
+  <p class="label">Contents</p>
+  <ol>
+    <li><a href="#summary">Summary</a></li>
+    <li><a href="#built">What was built</a></li>
+    <li><a href="#markets">How the markets work</a></li>
+    <li><a href="#log">Test log</a></li>
+    <li><a href="#paper">Live paper results</a></li>
+    <li><a href="#trades">Anatomy of a trade</a></li>
+    <li><a href="#small">The $15 test</a></li>
+    <li><a href="#capital">Capital analysis</a></li>
+    <li><a href="#sim">Simulation</a></li>
+    <li><a href="#reality">Paper vs live</a></li>
+    <li><a href="#requirements">Live requirements</a></li>
+    <li><a href="#golive">Going live</a></li>
+    <li><a href="#params">Parameters</a></li>
+    <li><a href="#risks">Risks</a></li>
+    <li><a href="#open">Open items</a></li>
+  </ol>
+</nav>
+
+<main>
+<header>
+  <p class="eyebrow">POLYMARKET · BTC UP OR DOWN · 5 &amp; 15 MIN · TESTED 13–16 NOV 2026</p>
+  <h1>polyarb Test Report</h1>
+  <p class="lede">A Rust bot that buys Polymarket's Bitcoin Up/Down shares when their price lags the real BTC price, then sells once the book catches up. This report covers every test run, what broke and was fixed, what the results mean, and what you need to trade it with real money.</p>
+  <p class="lede" style="font-size:15px">All profit and loss below is <strong>paper trading</strong>: live market data and the real order book, with simulated fills. No real order has been placed.</p>
+</header>
+
+<section id="summary">
+  <h2><span class="n">01</span>Summary</h2>
+  <div class="verdict">
+    <div class="vcard">
+      <div class="q">Can it go live today?</div>
+      <div class="a">Not yet</div>
+      <p><span class="pill bad">4 blockers</span></p>
+      <p style="margin-top:8px">Location, wallet type, untested real orders and no automatic redemption. Details in <a href="#requirements">§11</a>.</p>
+    </div>
+    <div class="vcard">
+      <div class="q">Is $15 enough?</div>
+      <div class="a">Only at 20% risk per trade</div>
+      <p><span class="pill warn">gambling-sized</span></p>
+      <p style="margin-top:8px">On the tweet's 0.5% rule it placed zero trades. At 20% it traded, but one bad trade costs a fifth of the account.</p>
+    </div>
+    <div class="vcard">
+      <div class="q">Realistic minimum</div>
+      <div class="a">$100 to $1,000</div>
+      <p><span class="pill good">depends on rules</span></p>
+      <p style="margin-top:8px">$100 at 5% per trade takes every signal. $500–$1,000 is needed for the tweet's 0.5% rule.</p>
+    </div>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><div class="v num" id="k-trades">216</div><div class="k">paper trades closed ($1,000 runs)</div></div>
+    <div class="kpi"><div class="v num">68.5%</div><div class="k">winning trades</div></div>
+    <div class="kpi"><div class="v num">20 / 20</div><div class="k">resolutions matched Polymarket</div></div>
+    <div class="kpi"><div class="v num">8 s</div><div class="k">median holding time</div></div>
+  </div>
+  <p>The pipeline works end to end on live data. Every $1,000 paper run made money: +$16 to +$42 in 30–45 minutes at about $5 per trade. The edge shrinks as fills get slower, and these figures are almost certainly better than real trading will be (<a href="#reality">§10</a>). Treat them as proof that the machinery works, not as an expected return.</p>
+</section>
+
+<section id="built">
+  <h2><span class="n">02</span>What was built</h2>
+  <p>One Rust program, <code>polyarb</code>, with a local dashboard at <code>127.0.0.1:8787</code>. It runs on a laptop with no GPU and no cloud server.</p>
+<pre class="mermaid">
+flowchart LR
+  EX["Coinbase · Kraken · OKX · Binance<br/>BTC top of book"] --> C["Composite BTC price<br/>(median, basis-adjusted)"]
+  CL["Chainlink BTC/USD<br/>spot + 60s TWAP"] --> C
+  CL --> K["Strike + settlement"]
+  C --> FV["Fair value<br/>P(end TWAP ≥ strike)"]
+  K --> FV
+  GM["Gamma API<br/>finds btc-updown markets"] --> OB["Order books<br/>CLOB WebSocket"]
+  OB --> SG{"fair − ask − fee<br/>≥ 3¢ ?"}
+  FV --> SG
+  SG -->|yes| RK["Risk caps<br/>per trade + per day"]
+  RK --> EXE["Fill-and-kill order<br/>paper or live"]
+  EXE --> EXIT["Sell when book<br/>catches up"]
+</pre>
+  <div class="tbl"><table>
+    <thead><tr><th>Part</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td>Spot feeds</td><td>Live BTC best bid/ask from four exchanges. Each is adjusted to Chainlink's price; the median leads Chainlink on fast moves.</td></tr>
+      <tr><td>Reference feed</td><td>Chainlink BTC/USD spot and 60-second TWAP from Polymarket's price stream. The TWAP is what the markets settle on.</td></tr>
+      <tr><td>Market discovery</td><td>Finds the current and next markets by slug, e.g. <code>btc-updown-5m-1794814200</code>.</td></tr>
+      <tr><td>Order books</td><td>Polymarket's CLOB WebSocket, checked against the exchange's own best bid/ask on every update.</td></tr>
+      <tr><td>Fair value</td><td>Probability that the end-of-window TWAP finishes at or above the start, from spot, realised volatility, time left and the part of the average already printed.</td></tr>
+      <tr><td>Signal &amp; exit</td><td>Buy when <code>fair − ask − fee ≥ 3¢</code>. Sell when the bid catches up with fair value, otherwise hold to expiry.</td></tr>
+      <tr><td>Risk</td><td>Premium paid is the maximum loss. Per-trade cap, plus a daily cap on realised losses and open premium.</td></tr>
+      <tr><td>Execution</td><td>Paper: fills against the real book after a set delay. Live: one fill-and-kill limit order per signal via Polymarket's official Rust SDK.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="code"><button type="button" class="copy">Copy</button><pre>polyarb sim [--hours 24 --lag-ms 500 --serve]   # offline simulation
+polyarb run                                     # paper trading on live data
+polyarb run --live                              # real orders
+polyarb approve [--check]                       # one-time wallet setup (plain wallet)</pre></div>
+  <p>Code: <code>polymarket-arb/</code> on branch <code>claude/polymarket-btc-arbitrage-0avqt1</code>. 16 automated tests, all passing.</p>
+</section>
+
+<section id="markets">
+  <h2><span class="n">03</span>How the markets work</h2>
+  <p>Every 5 and 15 minutes Polymarket lists "Bitcoin Up or Down". An Up share pays $1 if BTC ends the window at or above where it started; otherwise a Down share pays $1. Shares trade between 1¢ and 99¢. The price of Up is the market's estimate of the probability BTC finishes higher.</p>
+
+  <h3>They settle on an average price, not the last price</h3>
+  <p>The market rules name Chainlink's BTC/USD <strong>TWAP</strong> (time-weighted average price) as the source. I recorded both Chainlink streams for 70 minutes and tested five candidate rules against Polymarket's official results on 20 windows.</p>
+  <figure>
+    <div class="ft">Which rule predicts the official result?</div>
+    <div class="fs">Windows where each rule picked the same winner as Polymarket, out of 20 (16 × 5-min, 4 × 15-min)</div>
+    <div class="chart" id="ch-rules"></div>
+    <details class="data"><summary>Show all 20 windows</summary><div class="tw" id="tb-windows"></div></details>
+  </figure>
+  <p>The "price to beat" and close price shown on the website are spot prints, and comparing them picked the wrong winner in 3 of 20 windows. The bot uses the TWAP rule, and its own settlement agreed with Polymarket on every window it traded through.</p>
+  <figure>
+    <div class="ft">BTC spot vs the 60-second TWAP the markets settle on</div>
+    <div class="fs">Chainlink BTC/USD, 16 Nov 08:06–09:16 UTC. Vertical lines mark 5-minute windows. The TWAP trails spot by about half a minute.</div>
+    <div class="legend" id="lg-btc"></div>
+    <div class="chart" id="ch-btc"></div>
+  </figure>
+
+  <h3>Fees</h3>
+  <p>Polymarket charges takers <code>fee = shares × 0.07 × p × (1 − p)</code> on crypto markets. The market's own data confirms it (<code>feeSchedule: rate 0.07, exponent 1, takerOnly</code>). Every bot trade is a taker trade, and the fee is included in every result here.</p>
+  <figure>
+    <div class="ft">Taker fee per share</div>
+    <div class="fs">Cents per share at each price. At 50¢ the fee is 1.75¢, 3.5% of the money spent.</div>
+    <div class="chart" id="ch-fee"></div>
+  </figure>
+  <p><strong>Order limits:</strong> minimum 5 shares per order, 1¢ price steps. The bot also enforces a $1 minimum order value. The 5-share minimum is what makes a $15 account hard (<a href="#capital">§8</a>).</p>
+</section>
+
+<section id="log">
+  <h2><span class="n">04</span>Test log</h2>
+  <p>Testing ran in three phases: an offline simulation on 13 Nov, then live data from 16 Nov, where several real problems showed up and were fixed, then paper trading.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>What testing found</th><th>What changed</th></tr></thead>
+    <tbody>
+      <tr><td>Markets settle on Chainlink's 60s TWAP, not spot</td><td>Fair value, strike and settlement rewritten around the TWAP stream</td></tr>
+      <tr><td>Real taker fee is <code>0.07·p·(1−p)</code>, more than double my first assumption</td><td>Fee model replaced and checked against Polymarket's published table</td></tr>
+      <tr><td>The SDK's WebSocket clients ignore HTTPS proxies</td><td>Own WebSocket clients for order books and price streams</td></tr>
+      <tr><td>The price stream stayed connected but sent nothing for about 3 minutes, and the bot kept trading on stale prices</td><td>Reconnects after 8 s without a price, and stands aside while the reference is over 10 s old</td></tr>
+      <tr><td>The local order book occasionally drifted from the exchange</td><td>Checked against the exchange's best bid/ask on every update: 99.96% agreement over 1.18 million checks, corrected on the rest</td></tr>
+      <tr><td>Binance's main endpoint refuses some locations</td><td>Uses Binance's market-data-only host</td></tr>
+      <tr><td>A "delayed" order (accepted, matched later) would have been counted as missed, leaving an untracked position</td><td>Delayed orders are followed to their final state and cancelled after about 10 s</td></tr>
+      <tr><td>Live mode trusted the configured balance</td><td>Reads the wallet's real balance and allowances at startup and warns on a mismatch</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="paper">
+  <h2><span class="n">05</span>Live paper results</h2>
+  <p>$1,000 paper balance, default settings (about $5 per trade). Each order filled against the real order book as it stood after the delay shown. Runs B, C and D ran at the same time on the same data, so fill delay is the only difference between them.</p>
+  <figure>
+    <div class="ft">Profit over time, four $1,000 runs</div>
+    <div class="fs">Paper P&amp;L in dollars by minutes into each run, fees included. A started 08:18 UTC; B, C and D started together at 08:43.</div>
+    <div class="legend" id="lg-eq"></div>
+    <div class="chart" id="ch-eq"></div>
+    <details class="data"><summary>Show table</summary><div class="tw" id="tb-runs"></div></details>
+  </figure>
+  <div class="pair">
+    <figure style="margin-top:0">
+      <div class="ft">P&amp;L in 30 minutes</div>
+      <div class="fs">Same data, different fill delay</div>
+      <div class="chart" id="ch-latpnl"></div>
+    </figure>
+    <figure style="margin-top:0">
+      <div class="ft">Orders missed</div>
+      <div class="fs">Share of orders where the book moved first</div>
+      <div class="chart" id="ch-latmiss"></div>
+    </figure>
+  </div>
+  <p>Slower fills miss far more orders: 13% at 80 ms, 76% at 1.5 s. At 1.5 s the bot still earned about 40% of what it did at 80 ms in this sample. Speed matters, but the edge did not vanish at home-connection speeds.</p>
+</section>
+
+<section id="trades">
+  <h2><span class="n">06</span>Anatomy of a trade</h2>
+  <p>All 216 closed trades from runs A–D. A typical trade buys about $5 of shares at a 3¢ edge, holds for a few seconds while Polymarket's book catches up with BTC, and sells.</p>
+  <div class="kpis">
+    <div class="kpi"><div class="v num">+12.5%</div><div class="k">mean return on premium</div></div>
+    <div class="kpi"><div class="v num">+$1.27</div><div class="k">average win</div></div>
+    <div class="kpi"><div class="v num">−$0.97</div><div class="k">average loss</div></div>
+    <div class="kpi"><div class="v num">3.3¢</div><div class="k">median edge at entry</div></div>
+  </div>
+  <figure>
+    <div class="ft">Return per trade</div>
+    <div class="fs">Profit as a share of the premium paid, in 10% bins. Median +8.1%; 10% of trades did worse than −23%, 10% better than +54%.</div>
+    <div class="chart" id="ch-ret"></div>
+  </figure>
+  <div class="pair">
+    <figure style="margin-top:0">
+      <div class="ft">How long positions were held</div>
+      <div class="fs">Number of trades</div>
+      <div class="chart" id="ch-hold"></div>
+    </figure>
+    <figure style="margin-top:0">
+      <div class="ft">P&amp;L by holding time</div>
+      <div class="fs">Dollars, all four runs</div>
+      <div class="chart" id="ch-holdpnl"></div>
+    </figure>
+  </div>
+  <p>Profit comes almost entirely from quick exits. The 5 positions that couldn't be sold and were held to expiry lost $17.41 between them, wiping out more than a tenth of the gains.</p>
+  <figure>
+    <div class="ft">Entry prices</div>
+    <div class="fs">Price paid per share, in 5¢ bins. Median 48¢. This sets the cost of Polymarket's 5-share minimum order.</div>
+    <div class="chart" id="ch-price"></div>
+  </figure>
+  <div class="tbl"><table>
+    <thead><tr><th>Breakdown</th><th class="r">Trades</th><th class="r">P&amp;L</th><th class="r">Win rate</th></tr></thead>
+    <tbody id="tb-split"></tbody>
+  </table></div>
+</section>
+
+<section id="small">
+  <h2><span class="n">07</span>The $15 test</h2>
+  <p>Three runs side by side on the same live data, 09:35–10:14 UTC, with a 250 ms fill delay, closer to a home connection than the 80 ms runs.</p>
+  <figure>
+    <div class="ft">Return on the account</div>
+    <div class="fs">Percent change from starting balance. The $15 run on the tweet's rules never traded and stays at 0%.</div>
+    <div class="legend" id="lg-small"></div>
+    <div class="chart" id="ch-small"></div>
+  </figure>
+  <div class="tbl"><table>
+    <thead><tr><th>Run</th><th class="r">Risk / trade</th><th class="r">Risk / day</th><th class="r">Fills</th><th class="r">Missed</th><th class="r">Max drawdown</th><th class="r">End</th></tr></thead>
+    <tbody>
+      <tr><td>$15, tweet rules</td><td class="r">0.5%</td><td class="r">2%</td><td class="r"><strong>0</strong></td><td class="r">0</td><td class="r">—</td><td class="r">$15.00</td></tr>
+      <tr><td>$15, minimum to trade</td><td class="r">20%</td><td class="r">50%</td><td class="r">76</td><td class="r">36</td><td class="r neg">27.9%</td><td class="r pos">$55.33</td></tr>
+      <tr><td>$500, tweet rules</td><td class="r">0.5%</td><td class="r">2%</td><td class="r">42</td><td class="r">16</td><td class="r">0.8%</td><td class="r pos">$505.67</td></tr>
+    </tbody>
+  </table></div>
+  <ul class="tight">
+    <li><strong>$15 on the tweet's rules cannot trade.</strong> Every signal was skipped: the cheapest allowed order costs dollars, the budget was 7¢.</li>
+    <li><strong>$15 at 20% per trade nearly quadrupled on paper in 38 minutes</strong> because each win raised the next trade size, from about $3 to $7. It also fell 27.9% from its high, lost 5 trades in a row and hit its daily cap once. If the real edge is smaller than paper, the same compounding works in reverse just as fast.</li>
+    <li><strong>$500 on the tweet's rules made +1.1%</strong> with a 0.8% worst drop: small, steady, slow. That is what the tweet's risk control looks like in practice.</li>
+  </ul>
+  <div class="note bad"><strong>Do not read +269% as a forecast.</strong> It is a short paper run compounding an edge that live trading will not fully reproduce (<a href="#reality">§10</a>).</div>
+</section>
+
+<section id="capital">
+  <h2><span class="n">08</span>Capital analysis</h2>
+  <p>The binding constraint is Polymarket's <strong>5-share minimum order</strong>. At the real entry prices above, the smallest allowed order (5 shares, one tick of slippage, plus fee) cost a median of <strong>$2.54</strong> (90% of the time under $3.82, at most $4.81). The bot only trades when that fits inside <code>risk_per_trade × balance</code>.</p>
+  <figure>
+    <div class="ft">Share of real signals each account could take</div>
+    <div class="fs">Rows are account balance, columns are risk per trade. Computed from the entry prices of the 216 paper trades.</div>
+    <div class="tw" id="tb-afford"></div>
+  </figure>
+  <div class="tbl"><table>
+    <thead><tr><th>Goal</th><th class="r">Minimum balance</th></tr></thead>
+    <tbody>
+      <tr><td>Tweet rules (0.5% per trade) on about half of signals</td><td class="r"><strong>~$500</strong></td></tr>
+      <tr><td>Tweet rules on every signal</td><td class="r"><strong>~$1,000</strong></td></tr>
+      <tr><td>Moderate rules (5% per trade, 15% per day), every signal</td><td class="r"><strong>~$100</strong></td></tr>
+      <tr><td>Trades at all (20% per trade, 50% per day)</td><td class="r">$15, high risk</td></tr>
+    </tbody>
+  </table></div>
+  <h3>What 20% per trade means on $15</h3>
+  <ul class="tight">
+    <li>Each trade risks about $2.50–$3.00, roughly 17–20% of the account.</li>
+    <li>A sold loser lost about 18% of its premium on average; a trade held to expiry can lose all of it.</li>
+    <li>Three losses in a row leave about $9–10. At that size most signals become unaffordable and the bot effectively stops.</li>
+    <li>Even if the paper edge held, a winning trade earns about $0.30–$0.40.</li>
+  </ul>
+  <h3>The tweet's claims</h3>
+  <p>"$400–$700 a day" at 0.5% risk per trade would need an account in the tens of thousands of dollars, each trade taking more liquidity than the book often has. "$50 → $435,000" and "1,000 orders per second" don't fit Polymarket's order minimums, fees or API, and the dashboard in the video contradicts its own numbers.</p>
+</section>
+
+<section id="sim">
+  <h2><span class="n">09</span>Simulation</h2>
+  <p>An offline test with a synthetic BTC path and a simulated market maker whose quotes trail spot by a fixed delay. It runs the same engine, with Polymarket's real fee curve and TWAP rule. It tests the mechanics, not profitability, because the simulated market maker never adapts.</p>
+  <figure>
+    <div class="ft">24-hour simulated P&amp;L by how far quotes lag</div>
+    <div class="fs">Starting balance $1,000. With no lag the strategy loses slightly: it only makes money when the book is stale.</div>
+    <div class="chart" id="ch-sim"></div>
+    <details class="data"><summary>Show table</summary><div class="tw" id="tb-sim"></div></details>
+  </figure>
+  <p>A separate test fed the bot a deliberately wrong volatility: losses stopped at the 2% daily cap, confirming the risk limit works.</p>
+</section>
+
+<section id="reality">
+  <h2><span class="n">10</span>Why live results will be worse than paper</h2>
+  <p>A mean of +12.5% per trade over an 8-second hold is far better than a real market should allow. Expect live results somewhere between a fraction of paper and a loss. Only real fills will tell.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Paper assumes</th><th>Live reality</th></tr></thead>
+    <tbody>
+      <tr><td>Nobody else takes the stale quote</td><td>Other bots run the same idea; when they get there first you fill worse or not at all</td></tr>
+      <tr><td>The book the bot sees is current</td><td>WebSocket updates arrive after the fact; some "stale" quotes are already gone</td></tr>
+      <tr><td>Orders match immediately</td><td>Polymarket can delay marketable orders (<code>delayed</code> status), which is exactly what defeats a latency strategy</td></tr>
+      <tr><td>Exits sell into the full displayed bid</td><td>Bids thin out or get pulled the moment BTC moves</td></tr>
+      <tr><td>One quiet morning is typical</td><td>Volatile markets bring bigger moves, wider books and more trades stuck to expiry</td></tr>
+      <tr><td>80–1,500 ms delay from a data centre</td><td>A home connection adds more</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="requirements">
+  <h2><span class="n">11</span>What live trading requires</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Requirement</th><th>Status</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Allowed location</td><td><span class="pill bad">blocker</span></td><td>Polymarket blocks this cloud server (<code>"blocked":true,"country":"US"</code>). Run on your own computer, where <code>polymarket.com/api/geoblock</code> shows <code>"blocked":false</code>. Do not try to get around a block.</td></tr>
+      <tr><td>Supported wallet</td><td><span class="pill bad">blocker</span></td><td>Accounts created on or after 4 May 2026 use a "Deposit Wallet", which the Rust SDK cannot sign for. Use a separate plain wallet (EOA), or a polymarket.com account created before that date.</td></tr>
+      <tr><td>Real orders tested</td><td><span class="pill bad">blocker</span></td><td>Order code compiles against the official SDK and handles delayed orders, but has never sent a real order. Supervise the first session.</td></tr>
+      <tr><td>Redeeming winners</td><td><span class="pill bad">blocker</span></td><td>Winning shares held to expiry must be redeemed by hand (5 of 216 paper trades).</td></tr>
+      <tr><td>Always-on computer</td><td><span class="pill warn">you</span></td><td>Windows, macOS or Linux with Rust from <code>rustup.rs</code>.</td></tr>
+      <tr><td>USDC.e on Polygon</td><td><span class="pill warn">you</span></td><td>Exchanges usually withdraw <em>native</em> USDC; swap to USDC.e (<code>0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174</code>). On $15, fees take a noticeable bite.</td></tr>
+      <tr><td>POL for gas</td><td><span class="pill warn">you</span></td><td>Plain wallet only: enough for two approval transactions; a dollar's worth is plenty.</td></tr>
+      <tr><td>Token approvals</td><td><span class="pill warn">written</span></td><td><code>polyarb approve</code>. Not yet run against Polygon, which this sandbox can't reach.</td></tr>
+      <tr><td>Private key</td><td><span class="pill warn">you</span></td><td>Set <code>POLYMARKET_PRIVATE_KEY</code> in your own terminal. Never paste it into a chat or commit it. Keep only trading money in that wallet.</td></tr>
+      <tr><td>Market data, fees, settlement</td><td><span class="pill good">verified</span></td><td>All tested on live data.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="golive">
+  <h2><span class="n">12</span>Going live, step by step</h2>
+  <ol class="steps">
+    <li><div><h4>Check your location</h4><p>On the computer you'll trade from, open <code>https://polymarket.com/api/geoblock</code>. If it says <code>"blocked":true</code>, stop here.</p></div></li>
+    <li><div><h4>Build and paper-trade for at least a day</h4>
+      <div class="code"><button type="button" class="copy">Copy</button><pre>git clone https://github.com/brainkitt/treasure.git
+cd treasure && git checkout claude/polymarket-btc-arbitrage-0avqt1
+cd polymarket-arb
+cargo build --release
+cp config.example.toml config.toml
+./target/release/polyarb run          # open http://127.0.0.1:8787</pre></div>
+      <p>Confirm every feed shows a fresh time, markets appear, and a strike is set within seconds of each window opening.</p></div></li>
+    <li><div><h4>Choose the wallet</h4>
+      <div class="tbl" style="margin:6px 0 10px"><table>
+        <thead><tr><th>You have</th><th>Use</th><th>Config</th></tr></thead>
+        <tbody>
+          <tr><td>Nothing yet, or a polymarket.com account made after 4 May 2026</td><td>A new plain wallet used only for this</td><td><code>signature_type = 0</code></td></tr>
+          <tr><td>polymarket.com account made before 4 May 2026, email/Google login</td><td>That account's exported signing key</td><td><code>signature_type = 1</code> + <code>funder</code></td></tr>
+          <tr><td>polymarket.com account made before 4 May 2026, MetaMask/Rabby</td><td>That browser wallet's key</td><td><code>signature_type = 2</code> + <code>funder</code></td></tr>
+        </tbody>
+      </table></div></div></li>
+    <li><div><h4>Fund it</h4><p>Plain-wallet route: send USDC.e and a little POL to the wallet on the Polygon network.</p></div></li>
+    <li><div><h4>Approve tokens (plain wallet only)</h4>
+      <div class="code"><button type="button" class="copy">Copy</button><pre>export POLYMARKET_PRIVATE_KEY=0x...        # your own terminal only
+./target/release/polyarb approve --check   # shows POL, USDC.e and approvals
+./target/release/polyarb approve           # sends the two approval transactions</pre></div>
+      <p>Set <code>POLYGON_RPC_URL</code> to another Polygon endpoint if the default is slow.</p></div></li>
+    <li><div><h4>Set the config</h4><p>Set <code>bankroll</code> to exactly your wallet balance and pick a profile from <a href="#params">§13</a>.</p></div></li>
+    <li><div><h4>First live session, supervised</h4>
+      <div class="code"><button type="button" class="copy">Copy</button><pre>./target/release/polyarb run --live</pre></div>
+      <p>Check the first lines: <code>authenticated as 0x…</code> is your wallet; <code>wallet collateral balance $X</code> matches your deposit (stop if it reads $0); no <code>no exchange allowance</code> warning. Compare the first <code>EXEC</code> and <code>FILLED</code> lines with your positions on Polymarket. Ctrl-C stops the bot; open positions remain and resolve on their own.</p></div></li>
+    <li><div><h4>Redeem winners</h4><p>After a window ends, redeem any winning shares still held so the money is usable again.</p></div></li>
+  </ol>
+</section>
+
+<section id="params">
+  <h2><span class="n">13</span>Parameters</h2>
+  <p>Put these in <code>config.toml</code>. Any key you leave out uses the default.</p>
+  <div class="profiles">
+    <div class="profile"><h4>$15</h4><div class="sub">Setup test only. High risk. Ran in §7.</div>
+      <div class="code"><button type="button" class="copy">Copy</button><pre>bankroll       = 15.0
+risk_per_trade = 0.20
+daily_risk     = 0.50
+min_edge       = 0.03
+[live]
+signature_type = 0</pre></div></div>
+    <div class="profile"><h4>$100</h4><div class="sub">Moderate. Takes every signal.</div>
+      <div class="code"><button type="button" class="copy">Copy</button><pre>bankroll       = 100.0
+risk_per_trade = 0.05
+daily_risk     = 0.15
+min_edge       = 0.03
+[live]
+signature_type = 0</pre></div></div>
+    <div class="profile"><h4>$1,000</h4><div class="sub">The tweet's rules. Ran in §5.</div>
+      <div class="code"><button type="button" class="copy">Copy</button><pre>bankroll       = 1000.0
+risk_per_trade = 0.005
+daily_risk     = 0.02
+min_edge       = 0.03
+[live]
+signature_type = 0</pre></div></div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>Key</th><th class="r">Default</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>bankroll</code></td><td class="r">1000</td><td>Starting balance in USDC. <strong>Set to your real balance.</strong> Every risk limit is a fraction of it.</td></tr>
+      <tr><td><code>risk_per_trade</code></td><td class="r">0.005</td><td>Maximum premium on one trade as a fraction of equity. Premium paid is the maximum loss.</td></tr>
+      <tr><td><code>daily_risk</code></td><td class="r">0.02</td><td>Maximum of today's realised losses plus open premium, as a fraction of start-of-day equity. Resets at 00:00 UTC.</td></tr>
+      <tr><td><code>min_edge</code></td><td class="r">0.03</td><td>Required edge after fees, in dollars per $1 share. Higher means fewer, safer trades.</td></tr>
+      <tr><td><code>exit_edge</code></td><td class="r">0.005</td><td>Sell once the bid, after fees, is within this of fair value.</td></tr>
+      <tr><td><code>min_price</code> / <code>max_price</code></td><td class="r">0.05 / 0.95</td><td>Only buy shares priced in this range.</td></tr>
+      <tr><td><code>min_secs_left</code></td><td class="r">10</td><td>No new trades in a window's last N seconds.</td></tr>
+      <tr><td><code>min_secs_elapsed</code></td><td class="r">5</td><td>No new trades in a window's first N seconds.</td></tr>
+      <tr><td><code>slippage_ticks</code></td><td class="r">1</td><td>Pay up to this many 1¢ ticks above the ask.</td></tr>
+      <tr><td><code>cooldown_ms</code></td><td class="r">1500</td><td>Minimum gap between orders in one market.</td></tr>
+      <tr><td><code>max_book_age_ms</code></td><td class="r">5000</td><td>Ignore an order book with no update for this long.</td></tr>
+      <tr><td><code>max_spot_age_ms</code></td><td class="r">3000</td><td>Ignore exchange prices older than this.</td></tr>
+      <tr><td><code>max_ref_age_ms</code></td><td class="r">10000</td><td>Stand aside if the Chainlink stream is older than this.</td></tr>
+      <tr><td><code>fee_rate</code> / <code>fee_exponent</code></td><td class="r">0.07 / 1</td><td>Polymarket's crypto taker fee. Do not change.</td></tr>
+      <tr><td><code>twap_window_s</code></td><td class="r">60</td><td>Markets settle on a 60-second TWAP. Do not change.</td></tr>
+      <tr><td><code>vol_mult</code></td><td class="r">1.0</td><td>Multiplier on estimated volatility. Above 1 gives more cautious fair values.</td></tr>
+      <tr><td><code>paper_latency_ms</code></td><td class="r">80</td><td>Paper mode only: delay before a simulated fill. Use 250+ to mimic a home connection.</td></tr>
+      <tr><td><code>intervals_min</code></td><td class="r">[5, 15]</td><td>Which markets to trade.</td></tr>
+      <tr><td><code>feeds</code></td><td class="r">4 venues</td><td>Spot feeds: coinbase, kraken, okx, binance. Any subset works.</td></tr>
+      <tr><td><code>[live] signature_type</code></td><td class="r">0</td><td>0 = plain wallet, 1 = Polymarket Proxy, 2 = Polymarket Safe.</td></tr>
+      <tr><td><code>[live] funder</code></td><td class="r">—</td><td>Your Polymarket wallet address, for types 1 and 2 only.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="risks">
+  <h2><span class="n">14</span>Risks and safeguards</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Risk</th><th>What the bot does</th><th>What you do</th></tr></thead>
+    <tbody>
+      <tr><td>A feed goes silent</td><td>Stops trading when Chainlink is over 10 s old or spot over 3 s</td><td>Watch feed ages on the dashboard</td></tr>
+      <tr><td>A bad day</td><td>Daily cap blocks new entries until 00:00 UTC</td><td>Set <code>daily_risk</code> to the most you'll accept losing in a day</td></tr>
+      <tr><td>Order book out of sync</td><td>Corrects against the exchange's best bid/ask</td><td>Nothing</td></tr>
+      <tr><td>Delayed or partial fills</td><td>Follows delayed orders; tracks partial fills</td><td>Compare with Polymarket in the first session</td></tr>
+      <tr><td>Wrong bankroll in config</td><td>Warns at startup</td><td>Set it to the real balance</td></tr>
+      <tr><td>Polymarket retires the public price stream</td><td>Stops trading (stale reference)</td><td>The bot then needs migrating to the authenticated feed</td></tr>
+      <tr><td>BTC markets move to "V2"</td><td>Untested; orders likely rejected</td><td>Check markets still show <code>version: v1</code></td></tr>
+      <tr><td>Key theft</td><td>—</td><td>Dedicated wallet, trading money only, key only in an environment variable</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="open">
+  <h2><span class="n">15</span>Open items before real money</h2>
+  <ol class="steps">
+    <li><div><h4>First real orders</h4><p>Never sent. Expect at least one small fix after seeing real responses.</p></div></li>
+    <li><div><h4>Deposit Wallet support</h4><p>Needs the executor ported to Polymarket's official TypeScript or Python client, or a Rust SDK update.</p></div></li>
+    <li><div><h4>Automatic redemption</h4><p>For winning shares held to expiry.</p></div></li>
+    <li><div><h4>Authenticated price feed</h4><p>Migrate before Polymarket switches off the public stream.</p></div></li>
+    <li><div><h4>A longer paper record</h4><p>Several days covering quiet and volatile markets, at your real latency.</p></div></li>
+  </ol>
+  <footer>Data: live Polymarket and exchange feeds, 16 Nov 2026 07:30–10:14 UTC, recorded by the bot in paper mode; official outcomes from Polymarket's Gamma API. Simulation: <code>polyarb sim --hours 24</code>, seed 7.</footer>
+</section>
+</main>
+</div>
+<div id="tip" hidden></div>
+
+<script>
+const D = {"runs":{"A":{"curve":[[0,1000],[2.57,1001.51],[3.01,1004.57],[3.27,1004.53],[3.6,1005.16],[4.91,1003.38],[6.92,1004.28],[8.34,1004.85],[14.03,1005.4],[14.1,1005.76],[14.39,1004.61],[14.99,1005.07],[15.12,1006.01],[15.37,1003.76],[16.69,1004.3],[18.07,1004.83],[18.78,1005.85],[19.32,1008.15],[19.41,1009.95],[19.68,1007.16],[19.69,1007.79],[20.05,1008.88],[20.29,1013.14],[20.34,1013.92],[20.44,1015.02],[20.51,1016.03],[21.57,1018.29],[22.44,1018.38],[24.93,1018.6],[24.99,1021.9],[26.56,1020.12],[26.82,1020.77],[26.92,1021.52],[27.47,1021.83],[27.58,1021.43],[27.79,1020.3],[28.27,1023.18],[28.64,1023.14],[28.64,1022.36],[29.42,1024.42],[29.59,1024.23],[29.87,1025.32],[30.07,1025.19],[30.35,1025.57],[30.45,1025.42],[30.59,1024.83],[30.72,1029.69],[30.84,1030.47],[30.89,1034.7],[31.05,1037.22],[31.27,1033.41],[31.58,1029.1],[32.64,1029.4],[33.73,1029.49],[33.92,1029.06],[37.62,1028.64],[37.88,1028.49],[38.25,1029.12],[38.45,1032.21],[39.31,1031.71],[39.42,1032.09],[39.81,1031.58],[40.19,1030.12],[40.28,1030.62],[40.39,1030.45],[40.54,1030.11],[40.63,1029.4],[40.71,1030.88],[41.06,1031.4],[41.88,1031.98],[42.05,1032.21],[42.58,1031.96]],"missed":12,"signals":74,"n":69},"B":{"curve":[[0,1000],[1.53,1001.12],[1.76,1001.55],[1.87,1002.32],[2.03,1002.62],[2.29,1002.93],[2.49,1004.26],[2.87,1004.11],[3.59,1005.49],[3.62,1006.82],[3.8,1007.07],[3.88,1007.6],[4.26,1009.81],[4.56,1010.69],[4.71,1011.58],[4.95,1012.91],[5.11,1012.22],[5.24,1015.65],[5.37,1023.19],[5.48,1025.73],[5.63,1026.51],[5.68,1031.05],[5.84,1033.24],[6.07,1028.72],[6.37,1024.31],[7.29,1024.79],[7.31,1025.17],[7.54,1024.69],[8.29,1024.91],[9.42,1023.58],[11.41,1024.04],[11.71,1024.75],[12.26,1026.01],[12.82,1029.97],[13.66,1032.99],[13.71,1034.44],[14.0,1034.3],[14.1,1034.6],[14.15,1034.9],[14.31,1035.13],[14.52,1035.05],[14.57,1035.67],[14.65,1036.1],[15.0,1035.08],[15.09,1035.78],[15.18,1034.76],[15.29,1035.04],[15.5,1034.22],[16.66,1034.96],[16.84,1035.19],[16.84,1035.42],[17.35,1035.12],[17.37,1034.87],[17.96,1035.22],[20.09,1035.33],[20.19,1035.27],[20.19,1038.61],[20.64,1038.86],[21.08,1038.54],[22.08,1038.2],[22.25,1038.23],[22.42,1039.84],[22.87,1040.24],[23.16,1040.49],[24.02,1040.45],[24.05,1040.6],[24.17,1040.48],[24.35,1041.09],[24.38,1041.35],[26.67,1041.51],[27.82,1042.06],[27.88,1041.9],[28.43,1041.31],[28.89,1041.54],[29.1,1041.72],[29.83,1042.25]],"missed":11,"signals":80,"n":74},"C":{"curve":[[0,1000],[1.77,1000.54],[2.36,1000.98],[2.73,1001.38],[2.88,1001.4],[3.47,1004.06],[4.31,1005.42],[4.51,1006.0],[4.96,1007.21],[5.11,1006.68],[5.64,1025.98],[5.69,1033.71],[6.37,1028.54],[7.3,1028.78],[7.4,1029.08],[7.59,1029.39],[9.43,1028.0],[12.89,1026.4],[13.93,1025.51],[14.11,1025.66],[14.32,1025.81],[14.53,1025.76],[16.36,1024.06],[16.67,1024.31],[17.4,1023.56],[21.11,1022.52],[21.36,1023.07],[21.58,1023.78],[21.74,1023.52],[22.09,1023.57],[22.25,1024.03],[22.34,1023.96],[22.43,1025.54],[22.6,1025.7],[23.0,1025.53],[23.18,1025.93],[23.62,1026.58],[24.01,1028.56],[24.24,1028.47],[26.35,1028.13],[27.89,1028.11],[28.38,1028.28],[28.44,1030.45],[28.54,1031.25],[28.91,1031.56]],"missed":55,"signals":68,"n":41},"D":{"curve":[[0,1000],[1.79,1000.54],[2.38,1001.76],[3.48,1004.6],[4.33,1005.66],[4.52,1006.49],[5.5,1010.24],[5.69,1015.88],[6.37,1011.81],[9.44,1010.55],[12.93,1011.47],[14.12,1011.42],[15.03,1009.7],[15.09,1010.11],[15.31,1009.55],[15.52,1008.8],[17.43,1007.69],[20.25,1009.43],[21.36,1010.85],[21.78,1011.37],[22.61,1008.97],[22.88,1008.44],[23.0,1008.99],[23.39,1009.77],[24.01,1011.12],[24.2,1014.14],[24.61,1014.36],[26.96,1015.21],[27.23,1014.92],[27.53,1015.37],[28.46,1015.89],[28.5,1015.13],[28.91,1015.8],[29.12,1016.36]],"missed":100,"signals":87,"n":32},"s15tweet":{"curve":[[0,15]],"missed":0,"signals":0,"n":0,"pct":[[0,0.0]]},"s15min":{"curve":[[0,15],[1.29,15.08],[3.78,14.21],[3.88,14.04],[4.02,16.01],[4.18,16.54],[4.59,15.93],[4.8,17.03],[4.87,17.1],[4.95,16.53],[7.5,17.04],[7.59,17.14],[8.06,16.82],[8.22,16.74],[8.53,17.9],[8.78,18.08],[8.84,19.11],[8.92,20.37],[9.31,21.26],[9.47,21.8],[12.05,20.6],[13.76,18.94],[14.42,16.73],[14.64,15.71],[16.57,15.88],[16.66,16.3],[19.25,20.35],[19.27,24.24],[20.38,24.23],[20.55,23.75],[21.42,24.06],[21.77,22.8],[21.93,22.43],[22.14,22.26],[22.9,23.05],[23.32,23.73],[26.05,22.3],[26.94,22.78],[27.17,23.39],[27.37,23.67],[27.73,28.17],[27.84,28.52],[27.91,28.3],[28.94,30.6],[29.26,30.81],[29.34,31.54],[29.69,32.1],[29.8,31.86],[29.89,34.04],[29.95,36.24],[30.0,36.72],[30.2,40.84],[30.27,41.33],[30.34,41.6],[30.63,41.88],[31.23,42.31],[31.55,42.57],[32.16,42.75],[32.3,42.68],[32.42,42.94],[32.56,43.77],[32.95,44.06],[33.01,44.15],[33.68,44.03],[33.8,43.71],[33.91,41.79],[34.09,40.53],[34.26,39.84],[34.47,41.63],[34.71,51.81],[36.47,52.43],[37.24,52.6],[37.84,53.77],[38.34,54.05],[38.86,53.19],[39.42,52.87],[39.57,52.81],[39.63,54.59],[39.73,55.33]],"missed":36,"signals":101,"n":74,"pct":[[0,0.0],[1.29,0.53],[3.78,-5.27],[3.88,-6.4],[4.02,6.73],[4.18,10.27],[4.59,6.2],[4.8,13.53],[4.87,14.0],[4.95,10.2],[7.5,13.6],[7.59,14.27],[8.06,12.13],[8.22,11.6],[8.53,19.33],[8.78,20.53],[8.84,27.4],[8.92,35.8],[9.31,41.73],[9.47,45.33],[12.05,37.33],[13.76,26.27],[14.42,11.53],[14.64,4.73],[16.57,5.87],[16.66,8.67],[19.25,35.67],[19.27,61.6],[20.38,61.53],[20.55,58.33],[21.42,60.4],[21.77,52.0],[21.93,49.53],[22.14,48.4],[22.9,53.67],[23.32,58.2],[26.05,48.67],[26.94,51.87],[27.17,55.93],[27.37,57.8],[27.73,87.8],[27.84,90.13],[27.91,88.67],[28.94,104.0],[29.26,105.4],[29.34,110.27],[29.69,114.0],[29.8,112.4],[29.89,126.93],[29.95,141.6],[30.0,144.8],[30.2,172.27],[30.27,175.53],[30.34,177.33],[30.63,179.2],[31.23,182.07],[31.55,183.8],[32.16,185.0],[32.3,184.53],[32.42,186.27],[32.56,191.8],[32.95,193.73],[33.01,194.33],[33.68,193.53],[33.8,191.4],[33.91,178.6],[34.09,170.2],[34.26,165.6],[34.47,177.53],[34.71,245.4],[36.47,249.53],[37.24,250.67],[37.84,258.47],[38.34,260.33],[38.86,254.6],[39.42,252.47],[39.57,252.07],[39.63,263.93],[39.73,268.87]]},"s500":{"curve":[[0,500],[1.29,500.07],[2.27,500.29],[3.88,499.35],[4.02,501.43],[4.27,501.72],[4.36,501.58],[4.93,501.59],[6.45,502.0],[6.74,502.14],[7.52,501.92],[7.97,502.19],[8.51,502.84],[8.84,502.66],[11.05,502.41],[12.05,501.75],[13.76,500.74],[14.42,499.29],[14.52,499.49],[14.64,498.73],[16.57,498.86],[19.24,502.1],[20.44,503.76],[20.65,505.39],[20.7,504.54],[22.42,505.44],[23.03,505.17],[24.19,503.16],[25.38,502.89],[27.85,503.32],[27.91,503.1],[29.9,504.07],[29.98,504.61],[30.08,504.64],[30.22,504.3],[33.04,505.12],[33.91,504.14],[34.13,504.58],[34.26,504.22],[34.73,504.47],[36.54,504.83],[38.01,505.01],[38.43,506.08],[39.44,505.67]],"missed":16,"signals":48,"n":42,"pct":[[0,0.0],[1.29,0.01],[2.27,0.06],[3.88,-0.13],[4.02,0.29],[4.27,0.34],[4.36,0.32],[4.93,0.32],[6.45,0.4],[6.74,0.43],[7.52,0.38],[7.97,0.44],[8.51,0.57],[8.84,0.53],[11.05,0.48],[12.05,0.35],[13.76,0.15],[14.42,-0.14],[14.52,-0.1],[14.64,-0.25],[16.57,-0.23],[19.24,0.42],[20.44,0.75],[20.65,1.08],[20.7,0.91],[22.42,1.09],[23.03,1.03],[24.19,0.63],[25.38,0.58],[27.85,0.66],[27.91,0.62],[29.9,0.81],[29.98,0.92],[30.08,0.93],[30.22,0.86],[33.04,1.02],[33.91,0.83],[34.13,0.92],[34.26,0.84],[34.73,0.89],[36.54,0.97],[38.01,1.0],[38.43,1.22],[39.44,1.13]]}},"retHist":[["-100%",8,-100],["-90%",2,-90],["-80%",1,-80],["-70%",0,-70],["-60%",5,-60],["-50%",1,-50],["-40%",3,-40],["-30%",7,-30],["-20%",10,-20],["-10%",31,-10],["0%",49,0],["10%",38,10],["20%",16,20],["30%",10,30],["40%",11,40],["50%",4,50],["60%",4,60],["70%",3,70],["80%",3,80],["90%",3,90],["100%",2,100],["110%",0,110],["120%",1,120],["130%",0,130],["140%",4,140]],"holdHist":[["<5s",77],["5\u201310s",49],["10\u201320s",25],["20\u201330s",16],["30\u201360s",28],["1\u20132 min",8],["2\u20135 min",8],["held to expiry",5]],"holdPnl":[["<5s",51.3],["5\u201310s",37.38],["10\u201320s",2.59],["20\u201330s",27.77],["30\u201360s",7.99],["1\u20132 min",2.67],["2\u20135 min",4.67],["held to expiry",-17.41]],"leftPnl":[["under 1 min",21,9.24],["1\u20133 min",82,56.89],["3\u20135 min",84,42.33],["over 5 min",29,13.23]],"kindPnl":[["5m",185,104.94,67.6],["15m",31,16.75,74.2]],"priceHist":[["0\u20135\u00a2",0],["5\u201310\u00a2",5],["10\u201315\u00a2",13],["15\u201320\u00a2",10],["20\u201325\u00a2",11],["25\u201330\u00a2",21],["30\u201335\u00a2",15],["35\u201340\u00a2",7],["40\u201345\u00a2",17],["45\u201350\u00a2",18],["50\u201355\u00a2",13],["55\u201360\u00a2",21],["60\u201365\u00a2",12],["65\u201370\u00a2",20],["70\u201375\u00a2",12],["75\u201380\u00a2",10],["80\u201385\u00a2",1],["85\u201390\u00a2",8],["90\u201395\u00a2",2],["95\u2013100\u00a2",0]],"afford":{"eqs":[15,25,50,100,200,300,500,1000],"rps":[0.005,0.01,0.02,0.05,0.1,0.2],"grid":[[0,0,0,7,23,65],[0,0,2,14,49,100],[0,2,11,49,100,100],[2,11,36,100,100,100],[11,36,94,100,100,100],[23,65,100,100,100,100],[49,100,100,100,100,100],[100,100,100,100,100,100]]},"cost5":{"median":2.54,"p90":3.82,"max":4.81,"min":0.32},"stats":{"n":216,"win":68.5,"avgWin":1.27,"avgLoss":-0.97,"meanRet":12.5,"medRet":8.1,"p10":-23.2,"p90":54.1,"medHold":8,"medPx":0.48,"medEdge":3.3,"resN":5,"resPnl":-17.41,"signals":309,"missed":178},"btc":[[1794816362,64709.66,64700.26],[1794816367,64726.41,64701.56],[1794816372,64726.09,64704.36],[1794816377,64726.67,64706.84],[1794816382,64730.53,64708.92],[1794816387,64728.61,64711.71],[1794816392,64723.98,64713.76],[1794816397,64725.49,64715.77],[1794816402,64729.09,64718.34],[1794816407,64720.25,64720.86],[1794816412,64717.68,64722.05],[1794816417,64729.71,64723.92],[1794816422,64722.3,64725.98],[1794816427,64715.31,64726.58],[1794816432,64683.49,64725.19],[1794816437,64683.62,64721.64],[1794816442,64678.13,64717.31],[1794816447,64651.16,64712.52],[1794816452,64643.37,64706.0],[1794816457,64648.15,64699.33],[1794816462,64650.43,64693.9],[1794816467,64661.57,64687.51],[1794816472,64662.66,64682.53],[1794816477,64666.34,64677.53],[1794816482,64662.27,64672.18],[1794816487,64656.5,64666.09],[1794816493,64610.43,64661.54],[1794816498,64604.91,64654.06],[1794816503,64598.12,64647.49],[1794816508,64596.01,64641.41],[1794816513,64595.18,64637.8],[1794816518,64609.44,64633.88],[1794816523,64614.48,64630.5],[1794816528,64624.28,64627.46],[1794816533,64630.75,64624.9],[1794816538,64630.99,64620.94],[1794816543,64644.48,64618.95],[1794816549,64652.42,64617.56],[1794816554,64651.19,64619.49],[1794816559,64653.18,64623.15],[1794816564,64643.54,64626.46],[1794816569,64655.5,64630.73],[1794816574,64636.56,64636.39],[1794816579,64631.33,64638.95],[1794816584,64642.4,64641.23],[1794816589,64640.17,64643.25],[1794816594,64646.61,64644.54],[1794816599,64661.51,64646.29],[1794816604,64660.24,64648.34],[1794816609,64660.26,64649.37],[1794816614,64660.48,64650.0],[1794816619,64644.59,64650.75],[1794816624,64643.49,64650.24],[1794816629,64647.69,64649.92],[1794816634,64647.88,64649.38],[1794816639,64651.32,64650.21],[1794816644,64645.94,64651.33],[1794816649,64649.74,64651.7],[1794816654,64659.5,64652.3],[1794816659,64660.64,64652.81],[1794816664,64659.56,64652.74],[1794816669,64653.43,64652.52],[1794816674,64652.91,64651.46],[1794816679,64653.95,64651.04],[1794816685,64650.54,64651.75],[1794816690,64651.78,64652.09],[1794816695,64652.45,64652.44],[1794816700,64660.93,64653.02],[1794816706,64662.71,64654.03],[1794816711,64667.31,64655.7],[1794816716,64666.61,64656.89],[1794816721,64674.48,64657.24],[1794816726,64684.99,64658.38],[1794816731,64700.28,64661.26],[1794816736,64716.89,64665.86],[1794816742,64719.14,64671.06],[1794816747,64717.19,64676.8],[1794816752,64712.49,64683.31],[1794816757,64704.36,64687.06],[1794816762,64704.52,64691.01],[1794816767,64704.75,64695.29],[1794816772,64698.76,64697.91],[1794816777,64699.79,64701.33],[1794816782,64721.96,64703.46],[1794816787,64718.17,64707.52],[1794816792,64717.81,64709.75],[1794816797,64714.01,64710.89],[1794816802,64715.07,64710.76],[1794816807,64721.67,64710.38],[1794816812,64716.25,64710.76],[1794816817,64710.27,64711.25],[1794816822,64689.18,64711.45],[1794816827,64678.6,64709.79],[1794816832,64677.21,64708.05],[1794816837,64668.04,64706.07],[1794816842,64662.35,64703.48],[1794816847,64657.03,64698.91],[1794816852,64661.64,64693.73],[1794816857,64660.43,64689.05],[1794816862,64664.15,64684.7],[1794816867,64674.25,64680.5],[1794816872,64683.18,64675.7],[1794816877,64668.02,64672.75],[1794816882,64667.59,64669.96],[1794816887,64658.47,64668.56],[1794816892,64657.03,64667.07],[1794816897,64658.9,64665.42],[1794816902,64655.73,64664.49],[1794816907,64654.15,64664.01],[1794816912,64652.81,64663.87],[1794816917,64648.88,64662.87],[1794816922,64648.19,64661.9],[1794816927,64649.61,64660.58],[1794816932,64653.28,64658.34],[1794816937,64651.42,64655.7],[1794816942,64656.84,64654.38],[1794816947,64685.13,64653.93],[1794816952,64660.73,64655.39],[1794816957,64650.1,64655.33],[1794816962,64670.08,64654.73],[1794816967,64663.5,64655.54],[1794816972,64655.89,64656.32],[1794816977,64657.02,64656.65],[1794816982,64648.14,64657.38],[1794816988,64649.86,64657.77],[1794816993,64651.26,64657.7],[1794816998,64665.65,64657.74],[1794817003,64647.2,64657.66],[1794817008,64646.74,64656.53],[1794817013,64649.74,64654.16],[1794817018,64648.63,64653.6],[1794817023,64659.51,64653.11],[1794817029,64657.34,64651.71],[1794817034,64638.52,64651.74],[1794817039,64637.23,64650.51],[1794817044,64616.11,64648.84],[1794817049,64606.9,64646.19],[1794817054,64604.85,64642.57],[1794817059,64601.3,64637.82],[1794817064,64592.93,64634.38],[1794817069,64601.74,64629.92],[1794817074,64596.53,64625.93],[1794817079,64595.61,64621.55],[1794817084,64587.18,64617.05],[1794817089,64576.29,64611.09],[1794817094,64573.97,64604.33],[1794817099,64567.08,64598.61],[1794817104,64568.42,64593.01],[1794817109,64539.88,64587.12],[1794817114,64532.53,64582.7],[1794817119,64527.99,64575.49],[1794817124,64522.07,64570.66],[1794817129,64517.27,64563.61],[1794817134,64506.08,64556.29],[1794817139,64512.18,64548.77],[1794817145,64531.73,64541.79],[1794817150,64535.67,64538.94],[1794817155,64543.02,64535.62],[1794817160,64531.21,64533.0],[1794817166,64537.47,64529.34],[1794817171,64542.64,64528.16],[1794817176,64530.33,64528.4],[1794817181,64558.06,64528.32],[1794817186,64546.83,64530.48],[1794817191,64545.99,64532.15],[1794817196,64569.69,64536.49],[1794817201,64534.37,64540.07],[1794817206,64547.66,64541.09],[1794817211,64572.08,64542.47],[1794817216,64572.19,64545.3],[1794817221,64573.07,64548.14],[1794817226,64568.87,64551.93],[1794817231,64570.41,64555.24],[1794817236,64562.9,64557.31],[1794817241,64566.83,64560.37],[1794817246,64571.38,64562.31],[1794817251,64580.05,64564.13],[1794817256,64550.53,64566.1],[1794817261,64551.94,64565.63],[1794817266,64556.42,64567.25],[1794817271,64551.5,64567.37],[1794817276,64556.09,64566.21],[1794817281,64544.42,64564.96],[1794817286,64532.94,64562.49],[1794817291,64524.62,64559.57],[1794817296,64525.38,64555.02],[1794817301,64525.3,64552.34],[1794817306,64542.39,64548.78],[1794817311,64535.59,64545.03],[1794817316,64538.45,64542.34],[1794817321,64544.05,64541.53],[1794817326,64539.22,64540.1],[1794817331,64557.15,64538.92],[1794817336,64555.71,64538.29],[1794817341,64558.11,64538.36],[1794817346,64556.33,64539.22],[1794817351,64558.17,64541.13],[1794817356,64562.47,64543.9],[1794817361,64565.74,64546.93],[1794817366,64576.6,64551.36],[1794817371,64583.53,64554.01],[1794817376,64582.94,64558.66],[1794817381,64572.87,64561.54],[1794817386,64587.98,64564.31],[1794817391,64591.29,64568.27],[1794817396,64604.26,64572.65],[1794817401,64608.26,64575.86],[1794817406,64633.92,64580.45],[1794817411,64628.02,64587.92],[1794817417,64611.76,64594.3],[1794817422,64606.52,64598.04],[1794817427,64607.35,64600.79],[1794817432,64626.61,64602.98],[1794817437,64617.07,64606.37],[1794817442,64638.95,64609.36],[1794817447,64634.96,64613.34],[1794817452,64636.72,64617.95],[1794817457,64641.91,64620.58],[1794817462,64643.48,64624.23],[1794817467,64639.1,64625.68],[1794817473,64644.04,64626.86],[1794817478,64645.43,64628.47],[1794817483,64646.02,64632.06],[1794817488,64632.12,64634.6],[1794817493,64631.63,64637.01],[1794817498,64631.56,64637.44],[1794817503,64624.01,64638.6],[1794817508,64618.79,64637.59],[1794817513,64617.33,64636.31],[1794817518,64625.17,64634.73],[1794817523,64617.24,64633.29],[1794817528,64601.97,64631.51],[1794817533,64596.47,64628.48],[1794817538,64596.39,64624.68],[1794817543,64595.67,64620.6],[1794817549,64563.75,64615.18],[1794817554,64563.11,64609.47],[1794817559,64491.44,64603.78],[1794817564,64484.02,64592.71],[1794817569,64484.69,64581.77],[1794817574,64509.37,64571.15],[1794817579,64511.6,64561.83],[1794817584,64482.46,64551.99],[1794817589,64488.32,64539.19],[1794817594,64498.6,64531.52],[1794817599,64480.05,64521.35],[1794817604,64472.92,64513.55],[1794817609,64490.35,64501.36],[1794817614,64501.85,64496.69],[1794817619,64498.67,64493.07],[1794817624,64484.74,64493.24],[1794817629,64474.98,64492.32],[1794817634,64475.62,64491.06],[1794817639,64477.54,64488.1],[1794817644,64482.37,64485.42],[1794817650,64487.43,64485.67],[1794817655,64489.65,64485.49],[1794817660,64492.08,64484.94],[1794817665,64490.66,64486.41],[1794817670,64498.06,64487.56],[1794817675,64503.26,64487.76],[1794817680,64503.97,64487.52],[1794817685,64506.75,64488.18],[1794817690,64509.37,64490.63],[1794817695,64524.76,64494.33],[1794817700,64470.55,64497.56],[1794817705,64472.17,64496.94],[1794817710,64479.86,64495.98],[1794817715,64479.8,64495.36],[1794817720,64485.01,64494.69],[1794817725,64484.79,64494.11],[1794817730,64482.47,64493.32],[1794817735,64482.25,64492.28],[1794817740,64493.12,64490.64],[1794817746,64451.58,64486.72],[1794817751,64461.85,64483.27],[1794817756,64464.91,64479.17],[1794817762,64473.55,64474.93],[1794817768,64482.25,64475.11],[1794817773,64481.55,64475.4],[1794817778,64494.42,64475.83],[1794817783,64492.6,64476.6],[1794817788,64478.59,64476.85],[1794817793,64487.26,64476.6],[1794817798,64485.83,64476.83],[1794817803,64498.26,64476.8],[1794817808,64496.5,64480.75],[1794817813,64493.86,64483.77],[1794817818,64500.79,64485.87],[1794817823,64492.6,64488.82],[1794817828,64482.48,64490.23],[1794817833,64483.16,64490.13],[1794817838,64482.22,64490.01],[1794817843,64481.81,64489.16],[1794817848,64482.16,64488.5],[1794817853,64480.91,64488.29],[1794817858,64481.29,64487.77],[1794817863,64481.02,64487.23],[1794817868,64478.12,64485.96],[1794817873,64482.19,64484.07],[1794817878,64498.11,64483.4],[1794817883,64513.83,64483.39],[1794817888,64515.1,64485.24],[1794817893,64518.31,64487.96],[1794817898,64507.68,64490.95],[1794817903,64519.58,64493.69],[1794817908,64520.66,64496.06],[1794817913,64505.04,64499.65],[1794817918,64491.97,64502.26],[1794817923,64500.44,64503.57],[1794817928,64501.38,64505.15],[1794817933,64506.66,64507.59],[1794817938,64501.04,64508.87],[1794817943,64492.87,64509.18],[1794817948,64493.6,64507.76],[1794817953,64503.85,64505.99],[1794817958,64504.68,64504.74],[1794817963,64520.49,64504.87],[1794817968,64523.9,64505.12],[1794817973,64534.13,64505.47],[1794817978,64534.43,64507.35],[1794817983,64530.25,64510.22],[1794817988,64543.83,64512.94],[1794817993,64544.79,64516.47],[1794817998,64540.57,64520.36],[1794818004,64534.7,64524.23],[1794818009,64515.18,64526.49],[1794818014,64504.37,64527.99],[1794818019,64514.17,64528.16],[1794818025,64517.99,64528.08],[1794818030,64524.4,64527.67],[1794818035,64529.52,64527.33],[1794818040,64534.91,64526.87],[1794818045,64531.21,64527.42],[1794818050,64534.49,64526.69],[1794818055,64533.83,64525.93],[1794818060,64530.94,64524.93],[1794818065,64528.55,64524.21],[1794818070,64540.5,64524.69],[1794818075,64535.46,64527.43],[1794818080,64533.66,64529.33],[1794818091,64531.45,64532.38],[1794818096,64516.41,64532.82],[1794818101,64518.55,64531.7],[1794818106,64541.05,64530.6],[1794818111,64538.45,64531.26],[1794818116,64536.42,64531.52],[1794818121,64527.98,64531.67],[1794818126,64518.94,64531.51],[1794818131,64517.5,64530.35],[1794818136,64494.95,64528.76],[1794818141,64489.99,64525.52],[1794818146,64496.38,64521.67],[1794818151,64501.25,64518.33],[1794818156,64497.03,64515.84],[1794818161,64497.71,64514.18],[1794818166,64498.6,64512.14],[1794818171,64503.3,64509.35],[1794818176,64503.59,64506.32],[1794818181,64510.26,64503.39],[1794818186,64508.47,64502.19],[1794818192,64503.72,64501.13],[1794818197,64506.16,64500.63],[1794818202,64516.12,64501.5],[1794818207,64518.58,64503.65],[1794818212,64519.23,64505.32],[1794818217,64524.54,64507.14],[1794818222,64521.79,64509.46],[1794818227,64522.28,64511.44],[1794818232,64522.38,64513.71],[1794818237,64500.98,64514.18],[1794818242,64510.33,64513.95],[1794818247,64480.09,64513.08],[1794818252,64460.46,64510.52],[1794818257,64458.25,64507.02],[1794818262,64460.29,64502.39],[1794818267,64476.23,64498.75],[1794818272,64482.8,64495.0],[1794818277,64487.96,64492.17],[1794818282,64489.68,64489.09],[1794818287,64494.48,64486.39],[1794818292,64481.38,64482.54],[1794818297,64484.05,64480.45],[1794818302,64497.42,64479.08],[1794818307,64507.22,64479.08],[1794818312,64508.58,64482.22],[1794818317,64511.99,64486.22],[1794818323,64519.28,64490.64],[1794818328,64530.92,64496.38],[1794818333,64531.45,64499.75],[1794818338,64533.73,64503.49],[1794818343,64540.59,64507.26],[1794818348,64547.31,64512.35],[1794818353,64548.75,64518.02],[1794818358,64549.36,64522.5],[1794818363,64549.41,64528.48],[1794818368,64546.18,64532.3],[1794818373,64545.89,64534.75],[1794818378,64531.41,64537.79],[1794818383,64524.47,64539.35],[1794818388,64531.36,64539.86],[1794818393,64546.21,64539.95],[1794818398,64558.76,64541.44],[1794818403,64562.2,64543.48],[1794818408,64563.48,64544.93],[1794818413,64570.96,64546.39],[1794818418,64559.41,64548.48],[1794818426,64556.54,64549.53],[1794818431,64549.03,64550.19],[1794818436,64555.43,64550.52],[1794818441,64560.75,64552.45],[1794818446,64560.99,64554.91],[1794818451,64570.56,64557.81],[1794818456,64554.6,64560.5],[1794818461,64556.69,64560.49],[1794818466,64552.93,64560.1],[1794818471,64529.93,64558.58],[1794818476,64528.97,64555.75],[1794818481,64528.34,64552.75],[1794818486,64521.49,64550.34],[1794818491,64526.56,64547.62],[1794818496,64524.33,64545.41],[1794818501,64530.26,64542.92],[1794818506,64529.52,64540.33],[1794818511,64529.54,64537.7],[1794818516,64528.84,64534.43],[1794818521,64529.11,64531.57],[1794818526,64519.29,64529.27],[1794818531,64519.56,64527.22],[1794818536,64520.07,64526.22],[1794818541,64526.59,64525.66],[1794818546,64543.34,64525.69],[1794818551,64549.24,64527.76],[1794818556,64555.35,64529.57],[1794818561,64544.7,64532.42],[1794818567,64544.48,64533.74],[1794818573,64549.83,64535.71],[1794818578,64550.21,64537.16],[1794818583,64539.24,64539.09],[1794818588,64540.99,64540.08],[1794818594,64540.11,64542.16],[1794818599,64529.73,64543.64],[1794818605,64517.53,64543.8],[1794818610,64506.7,64541.45],[1794818615,64519.39,64538.15],[1794818620,64526.71,64535.32],[1794818625,64521.92,64533.36],[1794818630,64526.66,64531.53],[1794818635,64525.11,64529.08],[1794818640,64519.42,64527.4],[1794818645,64513.4,64524.78],[1794818650,64512.51,64522.95],[1794818655,64520.63,64520.64],[1794818660,64521.32,64518.99],[1794818665,64520.39,64518.89],[1794818670,64518.54,64519.82],[1794818676,64528.62,64520.32],[1794818681,64528.99,64520.5],[1794818686,64524.94,64520.93],[1794818691,64524.6,64521.13],[1794818696,64526.98,64520.98],[1794818702,64527.33,64521.39],[1794818707,64529.81,64522.53],[1794818712,64509.9,64523.67],[1794818717,64518.84,64523.56],[1794818722,64510.0,64523.32],[1794818727,64513.8,64522.52],[1794818732,64517.17,64521.99],[1794818737,64513.98,64521.91],[1794818742,64518.7,64520.51],[1794818747,64518.97,64519.85],[1794818752,64513.47,64519.16],[1794818758,64500.59,64517.34],[1794818763,64512.22,64515.57],[1794818768,64513.61,64513.78],[1794818773,64513.98,64512.82],[1794818778,64524.39,64513.21],[1794818783,64537.78,64513.76],[1794818788,64552.64,64515.9],[1794818793,64559.12,64519.77],[1794818798,64569.53,64523.4],[1794818803,64586.5,64528.12],[1794818808,64579.81,64532.28],[1794818813,64570.17,64537.29],[1794818818,64555.84,64543.11],[1794818823,64555.55,64547.66],[1794818828,64534.39,64550.66],[1794818833,64535.57,64553.03],[1794818838,64536.87,64554.22],[1794818843,64533.91,64555.24],[1794818848,64536.01,64555.1],[1794818853,64544.76,64553.87],[1794818858,64546.89,64552.82],[1794818863,64555.54,64551.08],[1794818868,64557.38,64548.93],[1794818873,64539.91,64547.18],[1794818878,64535.1,64545.15],[1794818883,64527.6,64543.22],[1794818888,64528.41,64540.87],[1794818893,64516.27,64540.04],[1794818898,64507.01,64538.4],[1794818903,64500.25,64535.84],[1794818908,64502.35,64532.38],[1794818913,64507.56,64529.22],[1794818918,64506.4,64526.58],[1794818923,64506.97,64522.38],[1794818928,64498.7,64519.18],[1794818933,64504.5,64513.55],[1794818938,64506.47,64510.68],[1794818943,64514.6,64508.97],[1794818948,64512.25,64507.38],[1794818953,64520.98,64506.44],[1794818958,64526.43,64506.96],[1794818963,64515.66,64508.69],[1794818968,64514.13,64510.31],[1794818973,64517.62,64511.44],[1794818978,64519.82,64512.46],[1794818983,64519.33,64513.36],[1794818989,64518.72,64514.34],[1794818994,64527.06,64516.01],[1794818999,64528.57,64518.25],[1794819004,64541.33,64520.5],[1794819009,64541.63,64522.36],[1794819014,64532.3,64524.51],[1794819019,64518.37,64525.13],[1794819024,64521.31,64524.58],[1794819029,64522.07,64525.1],[1794819034,64514.77,64525.6],[1794819039,64510.96,64525.27],[1794819044,64511.29,64524.61],[1794819049,64508.54,64524.14],[1794819054,64500.37,64522.94],[1794819059,64477.74,64521.13],[1794819064,64481.99,64516.55],[1794819069,64490.93,64510.75],[1794819074,64468.35,64507.62],[1794819079,64456.37,64503.06],[1794819084,64455.75,64496.95],[1794819089,64458.07,64492.59],[1794819094,64467.13,64487.39],[1794819099,64474.66,64483.37],[1794819104,64482.7,64480.34],[1794819109,64484.3,64477.69],[1794819114,64484.06,64476.1],[1794819119,64476.22,64474.65],[1794819124,64485.12,64474.8],[1794819129,64489.47,64475.09],[1794819134,64487.17,64474.97],[1794819139,64486.54,64475.79],[1794819144,64483.64,64477.97],[1794819149,64477.75,64480.2],[1794819154,64465.21,64481.89],[1794819159,64467.13,64481.96],[1794819164,64466.99,64481.22],[1794819169,64468.0,64479.68],[1794819174,64468.12,64478.32],[1794819179,64473.71,64477.28],[1794819184,64460.05,64476.58],[1794819189,64447.15,64474.19],[1794819194,64454.62,64470.7],[1794819199,64451.61,64467.38],[1794819204,64448.08,64465.12],[1794819209,64442.94,64462.34],[1794819214,64443.74,64459.34],[1794819219,64440.61,64457.22],[1794819224,64439.83,64454.57],[1794819229,64435.01,64452.74],[1794819234,64435.19,64449.37],[1794819239,64427.12,64447.11],[1794819244,64435.03,64443.57],[1794819249,64420.64,64441.14],[1794819254,64409.79,64438.83],[1794819259,64404.72,64435.17],[1794819265,64407.39,64430.66],[1794819270,64399.18,64427.19],[1794819275,64401.33,64423.62],[1794819280,64401.61,64420.23],[1794819285,64407.46,64416.97],[1794819290,64408.24,64414.34],[1794819295,64403.39,64411.65],[1794819300,64401.35,64409.67],[1794819305,64413.02,64407.26],[1794819310,64425.92,64406.43],[1794819315,64427.28,64407.05],[1794819320,64417.93,64408.54],[1794819325,64406.48,64409.49],[1794819330,64405.84,64409.64],[1794819335,64412.3,64410.26],[1794819340,64412.68,64411.4],[1794819345,64401.85,64412.08],[1794819350,64366.43,64411.77],[1794819355,64368.7,64409.17],[1794819360,64383.26,64406.44],[1794819365,64393.58,64404.92],[1794819370,64403.3,64403.58],[1794819375,64403.61,64401.73],[1794819380,64411.44,64399.78],[1794819385,64406.99,64399.04],[1794819390,64407.25,64399.11],[1794819395,64407.54,64399.05],[1794819400,64392.26,64398.41],[1794819405,64392.23,64396.71],[1794819410,64380.69,64395.91],[1794819415,64363.29,64396.35],[1794819420,64371.93,64395.85],[1794819425,64375.67,64394.71],[1794819430,64375.86,64393.27],[1794819435,64375.48,64390.49],[1794819440,64381.09,64388.11],[1794819445,64381.77,64385.59],[1794819450,64387.63,64384.08],[1794819455,64392.67,64382.41],[1794819460,64385.47,64381.44],[1794819465,64391.24,64380.89],[1794819471,64389.34,64380.75],[1794819476,64392.04,64381.91],[1794819481,64392.89,64383.59],[1794819486,64393.27,64385.61],[1794819491,64392.9,64387.05],[1794819496,64401.28,64388.41],[1794819501,64409.04,64391.2],[1794819506,64409.0,64393.11],[1794819511,64413.85,64395.67],[1794819516,64418.81,64397.95],[1794819521,64417.2,64400.24],[1794819526,64416.53,64402.29],[1794819531,64418.83,64404.51],[1794819536,64420.44,64407.01],[1794819541,64418.78,64409.44],[1794819546,64425.04,64412.06],[1794819551,64424.71,64414.2],[1794819557,64423.96,64417.43],[1794819562,64424.21,64418.66],[1794819567,64420.97,64419.8],[1794819572,64414.09,64420.58],[1794819577,64412.52,64420.54],[1794819582,64412.92,64420.06],[1794819587,64398.84,64419.51],[1794819592,64398.21,64417.72],[1794819597,64400.54,64416.28],[1794819602,64405.81,64414.65],[1794819607,64404.03,64413.23],[1794819612,64420.43,64411.46],[1794819617,64428.47,64411.51],[1794819622,64430.65,64412.07],[1794819627,64446.25,64412.62],[1794819632,64441.91,64415.02],[1794819637,64439.93,64417.39],[1794819642,64428.52,64419.54],[1794819647,64428.51,64421.34],[1794819652,64421.3,64423.15],[1794819657,64414.27,64424.93],[1794819662,64420.41,64426.34],[1794819667,64389.93,64427.0],[1794819672,64383.74,64425.89],[1794819677,64380.42,64422.6],[1794819683,64336.36,64417.33],[1794819688,64300.77,64409.2],[1794819693,64338.75,64397.75],[1794819698,64331.57,64387.21],[1794819703,64305.38,64379.65],[1794819708,64273.52,64369.07],[1794819713,64270.93,64353.95],[1794819718,64272.88,64341.59],[1794819723,64313.9,64333.12],[1794819728,64337.43,64325.59],[1794819733,64326.04,64319.47],[1794819738,64327.14,64314.87],[1794819743,64305.57,64311.44],[1794819748,64321.54,64309.0],[1794819753,64308.81,64309.62],[1794819758,64288.35,64306.79],[1794819763,64297.6,64303.22],[1794819768,64287.28,64302.26],[1794819773,64285.2,64303.67],[1794819778,64294.82,64304.87],[1794819783,64274.79,64305.64],[1794819788,64273.94,64302.11],[1794819793,64243.38,64296.35],[1794819798,64250.02,64290.83],[1794819803,64286.06,64284.73],[1794819808,64311.7,64283.25],[1794819813,64329.89,64282.79],[1794819818,64326.72,64284.65],[1794819823,64309.58,64289.06],[1794819828,64317.39,64290.22],[1794819833,64348.13,64292.47],[1794819838,64382.27,64297.72],[1794819843,64373.17,64306.43],[1794819848,64361.03,64314.81],[1794819853,64333.08,64322.13],[1794819858,64333.01,64328.24],[1794819863,64356.34,64335.01],[1794819868,64359.79,64340.06],[1794819873,64363.92,64344.18],[1794819878,64385.71,64347.5],[1794819883,64403.66,64352.35],[1794819888,64433.33,64362.35],[1794819893,64472.6,64370.57],[1794819898,64473.68,64380.66],[1794819903,64456.53,64388.15],[1794819908,64436.76,64395.02],[1794819913,64399.94,64401.55],[1794819918,64394.96,64405.9],[1794819923,64386.3,64411.07],[1794819928,64386.93,64415.0],[1794819933,64400.68,64416.94],[1794819945,64383.74,64419.16],[1794819950,64396.15,64416.55],[1794819955,64391.75,64411.96],[1794819961,64389.33,64403.37],[1794819966,64347.28,64396.69],[1794819971,64338.72,64388.5],[1794819976,64325.01,64382.95],[1794819981,64333.64,64376.62],[1794819986,64345.48,64372.1],[1794819991,64340.83,64368.27],[1794819996,64359.79,64363.76],[1794820001,64341.9,64360.98],[1794820006,64343.58,64356.46],[1794820011,64338.72,64352.42],[1794820016,64339.01,64348.64],[1794820021,64335.74,64344.9],[1794820026,64338.15,64340.93],[1794820031,64300.61,64340.33],[1794820036,64297.66,64337.77],[1794820041,64304.11,64335.48],[1794820046,64305.13,64333.03],[1794820051,64308.66,64329.17],[1794820056,64324.74,64326.56],[1794820061,64325.89,64323.28],[1794820066,64359.0,64322.62],[1794820071,64347.21,64323.83],[1794820077,64318.48,64324.07],[1794820082,64319.52,64322.12],[1794820087,64297.34,64320.42],[1794820092,64289.94,64316.31],[1794820097,64299.76,64315.71],[1794820102,64295.38,64315.71],[1794820107,64294.26,64314.85],[1794820112,64273.23,64314.03],[1794820117,64269.84,64311.2],[1794820122,64275.76,64306.66],[1794820127,64277.37,64301.49],[1794820132,64286.09,64294.89],[1794820137,64292.28,64290.36],[1794820142,64272.3,64287.55],[1794820147,64270.1,64285.08],[1794820152,64273.47,64283.3],[1794820157,64273.65,64282.21],[1794820162,64271.88,64279.64],[1794820167,64261.04,64277.96],[1794820172,64268.81,64275.51],[1794820177,64255.16,64275.2],[1794820182,64248.16,64274.11],[1794820187,64240.18,64271.71],[1794820192,64263.25,64268.59],[1794820197,64266.52,64266.45],[1794820202,64287.01,64264.19],[1794820207,64280.58,64264.91],[1794820213,64290.63,64265.82],[1794820218,64285.05,64267.04],[1794820223,64298.73,64268.62],[1794820229,64297.23,64271.18],[1794820234,64274.72,64273.72],[1794820240,64281.9,64275.06],[1794820245,64297.02,64277.96],[1794820250,64286.01,64282.7],[1794820255,64269.5,64285.8],[1794820260,64268.55,64286.05],[1794820265,64264.65,64285.27],[1794820270,64251.24,64283.2],[1794820275,64248.86,64280.94],[1794820280,64236.63,64277.59],[1794820285,64211.9,64273.25],[1794820290,64203.46,64264.72],[1794820295,64220.12,64258.85],[1794820300,64214.26,64251.99],[1794820305,64195.24,64247.1],[1794820310,64193.14,64236.99],[1794820315,64189.6,64230.96],[1794820320,64211.31,64224.18],[1794820326,64234.95,64217.77],[1794820331,64240.9,64216.28],[1794820336,64229.25,64215.56],[1794820341,64228.25,64214.51],[1794820346,64227.5,64213.96],[1794820351,64233.17,64215.41],[1794820356,64220.24,64217.54],[1794820361,64201.76,64218.39],[1794820366,64215.38,64218.01],[1794820371,64213.22,64219.5],[1794820376,64167.37,64220.96],[1794820381,64173.28,64220.11],[1794820386,64164.07,64216.72],[1794820391,64160.04,64210.68],[1794820396,64159.38,64203.75],[1794820401,64162.39,64197.69],[1794820406,64165.75,64191.03],[1794820411,64158.86,64185.85],[1794820416,64152.7,64180.95],[1794820421,64152.9,64175.3],[1794820426,64153.81,64171.06],[1794820431,64157.94,64166.14],[1794820436,64160.2,64161.8],[1794820441,64167.53,64159.9],[1794820446,64187.19,64159.96],[1794820451,64168.01,64161.84],[1794820456,64156.19,64162.68],[1794820461,64150.62,64162.34],[1794820466,64149.43,64161.24],[1794820471,64144.54,64160.13],[1794820476,64159.77,64158.92],[1794820481,64155.84,64159.48],[1794820486,64154.31,64159.68],[1794820491,64146.26,64159.54],[1794820496,64138.16,64158.74],[1794820501,64136.75,64156.96],[1794820506,64113.58,64153.86],[1794820511,64113.94,64147.48],[1794820516,64093.43,64142.99],[1794820521,64091.54,64138.74],[1794820526,64093.97,64132.67],[1794820531,64092.97,64129.19],[1794820536,64088.77,64124.87],[1794820541,64076.6,64117.42],[1794820546,64098.66,64112.32],[1794820551,64109.67,64107.61],[1794820556,64125.82,64104.75],[1794820561,64105.16,64104.07],[1794820566,64127.55,64102.31],[1794820571,64114.16,64102.57],[1794820576,64133.63,64102.79],[1794820581,64138.94,64106.24],[1794820586,64141.4,64109.28],[1794820591,64143.99,64112.95],[1794820596,64193.08,64117.52],[1794820601,64204.22,64126.14],[1794820606,64224.59,64136.72],[1794820611,64234.62,64147.36]],"windows":[{"m":5,"t":"08:00","actual":"Down","s0":64921.98,"s1":64699.9,"t0":64943.11,"t1":64728.96,"h1":"Down","h2":"Down","h3":"Down","h4":"Down","h0":"Down"},{"m":5,"t":"08:05","actual":"Down","s0":64699.9,"s1":64662.63,"t0":64728.96,"t1":64646.8,"h1":"Down","h2":"Down","h3":"Down","h4":"Down","h0":"Down"},{"m":5,"t":"08:10","actual":"Up","s0":64662.63,"s1":64659.57,"t0":64646.8,"t1":64664.63,"h1":"Up","h2":"Up","h3":"Up","h4":"Up","h0":"Down"},{"m":5,"t":"08:15","actual":"Down","s0":64659.57,"s1":64532.23,"t0":64664.63,"t1":64539.5,"h1":"Down","h2":"Down","h3":"Down","h4":"Down","h0":"Down"},{"m":5,"t":"08:20","actual":"Up","s0":64532.23,"s1":64624.2,"t0":64539.5,"t1":64638.27,"h1":"Up","h2":"Up","h3":"Up","h4":"Up","h0":"Up"},{"m":5,"t":"08:25","actual":"Down","s0":64624.2,"s1":64485.33,"t0":64638.27,"t1":64476.92,"h1":"Down","h2":"Down","h3":"Down","h4":"Down","h0":"Down"},{"m":5,"t":"08:30","actual":"Up","s0":64485.33,"s1":64517.35,"t0":64476.92,"t1":64532.07,"h1":"Up","h2":"Up","h3":"Up","h4":"Up","h0":"Up"},{"m":5,"t":"08:35","actual":"Up","s0":64517.35,"s1":64559.31,"t0":64532.07,"t1":64541.84,"h1":"Up","h2":"Up","h3":"Down","h4":"Down","h0":"Up"},{"m":5,"t":"08:40","actual":"Down","s0":64559.31,"s1":64527.29,"t0":64541.84,"t1":64521.26,"h1":"Down","h2":"Down","h3":"Down","h4":"Down","h0":"Down"},{"m":5,"t":"08:45","actual":"Down","s0":64527.29,"s1":64532.49,"t0":64521.26,"t1":64518.6,"h1":"Down","h2":"Down","h3":"Down","h4":"Up","h0":"Up"},{"m":5,"t":"08:50","actual":"Down","s0":64532.49,"s1":64401.35,"t0":64518.6,"t1":64409.67,"h1":"Down","h2":"Down","h3":"Down","h4":"Down","h0":"Down"},{"m":5,"t":"08:55","actual":"Up","s0":64401.35,"s1":64401.63,"t0":64409.67,"t1":64414.99,"h1":"Up","h2":"Up","h3":"Up","h4":"Down","h0":"Up"},{"m":5,"t":"09:00","actual":"Down","s0":64401.63,"s1":64469.37,"t0":64414.99,"t1":64383.74,"h1":"Down","h2":"Down","h3":"Down","h4":"Down","h0":"Up"},{"m":5,"t":"09:05","actual":"Down","s0":64469.37,"s1":64268.67,"t0":64383.74,"t1":64265.15,"h1":"Down","h2":"Down","h3":"Down","h4":"Down","h0":"Down"},{"m":5,"t":"09:10","actual":"Down","s0":64268.67,"s1":64137.37,"t0":64265.15,"t1":64157.34,"h1":"Down","h2":"Down","h3":"Down","h4":"Down","h0":"Down"},{"m":15,"t":"08:00","actual":"Down","s0":64921.98,"s1":64659.57,"t0":64943.11,"t1":64664.63,"h1":"Down","h2":"Down","h3":"Down","h4":"Down","h0":"Down"},{"m":15,"t":"08:15","actual":"Down","s0":64659.57,"s1":64485.33,"t0":64664.63,"t1":64476.92,"h1":"Down","h2":"Down","h3":"Down","h4":"Down","h0":"Down"},{"m":15,"t":"08:30","actual":"Up","s0":64485.33,"s1":64527.29,"t0":64476.92,"t1":64521.26,"h1":"Up","h2":"Up","h3":"Up","h4":"Up","h0":"Up"},{"m":15,"t":"08:45","actual":"Down","s0":64527.29,"s1":64401.63,"t0":64521.26,"t1":64414.99,"h1":"Down","h2":"Down","h3":"Down","h4":"Down","h0":"Down"},{"m":15,"t":"09:00","actual":"Down","s0":64401.63,"s1":64137.37,"t0":64414.99,"t1":64157.34,"h1":"Down","h2":"Down","h3":"Down","h4":"Down","h0":"Down"}],"sim":[[0,970.85,22,18.2,652,7.77],[100,1488.6,416,63.0,1189,214.61],[250,2862.63,1352,63.5,1222,1019.92],[500,7834.52,2926,67.2,1353,3985.81],[1000,22597.75,5211,74.9,1287,12892.57],[2000,36637.59,6675,76.1,1007,19756.89]]};
+const NS = "http://www.w3.org/2000/svg";
+const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const tip = document.getElementById("tip");
+function el(tag, a, p) { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; }
+function txt(p, x, y, s, a = {}) { const t = el("text", Object.assign({ x, y }, a), p); t.textContent = s; return t; }
+function showTip(html, ev) {
+  tip.innerHTML = html; tip.hidden = false;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + w > innerWidth - 8) x = ev.clientX - w - 14;
+  if (y + h > innerHeight - 8) y = ev.clientY - h - 14;
+  tip.style.left = Math.max(8, x) + "px"; tip.style.top = Math.max(8, y) + "px";
+}
+const hideTip = () => { tip.hidden = true; };
+function ticks(min, max, n = 5) {
+  const span = (max - min) || 1, raw = span / n, mag = 10 ** Math.floor(Math.log10(raw)), e = raw / mag;
+  const step = (e >= 7.5 ? 10 : e >= 3.5 ? 5 : e >= 1.5 ? 2 : 1) * mag;
+  const out = []; for (let v = Math.floor(min / step) * step; v <= max + step * 1e-9; v += step) out.push(+v.toFixed(10));
+  if (out[out.length - 1] < max) out.push(+(out[out.length - 1] + step).toFixed(10));
+  return out;
+}
+const money = (v, d = 2) => (v < 0 ? "−$" : "$") + Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+const smoney = v => (v > 0 ? "+" : "") + money(v);
+const sw = c => `<span class="sw" style="background:${c}"></span>`;
+
+function legend(id, series) {
+  const L = document.getElementById(id); if (!L) return;
+  L.innerHTML = series.map(s => `<span><i style="background:${cssv(s.color)}"></i>${s.name}</span>`).join("");
+}
+
+function lineChart(id, o) {
+  const box = document.getElementById(id); box.innerHTML = "";
+  const W = box.clientWidth, H = o.height || 300, wide = W > 560;
+  const m = { l: o.ml || 58, r: wide && o.endLabels ? 104 : 14, t: 12, b: 34 };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, height: H, role: "img", "aria-label": o.aria || "" }, box);
+  const all = o.series.flatMap(s => s.pts);
+  const xs = all.map(p => p[0]), ys = all.map(p => p[1]).concat(o.yInclude || []);
+  const x0 = o.xMin ?? Math.min(...xs), x1 = o.xMax ?? Math.max(...xs);
+  const yt = ticks(Math.min(...ys), Math.max(...ys), o.yTicks || 5), y0 = yt[0], y1 = yt[yt.length - 1];
+  const X = v => m.l + (W - m.l - m.r) * (v - x0) / ((x1 - x0) || 1);
+  const Y = v => m.t + (H - m.t - m.b) * (1 - (v - y0) / ((y1 - y0) || 1));
+  const grid = cssv("--line"), axis = cssv("--axis");
+  for (const v of yt) { el("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: v === 0 && o.zero ? axis : grid, "stroke-width": 1 }, svg); txt(svg, m.l - 8, Y(v) + 4, o.yFmt(v), { "text-anchor": "end" }); }
+  const xt = o.xTicks ? o.xTicks : ticks(x0, x1, wide ? 7 : 4).filter(v => v >= x0 && v <= x1);
+  for (const v of xt) { el("line", { x1: X(v), x2: X(v), y1: H - m.b, y2: H - m.b + 4, stroke: axis }, svg); txt(svg, X(v), H - m.b + 17, o.xFmt(v), { "text-anchor": "middle" }); }
+  if (o.xLabel) txt(svg, W - m.r, H - 2, o.xLabel, { "text-anchor": "end" });
+  if (o.vlines) for (const v of o.vlines) if (v > x0 && v < x1) el("line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: grid, "stroke-dasharray": "3 3" }, svg);
+  el("line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: axis }, svg);
+  const ends = [];
+  for (const s of o.series) {
+    const c = cssv(s.color); let d = "";
+    s.pts.forEach((p, i) => {
+      if (i === 0) d += `M${X(p[0])},${Y(p[1])}`;
+      else if (s.step) d += `H${X(p[0])}V${Y(p[1])}`;
+      else d += `L${X(p[0])},${Y(p[1])}`;
+    });
+    if (s.step && s.extend != null) d += `H${X(s.extend)}`;
+    el("path", { d, fill: "none", stroke: c, "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+    const last = s.pts[s.pts.length - 1], lx = s.step && s.extend != null ? s.extend : last[0];
+    el("circle", { cx: X(lx), cy: Y(last[1]), r: 4, fill: c, stroke: cssv("--surface"), "stroke-width": 2 }, svg);
+    ends.push({ y: Y(last[1]), x: X(lx), s, v: last[1] });
+  }
+  if (wide && o.endLabels) {
+    ends.sort((a, b) => a.y - b.y);
+    for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 28) ends[i].y = ends[i - 1].y + 28;
+    for (const e of ends) { txt(svg, e.x + 10, e.y - 1, e.s.short || e.s.name, { class: "lbl" }); txt(svg, e.x + 10, e.y + 13, o.yFmt(e.v, true), { class: "val" }); }
+  }
+  const cross = el("line", { y1: m.t, y2: H - m.b, stroke: axis, visibility: "hidden" }, svg);
+  const dots = o.series.map(s => el("circle", { r: 4, fill: cssv(s.color), stroke: cssv("--surface"), "stroke-width": 2, visibility: "hidden" }, svg));
+  const hit = el("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent" }, svg);
+  const valAt = (s, xv) => {
+    if (s.step) { let v = null; for (const p of s.pts) { if (p[0] <= xv) v = p[1]; else break; } return (s.extend == null && xv > s.pts[s.pts.length - 1][0]) ? null : v; }
+    let best = null, bd = Infinity; for (const p of s.pts) { const dd = Math.abs(p[0] - xv); if (dd < bd) { bd = dd; best = p[1]; } } return best;
+  };
+  hit.addEventListener("pointermove", ev => {
+    const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * (W / r.width);
+    const xv = x0 + (px - m.l) / (W - m.l - m.r) * (x1 - x0);
+    cross.setAttribute("x1", px); cross.setAttribute("x2", px); cross.setAttribute("visibility", "visible");
+    let rows = "";
+    o.series.forEach((s, i) => {
+      const v = valAt(s, xv);
+      if (v == null || xv > (s.extend ?? s.pts[s.pts.length - 1][0])) { dots[i].setAttribute("visibility", "hidden"); return; }
+      dots[i].setAttribute("cx", px); dots[i].setAttribute("cy", Y(v)); dots[i].setAttribute("visibility", "visible");
+      rows += `<div>${sw(cssv(s.color))}${s.name}: <b>${o.yFmt(v, true)}</b></div>`;
+    });
+    showTip(`<div><b>${o.xFmt(xv, true)}</b></div>${rows}`, ev);
+  });
+  hit.addEventListener("pointerleave", () => { hideTip(); cross.setAttribute("visibility", "hidden"); dots.forEach(d => d.setAttribute("visibility", "hidden")); });
+}
+
+function barChart(id, o) {
+  const box = document.getElementById(id); box.innerHTML = "";
+  const W = box.clientWidth, H = o.height || 240;
+  const n = o.items.length, showVals = o.values !== false && n <= 10;
+  const m = { l: o.ml || 48, r: 10, t: showVals ? 20 : 10, b: o.mb || 40 };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, height: H, role: "img", "aria-label": o.aria || "" }, box);
+  const vals = o.items.map(d => d.v);
+  const yt = ticks(Math.min(0, ...vals), Math.max(0, ...vals), 4), y0 = yt[0], y1 = yt[yt.length - 1];
+  const Y = v => m.t + (H - m.t - m.b) * (1 - (v - y0) / ((y1 - y0) || 1));
+  const grid = cssv("--line"), axis = cssv("--axis");
+  for (const v of yt) { el("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: v === 0 ? axis : grid }, svg); txt(svg, m.l - 8, Y(v) + 4, o.yFmt(v), { "text-anchor": "end" }); }
+  const band = (W - m.l - m.r) / n, gap = Math.max(2, Math.min(band * 0.28, 22)), bw = band - gap;
+  const every = Math.ceil(n / Math.max(1, Math.floor((W - m.l) / 46)));
+  o.items.forEach((d, i) => {
+    const x = m.l + i * band + gap / 2, top = Y(Math.max(0, d.v)), bot = Y(Math.min(0, d.v)), h = Math.max(bot - top, d.v === 0 ? 0 : 1.5);
+    const c = cssv(d.color || o.color || "--s1"), r = Math.min(4, bw / 2, h);
+    const up = d.v >= 0;
+    const path = up
+      ? `M${x},${bot}V${top + r}Q${x},${top} ${x + r},${top}H${x + bw - r}Q${x + bw},${top} ${x + bw},${top + r}V${bot}Z`
+      : `M${x},${top}V${bot - r}Q${x},${bot} ${x + r},${bot}H${x + bw - r}Q${x + bw},${bot} ${x + bw},${bot - r}V${top}Z`;
+    el("path", { d: path, fill: c }, svg);
+    if (i % every === 0 || o.allLabels) txt(svg, x + bw / 2, H - m.b + (o.stagger && i % 2 ? 30 : 16), d.label, { "text-anchor": "middle", class: o.labelClass || "" });
+    if (d.sub) txt(svg, x + bw / 2, H - m.b + 30, d.sub, { "text-anchor": "middle" });
+    if (showVals) txt(svg, x + bw / 2, up ? top - 6 : bot + 14, o.vFmt ? o.vFmt(d.v) : o.yFmt(d.v), { "text-anchor": "middle", class: "val" });
+    const hr = el("rect", { x: m.l + i * band, y: m.t, width: band, height: H - m.t - m.b, fill: "transparent" }, svg);
+    hr.addEventListener("pointermove", ev => showTip(o.tip ? o.tip(d) : `<b>${d.label}</b><div>${o.vFmt ? o.vFmt(d.v) : o.yFmt(d.v)}</div>`, ev));
+    hr.addEventListener("pointerleave", hideTip);
+  });
+}
+
+function hbar(id, o) {
+  const box = document.getElementById(id); box.innerHTML = "";
+  const W = box.clientWidth, narrow = W < 520, row = narrow ? 46 : 34, H = o.items.length * row + 8;
+  const lw = narrow ? 0 : Math.min(300, W * 0.45), m = { l: lw, r: 56 };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, height: H, role: "img", "aria-label": o.aria || "" }, box);
+  const X = v => m.l + (W - m.l - m.r) * v / o.max;
+  o.items.forEach((d, i) => {
+    const y = i * row + 4, by = narrow ? y + 20 : y + 6, bh = narrow ? 14 : 18;
+    txt(svg, narrow ? 0 : lw - 12, narrow ? y + 13 : y + 19, d.label, { "text-anchor": narrow ? "start" : "end", class: "lbl" });
+    el("rect", { x: m.l, y: by, width: W - m.l - m.r, height: bh, fill: cssv("--sunk"), rx: 3 }, svg);
+    el("rect", { x: m.l, y: by, width: Math.max(0, X(d.v) - m.l), height: bh, fill: cssv(d.color), rx: 3 }, svg);
+    txt(svg, W - m.r + 8, by + bh - 4, `${d.v} / ${o.max}`, { class: "val" });
+    const hr = el("rect", { x: 0, y, width: W, height: row, fill: "transparent" }, svg);
+    hr.addEventListener("pointermove", ev => showTip(`<b>${d.label}</b><div>${d.v} of ${o.max} windows correct</div>`, ev));
+    hr.addEventListener("pointerleave", hideTip);
+  });
+}
+
+function table(id, head, rows, rcols = []) {
+  const t = document.getElementById(id); if (!t) return;
+  t.innerHTML = `<table><thead><tr>${head.map((h, i) => `<th class="${rcols.includes(i) ? "r" : ""}">${h}</th>`).join("")}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((c, i) => `<td class="${rcols.includes(i) ? "r" : ""}">${c}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+}
+
+const RUNS = [
+  { k: "A", name: "A · 80 ms, 45 min", short: "A · 80 ms", color: "--s1" },
+  { k: "B", name: "B · 80 ms", short: "B · 80 ms", color: "--s2" },
+  { k: "C", name: "C · 500 ms", short: "C · 500 ms", color: "--s3" },
+  { k: "D", name: "D · 1,500 ms", short: "D · 1.5 s", color: "--s4" },
+];
+const FILLS = { A: 70, B: 74, C: 42, D: 32 };
+
+function renderStatic() {
+  table("tb-runs", ["Run", "Fill delay", "Start (UTC)", "Length", "Fills", "Missed", "P&L"],
+    RUNS.map(r => { const R = D.runs[r.k], last = R.curve[R.curve.length - 1]; return [r.k, { A: "80 ms", B: "80 ms", C: "500 ms", D: "1,500 ms" }[r.k], { A: "08:18", B: "08:43", C: "08:43", D: "08:43" }[r.k], r.k === "A" ? "45 min" : "30 min", FILLS[r.k], R.missed, `<span class="${last[1] >= 1000 ? "pos" : "neg"}">${smoney(last[1] - 1000)}</span>`]; }), [4, 5, 6]);
+  table("tb-windows", ["Window", "Official", "TWAP start → end", "Spot start → end", "Spot rule"],
+    D.windows.map(w => [`${w.m}m ${w.t}`, w.actual, `${w.t0.toFixed(2)} → ${w.t1.toFixed(2)}`, `${w.s0.toFixed(2)} → ${w.s1.toFixed(2)}`, w.h0 === w.actual ? "correct" : `<span class="neg">wrong (${w.h0})</span>`]));
+  table("tb-sim", ["Quote lag", "End balance", "Trades", "Win rate", "Missed", "Fees"],
+    D.sim.map(s => [`${s[0]} ms`, money(s[1]), s[2].toLocaleString(), s[3] + "%", s[4].toLocaleString(), money(s[5])]), [1, 2, 3, 4, 5]);
+  const sp = D.kindPnl.map(k => [`${k[0]} markets`, k[1], `<span class="pos">${smoney(k[2])}</span>`, k[3] + "%"]);
+  const lp = D.leftPnl.map(k => [`Entered with ${k[0]} left`, k[1], `<span class="${k[2] >= 0 ? "pos" : "neg"}">${smoney(k[2])}</span>`, "—"]);
+  document.getElementById("tb-split").innerHTML = sp.concat(lp).map(r => `<tr>${r.map((c, i) => `<td class="${i ? "r" : ""}">${c}</td>`).join("")}</tr>`).join("");
+  // heatmap
+  const A = D.afford, lo = cssv("--seq-lo"), hi = cssv("--seq-hi");
+  const mix = t => { const a = lo.match(/\w\w/g).map(h => parseInt(h, 16)), b = hi.match(/\w\w/g).map(h => parseInt(h, 16)); return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(",")})`; };
+  const dark = document.documentElement.getAttribute("data-theme") === "dark" || (document.documentElement.getAttribute("data-theme") !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+  let h = `<table class="heat"><thead><tr><th style="text-align:left">Balance</th>${A.rps.map(r => `<th>${(r * 100).toFixed(r < 0.01 ? 1 : 0)}%</th>`).join("")}</tr></thead><tbody>`;
+  A.eqs.forEach((e, i) => {
+    h += `<tr><td class="rh">$${e.toLocaleString()}</td>` + A.grid[i].map((v, j) => {
+      const t = v / 100, fg = (t > 0.55 || (dark && t > 0.75)) ? "#ffffff" : "var(--ink)";
+      const mark = (e === 15 && j === 0) || (e === 15 && j === 5) ? "outline:2px solid var(--ink);outline-offset:-2px;" : "";
+      return `<td class="c" style="background:${mix(t)};color:${fg};${mark}" title="$${e} at ${(A.rps[j] * 100)}% per trade: budget ${money(e * A.rps[j])}, ${v}% of signals">${v}%</td>`;
+    }).join("") + "</tr>";
+  });
+  h += `</tbody></table><p style="font-size:13px;color:var(--muted);margin:8px 0 0">Outlined: $15 on the tweet's rules (0%) and at 20% per trade (65%).</p>`;
+  document.getElementById("tb-afford").innerHTML = h;
+}
+
+function renderCharts() {
+  legend("lg-eq", RUNS);
+  lineChart("ch-eq", {
+    series: RUNS.map(r => ({ ...r, step: true, pts: D.runs[r.k].curve.map(p => [p[0], +(p[1] - 1000).toFixed(2)]) })),
+    yFmt: (v, t) => t ? smoney(v) : (v === 0 ? "$0" : smoney(v).replace(".00", "")), xFmt: (v, t) => t ? `${v.toFixed(1)} min` : `${v}m`,
+    xLabel: "minutes into run", endLabels: true, zero: true, aria: "Paper profit over time for runs A to D",
+  });
+  const lat = ["B", "C", "D"];
+  barChart("ch-latpnl", {
+    items: lat.map(k => { const c = D.runs[k].curve; return { label: { B: "80 ms", C: "500 ms", D: "1.5 s" }[k], v: +(c[c.length - 1][1] - 1000).toFixed(2), color: RUNS.find(r => r.k === k).color }; }),
+    yFmt: v => "$" + v, vFmt: v => smoney(v), height: 220, aria: "P&L by fill delay",
+  });
+  barChart("ch-latmiss", {
+    items: lat.map(k => ({ label: { B: "80 ms", C: "500 ms", D: "1.5 s" }[k], v: Math.round(100 * D.runs[k].missed / (D.runs[k].missed + FILLS[k])), color: RUNS.find(r => r.k === k).color })),
+    yFmt: v => v + "%", height: 220, tip: d => `<b>${d.label}</b><div>${d.v}% of orders missed</div>`, aria: "Missed orders by fill delay",
+  });
+  const H = ["h1", "h2", "h3", "h4", "h0"], HN = { h1: "TWAP at end ≥ TWAP at start", h2: "TWAP at end ≥ spot at start", h3: "Window average ≥ spot at start", h4: "Window average ≥ TWAP at start", h0: "Spot at end ≥ spot at start (website)" };
+  hbar("ch-rules", { max: D.windows.length, items: H.map(h => ({ label: HN[h], v: D.windows.filter(w => w[h] === w.actual).length, color: h === "h1" ? "--s1" : h === "h0" ? "--s2" : "--axis" })), aria: "Resolution rule accuracy" });
+  const BT = [{ name: "Spot", color: "--s1" }, { name: "60s TWAP (settles the market)", short: "TWAP", color: "--s2" }];
+  legend("lg-btc", BT);
+  const t0 = D.btc[0][0], t1 = D.btc[D.btc.length - 1][0], vl = []; for (let t = Math.ceil(t0 / 300) * 300; t < t1; t += 300) vl.push(t);
+  const hhmm = s => new Date(s * 1000).toISOString().slice(11, 16), hhmmss = s => new Date(s * 1000).toISOString().slice(11, 19) + " UTC";
+  const xtk = []; for (let t = Math.ceil(t0 / 900) * 900; t <= t1; t += 900) xtk.push(t);
+  lineChart("ch-btc", {
+    series: [{ ...BT[0], pts: D.btc.map(b => [b[0], b[1]]) }, { ...BT[1], pts: D.btc.map(b => [b[0], b[2]]) }],
+    yFmt: (v, t) => t ? money(v) : "$" + v.toLocaleString("en-US"), xFmt: (v, t) => t ? hhmmss(v) : hhmm(v), xTicks: xtk, vlines: vl, height: 280, ml: 70, endLabels: true, aria: "BTC spot and TWAP",
+  });
+  const fp = []; for (let p = 1; p <= 99; p++) fp.push([p, +(7 * (p / 100) * (1 - p / 100)).toFixed(3)]);
+  lineChart("ch-fee", {
+    series: [{ name: "Fee per share", color: "--s1", pts: fp }], yFmt: (v, t) => t ? v.toFixed(2) + "¢" : v + "¢",
+    xFmt: (v, t) => t ? `price ${Math.round(v)}¢` : v + "¢", xTicks: [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 99], height: 220, yInclude: [0, 2], aria: "Fee curve",
+  });
+  // fix fee tooltip text to show % of spend too
+  const feeBox = document.getElementById("ch-fee");
+  feeBox.querySelector("rect[fill='transparent']").addEventListener("pointermove", ev => {
+    const r = feeBox.querySelector("svg").getBoundingClientRect(), W = feeBox.clientWidth;
+    const px = (ev.clientX - r.left) * (W / r.width), p = Math.min(99, Math.max(1, Math.round(1 + (px - 58) / (W - 58 - 14) * 98)));
+    const f = 7 * (p / 100) * (1 - p / 100);
+    showTip(`<b>Price ${p}¢</b><div>Fee ${f.toFixed(2)}¢ per share</div><div>${(100 * f / p).toFixed(1)}% of money spent</div>`, ev);
+  });
+  barChart("ch-ret", {
+    items: D.retHist.map(b => ({ label: b[2] % 50 === 0 ? b[0] : "", v: b[1], color: b[2] < 0 ? "--s2" : "--s1", rng: b[2] })),
+    yFmt: v => v, values: false, allLabels: true, height: 230, mb: 28,
+    tip: d => `<b>${d.rng}% to ${d.rng + 10}%${d.rng === -100 ? " (incl. total loss)" : d.rng === 140 ? " or more" : ""}</b><div>${d.v} trades</div>`, aria: "Return per trade histogram",
+  });
+  const short = ["<5s", "5–10s", "10–20s", "20–30s", "30–60s", "1–2m", "2–5m", "expiry"];
+  barChart("ch-hold", { items: D.holdHist.map((b, i) => ({ label: short[i], v: b[1], color: i === 7 ? "--s2" : "--s1", full: b[0] })), yFmt: v => v, height: 240, mb: 46, stagger: true, allLabels: true, values: true, tip: d => `<b>${d.full}</b><div>${d.v} trades</div>`, aria: "Holding time histogram" });
+  barChart("ch-holdpnl", { items: D.holdPnl.map((b, i) => ({ label: short[i], v: b[1], color: b[1] < 0 ? "--s2" : "--s1", full: b[0] })), yFmt: v => "$" + v, vFmt: v => (v < 0 ? "−" : "") + "$" + Math.abs(v).toFixed(0), height: 240, mb: 46, stagger: true, allLabels: true, tip: d => `<b>${d.full}</b><div>${smoney(d.v)}</div>`, aria: "P&L by holding time" });
+  barChart("ch-price", { items: D.priceHist.map((b, i) => ({ label: i % 4 === 0 ? `${i * 5}¢` : "", v: b[1], full: b[0] })), yFmt: v => v, values: false, allLabels: true, height: 210, mb: 28, tip: d => `<b>${d.full}</b><div>${d.v} trades</div>`, aria: "Entry price histogram" });
+  const SM = [{ k: "s15min", name: "$15 at 20% per trade", short: "$15 · 20%", color: "--s1" }, { k: "s500", name: "$500, tweet rules", short: "$500 · 0.5%", color: "--s2" }, { k: "s15tweet", name: "$15, tweet rules", short: "$15 · 0.5%", color: "--s3" }];
+  legend("lg-small", SM);
+  const endT = Math.max(...SM.map(s => D.runs[s.k].pct[D.runs[s.k].pct.length - 1][0]));
+  lineChart("ch-small", {
+    series: SM.map(s => ({ ...s, step: true, extend: s.k === "s15tweet" ? endT : null, pts: D.runs[s.k].pct })),
+    yFmt: (v, t) => (v > 0 ? "+" : "") + (t ? v.toFixed(1) : v) + "%", xFmt: (v, t) => t ? `${v.toFixed(1)} min` : `${v}m`, xLabel: "minutes into run", endLabels: true, zero: true, aria: "Return on account for small-account runs",
+  });
+  barChart("ch-sim", {
+    items: D.sim.map(s => ({ label: s[0] >= 1000 ? `${s[0] / 1000} s` : `${s[0]} ms`, v: +(s[1] - 1000).toFixed(0), color: s[1] < 1000 ? "--s2" : "--s1", s })),
+    yFmt: v => (v < 0 ? "−$" : "$") + (Math.abs(v) >= 1000 ? Math.abs(v / 1000) + "k" : Math.abs(v)), vFmt: v => (v < 0 ? "−$" : "+$") + Math.abs(v).toLocaleString("en-US"), height: 240, allLabels: true,
+    tip: d => `<b>Quotes ${d.label} late</b><div>P&L ${smoney(d.s[1] - 1000)}</div><div>${d.s[2].toLocaleString()} trades, ${d.s[3]}% won</div>`, aria: "Simulated P&L by quote lag",
+  });
+}
+
+function renderAll() { renderStatic(); renderCharts(); }
+renderAll();
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(renderCharts, 120); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderAll);
+new MutationObserver(renderAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+for (const b of document.querySelectorAll("button.copy")) b.addEventListener("click", () => {
+  const pre = b.parentElement.querySelector("pre"), done = () => { b.textContent = "Copied"; setTimeout(() => b.textContent = "Copy", 1500); };
+  navigator.clipboard.writeText(pre.textContent).then(done).catch(() => { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = "Selected"; });
+});
+</script>
