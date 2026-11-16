@@ -175,7 +175,30 @@ book caught up. Holding to expiry lost money.
 
 ### 4.5 Small-account runs ($15 and $500, 250 ms fill delay)
 
-RESULTS_15
+Three runs side by side, 09:35–10:14 UTC, same live data, 250 ms fill delay
+(closer to a home connection than the 80 ms runs).
+
+| Run | Balance | Risk per trade / day | Buys filled | Missed | Wins / losses | Max drawdown | End balance |
+| - | - | - | - | - | - | - | - |
+| $15, tweet rules | $15 | 0.5% / 2% | **0** | 0 | — | — | $15.00 |
+| $15, minimum to trade | $15 | 20% / 50% | 76 | 36 | 51 / 23 | **27.9%** | $55.33 (+269%) |
+| $500, tweet rules | $500 | 0.5% / 2% | 42 | 16 | 25 / 17 | 0.8% | $505.67 (+1.1%) |
+
+What these show:
+- **$15 on the tweet's rules cannot trade at all.** Every signal was skipped
+  because 5 shares cost more than the 7¢ budget.
+- **$15 at 20% per trade traded constantly and, on paper, nearly quadrupled
+  in 38 minutes.** That came from compounding: each win raised the next trade
+  size, from ~$3 to ~$7. It also fell 27.9% from its high at one point, had a
+  run of 5 losses in a row, and hit its daily risk cap once. If the real edge
+  is smaller than paper (§6), the same compounding works in reverse just as
+  fast. **Do not read +269% as a forecast.**
+- **$500 on the tweet's rules made +1.1%** with a 0.8% maximum drawdown. That
+  is what the tweet's risk control looks like: small, steady and slow. Most
+  orders were the 5-share minimum (~$1.70–$2.50), so it still only took the
+  cheaper signals.
+- About a third of signals at 250 ms were missed because the book moved
+  first, compared with about a fifth at 80 ms.
 
 ---
 
@@ -357,7 +380,7 @@ Put these in `config.toml`. Any key you leave out uses the default.
 
 ### Suggested profiles
 
-**$15 — setup test only (high risk; tested in paper, §4.5)**
+**$15 — setup test only (high risk; this exact profile ran in §4.5: +269% on paper with a 27.9% drawdown in 38 minutes)**
 ```toml
 bankroll       = 15.0
 risk_per_trade = 0.20    # ~$3 per trade: the smallest that fits a 5-share order
