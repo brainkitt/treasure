@@ -56,10 +56,10 @@ def load(symbol_id, period="M_1"):
 def plan(days, period="M_1", end_ms=None):
     """Print toTimestamp values (ISO) for paging back `days` of history, 1000 bars per call."""
     import time
-    mins = {"M_1": 1, "M_5": 5, "M_15": 15, "M_30": 30, "H_1": 60}[period]
+    mins = {"M_1": 1, "M_5": 5, "M_15": 15, "M_30": 30, "H_1": 60, "H_4": 240, "D_1": 1440}[period]
     end = end_ms or int(time.time() * 1000)
-    step = 1000 * mins * 60_000
-    n = int(days * 1440 / (1000 * mins)) + 1
+    step = min(1000 * mins * 60_000, 30 * 86_400_000 - 60_000)  # API caps: 1000 bars AND 30 days per call
+    n = int(days * 86_400_000 / step) + 1
     return [pd.Timestamp(end - i * step, unit="ms").strftime("%Y-%m-%dT%H:%M:%SZ") for i in range(n)]
 
 
