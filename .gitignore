@@ -45,3 +45,6 @@ obj/
 # cTrader arena
 ctrader-arena/data/
 __pycache__/
+
+# Claude Code personal settings
+.claude/settings.local.json
