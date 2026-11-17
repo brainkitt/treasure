@@ -247,7 +247,7 @@ summary{cursor:pointer;padding:10px 14px;font-weight:600}
 pre.code{margin:0;padding:14px;overflow:auto;max-height:520px;font-family:var(--f-m);font-size:12px;line-height:1.45;background:var(--soft);border-top:1px solid var(--line)}
 button.copy{font:inherit;font-size:12px;margin:0 14px 10px;padding:5px 12px;border-radius:7px;border:1px solid var(--line);background:var(--soft);color:var(--ink);cursor:pointer}
 button.copy:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.ex{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.ex{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:14px}
 .ex .panel h4{margin:0 0 6px}
 .scorebar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--soft);margin:6px 0 2px}
 .scorebar span{display:block;height:100%}
@@ -280,6 +280,13 @@ def split_table(m):
 def generic_table(rows, cols=None, maxrows=40):
     if not rows:
         return '<p class="muted small">Not reported.</p>'
+    if isinstance(rows, dict):
+        lists = {k: v for k, v in rows.items() if isinstance(v, list) and v and isinstance(v[0], dict)}
+        rest = {k: v for k, v in rows.items() if k not in lists}
+        out = generic_table([{"item": k, "value": v} for k, v in rest.items()]) if rest else ""
+        return out + "".join(f'<p class="small muted" style="margin:8px 0 0">{E(k)}</p>' + generic_table(v) for k, v in lists.items())
+    if isinstance(rows, str):
+        return f"<p class='small'>{E(rows)}</p>"
     if isinstance(rows[0], str):
         return '<ul class="tight">' + "".join(f"<li>{E(r)}</li>" for r in rows) + "</ul>"
     cols = cols or list(dict.fromkeys(k for r in rows for k in r.keys()))
@@ -333,7 +340,9 @@ def build(out_path):
 <dt>Max drawdown</dt><dd>{money(f["max_dd_usd"])} ({f["max_dd_pct"]:.1f}%)</dd><dt>Start balance tested</dt><dd>{money(m["start_balance"],0)}</dd>
 <dt>Recommended min.</dt><dd>{money(m["balance"]["recommended_min"],0)}</dd></dl></div>''')
     P.append(f'<div class="grid3">{"".join(cards)}</div>')
-    P.append(SUMMARY_TEXT.format(winner=winner or "none"))
+    bal_rows = "".join(f'<tr><td>{n}</td><td class="n">{money(data[n]["m"]["balance"]["technical_min"],0)}</td><td class="n">{money(data[n]["m"]["balance"]["recommended_min"],0)}</td><td class="n">{money(data[n]["m"]["balance"]["recommended_operating"],0)}</td></tr>'
+                       for n, *_ in ranked if data[n]["m"].get("qualified"))
+    P.append(SUMMARY_TEXT.format(vol_line=VOL_LINE, bal_rows=bal_rows) if SUMMARY_TEXT else "")
 
     # ---------------- comparison table
     P.append('<h2 id="compare">Head-to-head comparison</h2>')
@@ -374,9 +383,9 @@ def build(out_path):
 
     # ---------------- curves
     P.append('<h2 id="curves">Equity and drawdown</h2>')
-    P.append('<p>Each curve is the bot\'s closed-trade equity as a percentage gain on the start balance it was tested with. Lines end on 17 Nov 2026. The bots started at different dates because history depth differs by instrument.</p>')
+    P.append('<p>Qualified bots only (the unqualified bot\'s curve is in its own section). Each curve is the bot\'s closed-trade equity as a percentage gain on the start balance it was tested with. Lines end on 17 Nov 2026. The bots started at different dates because history depth differs by instrument.</p>')
     ser, dds = [], []
-    for n, title, mk, cb, col in present:
+    for n, title, mk, cb, col in [x for x in present if data[x[0]]["m"].get("qualified")] or present:
         tr = data[n]["tr"]; B = data[n]["m"]["start_balance"]
         eq = np.cumsum(tr.pnl.to_numpy()); xs = tr.exit_time.to_numpy()
         ser.append((n, col, np.concatenate([[tr.entry_time.iloc[0].to_datetime64()], xs]), np.concatenate([[0], eq / B * 100])))
@@ -474,6 +483,7 @@ def bot_section(n, title, mk, cb, col, a):
 
 
 SUMMARY_TEXT = ""
+VOL_LINE = ""
 METHOD_TEXT = ""
 
 
@@ -485,7 +495,7 @@ if __name__ == "__main__":
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     try:
         import report_text as RT  # editorial text written by the supervisor
-        SUMMARY_TEXT, METHOD_TEXT = RT.SUMMARY, RT.METHOD
+        SUMMARY_TEXT, METHOD_TEXT, VOL_LINE = RT.SUMMARY, RT.METHOD, RT.VOL_LINE
         deploy_section = RT.deploy_section
     except ImportError:
         pass

@@ -46,7 +46,7 @@ def features(bars, N, atr_n, bar_sec=300):
 
 def signals(bars, params, spec):
     p = {**PARAMS, **params}
-    c, er, atr, clean = features(bars, p["N"], p["atr_n"])
+    c, er, atr, clean = features(bars, p["N"], p["atr_n"], p.get("bar_sec", 300))
     sig = np.zeros(len(c))
     sig[er > p["thr"]] = 1
     if p["shorts"]:
