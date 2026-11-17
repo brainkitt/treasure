@@ -1,0 +1,686 @@
+[
+[
+2428,
+"Volatility 10 Index",
+"Constant Volatility of 10% with a tick every 2 seconds",
+true
+],
+[
+2429,
+"Volatility 10 (1s) Index",
+"Constant Volatility of 10% with a tick every 1 second",
+true
+],
+[
+2430,
+"Volatility 25 Index",
+"Constant Volatility of 25% with a tick every 2 second",
+true
+],
+[
+2431,
+"Volatility 25 (1s) Index",
+"Constant Volatility of 25% with a tick every 1 second",
+true
+],
+[
+2432,
+"Volatility 50 Index",
+"Constant Volatility of 50% with a tick every 2 second",
+true
+],
+[
+2433,
+"Volatility 50 (1s) Index",
+"Constant Volatility of 50% with a tick every 1 second",
+true
+],
+[
+2434,
+"Volatility 75 Index",
+"Constant Volatility of 75% with a tick every 2 second",
+true
+],
+[
+2435,
+"Volatility 75 (1s) Index",
+"Constant Volatility of 75% with a tick every 1 second",
+true
+],
+[
+2436,
+"Volatility 100 Index",
+"Constant Volatility of 100% with a tick every 2 seconds",
+true
+],
+[
+2437,
+"Volatility 100 (1s) Index",
+"Constant Volatility of 100% with a tick every 1 second",
+true
+],
+[
+2438,
+"Volatility 150 (1s) Index",
+"Constant Volatility of 150% with a tick every 1 second",
+true
+],
+[
+2440,
+"Volatility 250 (1s) Index",
+"Constant Volatility of 250% with a tick every 1 second",
+true
+],
+[
+2442,
+"Boom 500 Index",
+"On average 1 spike occurs in the price series every 500 ticks",
+true
+],
+[
+2443,
+"Crash 500 Index",
+"On average 1 drop occurs in the price series every 500 ticks",
+true
+],
+[
+2444,
+"Boom 1000 Index",
+"On average 1 spike occurs in the price series every 1000 ticks",
+true
+],
+[
+2445,
+"Crash 1000 Index",
+"On average 1 drop occurs in the price series every 1000 ticks",
+true
+],
+[
+2446,
+"Boom 300 Index",
+"On average 1 spike occurs in the price series every 300 ticks",
+true
+],
+[
+2447,
+"Crash 300 Index",
+"On average 1 drop occurs in the price series every 300 ticks",
+true
+],
+[
+2448,
+"Step Index",
+"Equal probability of up/down with fixed step size of 0.1",
+true
+],
+[
+2449,
+"Range Break 100 Index",
+"Index that breaks the range once every 100 attempts on average",
+true
+],
+[
+2450,
+"Range Break 200 Index",
+"Index that breaks the range once every 200 attempts on average",
+true
+],
+[
+2451,
+"Jump 10 Index",
+"Index with constant 10% volatility and 3 jumps per hour on average",
+true
+],
+[
+2452,
+"Jump 25 Index",
+"Index with constant 25% volatility and 3 jumps per hour on average",
+true
+],
+[
+2453,
+"Jump 50 Index",
+"Index with constant 50% volatility and 3 jumps per hour on average",
+true
+],
+[
+2454,
+"Jump 75 Index",
+"Index with constant 75% volatility and 3 jumps per hour on average",
+true
+],
+[
+2455,
+"Jump 100 Index",
+"Index with constant 100% volatility and 3 jumps per hour on average",
+true
+],
+[
+2461,
+"DEX 900 DOWN Index",
+"Small spikes and major drops every 15 minutes on average",
+true
+],
+[
+2462,
+"DEX 900 UP Index",
+"Small drops and major spikes every 15 minutes on average",
+true
+],
+[
+2464,
+"Drift Switch Index 10",
+"Switches between regimes every 10 minutes on average",
+true
+],
+[
+2465,
+"DEX 1500 DOWN Index",
+"Small spikes and major drops every 25 minutes on average",
+true
+],
+[
+2466,
+"DEX 1500 UP Index",
+"Small drops and major spikes every 25 minutes on average",
+true
+],
+[
+2467,
+"DEX 600 DOWN Index",
+"Small spikes and major drops every 10 minutes on average",
+true
+],
+[
+2468,
+"DEX 600 UP Index",
+"Small drops and major spikes every 10 minutes on average",
+true
+],
+[
+2469,
+"Drift Switch Index 20",
+"Switches between regimes every 20 minutes on average",
+true
+],
+[
+2470,
+"Drift Switch Index 30",
+"Switches between regimes every 30 minutes on average",
+true
+],
+[
+2502,
+"Volatility 15 (1s) Index",
+"Constant Volatility of 15% with a tick every 1 second",
+true
+],
+[
+2503,
+"Volatility 30 (1s) Index",
+"Constant Volatility of 30% with a tick every 1 second",
+true
+],
+[
+2504,
+"Volatility 90 (1s) Index",
+"Constant Volatility of 90% with a tick every 1 second",
+true
+],
+[
+2505,
+"Crash 600 Index",
+"On average 1 drop occurs in the price series every 600 ticks",
+true
+],
+[
+2506,
+"Crash 900 Index",
+"On average 1 drop occurs in the price series every 900 ticks",
+true
+],
+[
+2507,
+"Boom 600 Index",
+"On average 1 spike occurs in the price series every 600 ticks",
+true
+],
+[
+2508,
+"Boom 900 Index",
+"On average 1 spike occurs in the price series every 900 ticks",
+true
+],
+[
+2530,
+"Step Index 300",
+"Equal probability of up/down with fixed step size of 0.3",
+true
+],
+[
+2531,
+"Step Index 400",
+"Equal probability of up/down with fixed step size of 0.4",
+true
+],
+[
+2534,
+"Multi Step 3 Index",
+"Equal probability of up/down move with 3 different step sizes",
+true
+],
+[
+2563,
+"Step Index 200",
+"Equal probability of up/down with fixed step size of 0.2",
+true
+],
+[
+2564,
+"Step Index 500",
+"Equal probability of up/down with fixed step size of 0.5",
+true
+],
+[
+2565,
+"Multi Step 2 Index",
+"Equal probability of up/down move with 2 different step sizes",
+true
+],
+[
+2566,
+"Multi Step 4 Index",
+"Equal probability of up/down move with 4 different step sizes",
+true
+],
+[
+2567,
+"Volatility Crash 550 Index",
+"Volatility of 20% with on average 1 drop every 550 ticks",
+true
+],
+[
+2568,
+"Volatility Boom 550 Index",
+"Volatility of 20% with on average 1 spike every 550 ticks",
+true
+],
+[
+2569,
+"Skew Step Index 5 Up",
+"Offers 90% chance of gradual gains; 10% chance of sharp drop",
+true
+],
+[
+2570,
+"Volatility Crash 400 Index",
+"Volatility of 20% with on average 1 drop every 400 ticks",
+true
+],
+[
+2571,
+"Volatility Boom 400 Index",
+"Volatility of 20% with on average 1 spike every 400 ticks",
+true
+],
+[
+2572,
+"Volatility Crash 750 Index",
+"Volatility of 20% with on average 1 drop every 750 ticks",
+true
+],
+[
+2573,
+"Volatility Boom 750 Index",
+"Volatility of 20% with on average 1 spike every 750 ticks",
+true
+],
+[
+2574,
+"Skew Step Index 5 Down",
+"Offers 90% chance of gradual declines; 10% chance of sharp rise",
+true
+],
+[
+2575,
+"Skew Step Index 4 Up",
+"Offers 80% chance of gradual gains; 20% chance of sharp drop",
+true
+],
+[
+2576,
+"Skew Step Index 4 Down",
+"Offers 80% chance of gradual declines; 20% chance of sharp rise",
+true
+],
+[
+2606,
+"Trek Up Index",
+"30% volatility with rare large upward price movements",
+true
+],
+[
+2607,
+"Trek Down Index",
+"30% volatility with rare large downward price movements",
+true
+],
+[
+2616,
+"VolSwitch Low Vol Index",
+"Low-Vol index with regime-based volatility switching",
+true
+],
+[
+2617,
+"VolSwitch Medium Vol Index",
+"Medium-Vol index with regime-based volatility switching",
+true
+],
+[
+2618,
+"VolSwitch High Vol Index",
+"High-Vol index with regime-based volatility switching",
+true
+],
+[
+2619,
+"Crash 150 Index",
+"On average 1 drop occurs in the price series every 150 ticks",
+true
+],
+[
+2620,
+"Boom 150 Index",
+"On average 1 spike occurs in the price series every 150 ticks",
+true
+],
+[
+2621,
+"Exponential Growth Index 1",
+"Index moves up/down by 0.01% of spot price",
+true
+],
+[
+2622,
+"Exponential Growth Index 2",
+"Index moves up/down by 0.02% of spot price",
+true
+],
+[
+2623,
+"Ladder Volatility Up Index",
+"Volatility increases by 1% with every 100 points rise in spot",
+true
+],
+[
+2624,
+"Ladder Volatility Down Index",
+"Volatility decreases by 1% with every 100 points rise in spot",
+true
+],
+[
+2632,
+"Volatility 5 Index",
+"Constant Volatility of 5% with a tick every 2 seconds",
+true
+],
+[
+2633,
+"Volatility 5 (1s) Index",
+"Constant Volatility of 5% with a tick every 1 second",
+true
+],
+[
+2634,
+"Boom 99 Index",
+"On average 1 spike occurs in the price series every 99 ticks",
+true
+],
+[
+2635,
+"Boom 100 Index",
+"On average 1 spike occurs in the price series every 100 ticks",
+true
+],
+[
+2636,
+"Boom 200 Index",
+"On average 1 spike occurs in the price series every 200 ticks",
+true
+],
+[
+2637,
+"Crash 99 Index",
+"On average 1 drop occurs in the price series every 99 ticks",
+true
+],
+[
+2638,
+"Crash 100 Index",
+"On average 1 drop occurs in the price series every 100 ticks",
+true
+],
+[
+2639,
+"Crash 200 Index",
+"On average 1 drop occurs in the price series every 200 ticks",
+true
+],
+[
+2641,
+"Crash Boom Flip 150 Index",
+"Crash/Boom alternate: one large move every 150 ticks on avg",
+true
+],
+[
+2642,
+"Crash Boom Flip 300 Index",
+"Crash/Boom alternate: one large move every 300 ticks on avg",
+true
+],
+[
+2643,
+"Crash Boom Flip 500 Index",
+"Crash/Boom alternate: one large move every 500 ticks on avg",
+true
+],
+[
+2644,
+"Crash Boom Flip 1000 Index",
+"Crash/Boom alternate: one large move every 1000 ticks on avg",
+true
+],
+[
+2645,
+"Boom 50 Index",
+"On average 1 spike occurs in the price series every 50 ticks",
+true
+],
+[
+2646,
+"Crash 50 Index",
+"On average 1 drop occurs in the price series every 50 ticks",
+true
+],
+[
+2647,
+"Volatility 90 Index",
+"Constant Volatility of 90% with a tick every 2 seconds",
+true
+],
+[
+2648,
+"Volatility 30 Index",
+"Constant Volatility of 30% with a tick every 2 seconds",
+true
+],
+[
+2649,
+"Volatility 15 Index",
+"Constant Volatility of 15% with a tick every 2 seconds",
+true
+],
+[
+2650,
+"High Frequency Vol 100 Index",
+"Constant Volatility of 100% with 2 ticks every 1 second",
+true
+],
+[
+2651,
+"High Frequency Vol 75 Index",
+"Constant Volatility of 75% with 2 ticks every 1 second",
+true
+],
+[
+2652,
+"High Frequency Vol 50 Index",
+"Constant Volatility of 50% with 2 ticks every 1 second",
+true
+],
+[
+2653,
+"High Frequency Vol 25 Index",
+"Constant Volatility of 25% with 2 ticks every 1 second",
+true
+],
+[
+2654,
+"High Frequency Vol 10 Index",
+"Constant Volatility of 10% with 2 ticks every 1 second",
+true
+],
+[
+2666,
+"Snap 50 Index",
+"On average, one jump occurs every 10 ticks with 50% volatility",
+true
+],
+[
+2667,
+"Snap 80 Index",
+"On average, one jump occurs every 10 ticks with 80% volatility",
+true
+],
+[
+2668,
+"Volatility 20 (1s) Index",
+"Constant Volatility of 20% with a tick every 1 seconds",
+true
+],
+[
+2669,
+"Volatility 40 (1s) Index",
+"Constant Volatility of 40% with a tick every 1 seconds",
+true
+],
+[
+2670,
+"Volatility 60 (1s) Index",
+"Constant Volatility of 60% with a tick every 1 seconds",
+true
+],
+[
+2671,
+"Volatility 80 (1s) Index",
+"Constant Volatility of 80% with a tick every 1 seconds",
+true
+],
+[
+2672,
+"Volatility 120 (1s) Index",
+"Constant Volatility of 120% with a tick every 1 seconds",
+true
+],
+[
+2673,
+"Step Index 3000",
+"Equal probability of up/down with fixed step size of 3",
+true
+],
+[
+2674,
+"Step Index 4000",
+"Equal probability of up/down with fixed step size of 4",
+true
+],
+[
+2675,
+"Step Index 5000",
+"Equal probability of up/down with fixed step size of 5",
+true
+],
+[
+2676,
+"Step Index 6000",
+"Equal probability of up/down with fixed step size of 6",
+true
+],
+[
+2677,
+"Step Index 10000",
+"Equal probability of up/down with fixed step size of 10",
+true
+],
+[
+2678,
+"Crash 75 Index",
+"On average 1 drop occurs in the price series every 75 ticks",
+true
+],
+[
+2679,
+"Crash 250 Index",
+"On average 1 drop occurs in the price series every 250 ticks",
+true
+],
+[
+2680,
+"Crash 750 Index",
+"On average 1 drop occurs in the price series every 750 ticks",
+true
+],
+[
+2681,
+"Crash 1100 Index",
+"On average 1 drop occurs in the price series every 1100 ticks",
+true
+],
+[
+2682,
+"Crash 1500 Index",
+"On average 1 drop occurs in the price series every 1500 ticks",
+true
+],
+[
+2683,
+"Boom 75 Index",
+"On average 1 spike occurs in the price series every 75 ticks",
+true
+],
+[
+2684,
+"Boom 250 Index",
+"On average 1 spike occurs in the price series every 250 ticks",
+true
+],
+[
+2685,
+"Boom 750 Index",
+"On average 1 spike occurs in the price series every 750 ticks",
+true
+],
+[
+2686,
+"Boom 1100 Index",
+"On average 1 spike occurs in the price series every 1100 ticks",
+true
+],
+[
+2687,
+"Boom 1500 Index",
+"On average 1 spike occurs in the price series every 1500 ticks",
+true
+]
+]
