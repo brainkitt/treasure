@@ -79,6 +79,26 @@
    "name": "time-of-day / spread schedule",
    "result": "T4/T5 hour tests: 0 BH-significant of 140; spreads identical across 3 sampling times",
    "why_rejected": "no schedule"
+  },
+  {
+   "name": "R4 carry/swap",
+   "result": "Deriv synthetic swaps negative on both sides (Boom 50..1000: -3.5..-36 pts); owner V75 swaps all charged",
+   "why_rejected": "no credited side -> no carry edge"
+  },
+  {
+   "name": "R4 M1 microstructure (DEX600UP, VolBoom400, RB200)",
+   "result": "45 tests, 2 raw p<0.05 (2.2 exp), 0 BH; hazard flat by minutes-since-spike",
+   "why_rejected": "best lead (DEX post-spike fade) +0.85 spread gross < cost"
+  },
+  {
+   "name": "R4 spread schedule",
+   "result": "4 timed samples + CHARLIE: spreads fixed/proportional to price",
+   "why_rejected": "no cheap window"
+  },
+  {
+   "name": "R4 product-rule mechanisms",
+   "result": "Range Break / Trek / Exp Growth / Skew Step / CBF rules are compensated by design",
+   "why_rejected": "no testable asymmetry"
   }
  ],
  "walk_forward": [
@@ -1092,5 +1112,6 @@
    "key_stats": "no pre-holdout history",
    "verdict": "untestable: no pre-holdout history (launched after 2026-09-15 or only post-holdout bars)"
   }
- ]
+ ],
+ "round4_statistical_tests": 45
 }

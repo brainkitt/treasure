@@ -1,0 +1,917 @@
+{
+ "strategy_name": "VOLB DSI30 long-only regime follower with entry-spread cap (NOT QUALIFIED)",
+ "one_line": "Screen of 49 continuous Deriv synthetics found only Drift Switch regime momentum; its DSI30 long-only edge (+4.9 pts/trade gross) is consumed by a drift-linked dynamic spread (PF 0.41 at the widest observed 10.16).",
+ "instrument(s)": [
+  "Drift Switch Index 30 (2470)"
+ ],
+ "timeframe": "M5",
+ "logic": {
+  "entry": "long when efficiency ratio of last 6 closed M5 bars > 0.8 and live spread <= cap (cBot); no entries on bars stamped 18:50-21:05 UTC",
+  "exit": "trailing stop 1.5 x ATR20 (ratchets on bar closes) or time exit after 24 bars (2 h)",
+  "stop": "hard SL 2.5 x ATR20 attached to every order",
+  "take_profit": "none",
+  "sizing": "broker minimum 0.10 units (optional risk-% capped in the cBot)",
+  "risk": "one position, daily loss limit, equity kill-switch 25 %, pause after 8 consecutive losses, spread cap 4.0"
+ },
+ "parameters": [
+  {
+   "name": "N",
+   "default": 6,
+   "range": "4-12",
+   "meaning": "ER lookback (bars)"
+  },
+  {
+   "name": "thr",
+   "default": 0.8,
+   "range": "0.6-0.9",
+   "meaning": "ER entry threshold"
+  },
+  {
+   "name": "atr_n",
+   "default": 20,
+   "range": "fixed",
+   "meaning": "ATR window (mean bar range)"
+  },
+  {
+   "name": "sl_atr",
+   "default": 2.5,
+   "range": "2-3",
+   "meaning": "hard stop in ATR"
+  },
+  {
+   "name": "trail_atr",
+   "default": 1.5,
+   "range": "1.5-2.5",
+   "meaning": "trailing stop in ATR"
+  },
+  {
+   "name": "max_bars",
+   "default": 24,
+   "range": "fixed",
+   "meaning": "time exit (bars)"
+  },
+  {
+   "name": "max_spread (cBot)",
+   "default": 4.0,
+   "range": "-",
+   "meaning": "entry spread cap, not modelled in backtest"
+  }
+ ],
+ "rejected_alternatives": [
+  {
+   "name": "F1 quantised mean reversion (Step100, VolSwMed, HFV10, V75(1s))",
+   "result": "288 sets, max IS t 1.69, IS-top5 OOS PF 0.72-1.31",
+   "why_rejected": "fair random walks; no edge net of spread"
+  },
+  {
+   "name": "F2 Donchian breakout + trail",
+   "result": "Step100 last-24-day PF 1.15-1.27; prior 6 weeks median PF 1.04, max t 0.95; null RW sim PF 0.99",
+   "why_rejected": "one trending month; out-of-time failure"
+  },
+  {
+   "name": "F3 vol-regime breakout (VolSwitch focus)",
+   "result": "VolSwMed 21% sets PF>1, none >1.2; Step/V75(1s) hits on 35-68 trades within null p90",
+   "why_rejected": "noise"
+  },
+  {
+   "name": "F4 time-series momentum",
+   "result": "max IS t 2.41 over 40 sets/symbol, corr(IS,OOS)~0",
+   "why_rejected": "consistent with null max"
+  },
+  {
+   "name": "F5 time-of-day / spread schedule",
+   "result": "304 ANOVA tests, 1 BH hit (artefact)",
+   "why_rejected": "no schedule"
+  },
+  {
+   "name": "F6 DSI low-vol regime filter",
+   "result": "gross capture/trade not improved (DSI30 4.9 -> 4.3-4.8)",
+   "why_rejected": "no added information"
+  },
+  {
+   "name": "DSI10 / DSI20 long-only",
+   "result": "break-even spread ~1.6 / ~2.8 vs observed 2.4-3.8 / up to 4.05",
+   "why_rejected": "spread"
+  }
+ ],
+ "walk_forward": [
+  {
+   "fold": 2,
+   "start": "2026-02-22",
+   "end": "2026-04-14",
+   "best": {
+    "N": 12,
+    "thr": 0.9,
+    "sl_atr": 3.0,
+    "trail_atr": 2.5
+   },
+   "is_pf": 0.48,
+   "oos_pf": 0.49,
+   "oos_trades": 134,
+   "oos_net": -70.35
+  },
+  {
+   "fold": 3,
+   "start": "2026-04-14",
+   "end": "2026-06-04",
+   "best": {
+    "N": 6,
+    "thr": 0.9,
+    "sl_atr": 3.0,
+    "trail_atr": 2.5
+   },
+   "is_pf": 0.49,
+   "oos_pf": 0.56,
+   "oos_trades": 361,
+   "oos_net": -163.27
+  },
+  {
+   "fold": 4,
+   "start": "2026-06-04",
+   "end": "2026-07-25",
+   "best": {
+    "N": 6,
+    "thr": 0.9,
+    "sl_atr": 3.0,
+    "trail_atr": 2.5
+   },
+   "is_pf": 0.52,
+   "oos_pf": 0.68,
+   "oos_trades": 360,
+   "oos_net": -125.86
+  },
+  {
+   "fold": 5,
+   "start": "2026-07-25",
+   "end": "2026-09-14",
+   "best": {
+    "N": 6,
+    "thr": 0.9,
+    "sl_atr": 3.0,
+    "trail_atr": 2.5
+   },
+   "is_pf": 0.56,
+   "oos_pf": 0.58,
+   "oos_trades": 303,
+   "oos_net": -143.72
+  }
+ ],
+ "walk_forward_info_at_spread_4": [
+  {
+   "fold": 2,
+   "start": "2026-02-22",
+   "end": "2026-04-14",
+   "best": {
+    "N": 12,
+    "thr": 0.7,
+    "sl_atr": 2.0,
+    "trail_atr": 1.5
+   },
+   "is_pf": 1.18,
+   "oos_pf": 1.16,
+   "oos_trades": 233,
+   "oos_net": 18.69
+  },
+  {
+   "fold": 3,
+   "start": "2026-04-14",
+   "end": "2026-06-04",
+   "best": {
+    "N": 12,
+    "thr": 0.9,
+    "sl_atr": 2.5,
+    "trail_atr": 1.5
+   },
+   "is_pf": 1.24,
+   "oos_pf": 1.54,
+   "oos_trades": 137,
+   "oos_net": 33.79
+  },
+  {
+   "fold": 4,
+   "start": "2026-06-04",
+   "end": "2026-07-25",
+   "best": {
+    "N": 12,
+    "thr": 0.9,
+    "sl_atr": 2.5,
+    "trail_atr": 1.5
+   },
+   "is_pf": 1.33,
+   "oos_pf": 1.95,
+   "oos_trades": 146,
+   "oos_net": 60.48
+  },
+  {
+   "fold": 5,
+   "start": "2026-07-25",
+   "end": "2026-09-14",
+   "best": {
+    "N": 12,
+    "thr": 0.9,
+    "sl_atr": 2.5,
+    "trail_atr": 1.5
+   },
+   "is_pf": 1.48,
+   "oos_pf": 1.44,
+   "oos_trades": 117,
+   "oos_net": 29.7
+  }
+ ],
+ "neighbour_table": [
+  {
+   "N": 4,
+   "thr": 0.6,
+   "trades": 4125,
+   "pf_at_10_16": 0.32,
+   "pf_at_4_0": 0.95
+  },
+  {
+   "N": 4,
+   "thr": 0.7,
+   "trades": 3800,
+   "pf_at_10_16": 0.35,
+   "pf_at_4_0": 1.0
+  },
+  {
+   "N": 4,
+   "thr": 0.8,
+   "trades": 3494,
+   "pf_at_10_16": 0.37,
+   "pf_at_4_0": 1.07
+  },
+  {
+   "N": 4,
+   "thr": 0.9,
+   "trades": 3095,
+   "pf_at_10_16": 0.39,
+   "pf_at_4_0": 1.15
+  },
+  {
+   "N": 6,
+   "thr": 0.6,
+   "trades": 3191,
+   "pf_at_10_16": 0.35,
+   "pf_at_4_0": 1.05
+  },
+  {
+   "N": 6,
+   "thr": 0.7,
+   "trades": 2853,
+   "pf_at_10_16": 0.38,
+   "pf_at_4_0": 1.12
+  },
+  {
+   "N": 6,
+   "thr": 0.8,
+   "trades": 2479,
+   "pf_at_10_16": 0.41,
+   "pf_at_4_0": 1.22
+  },
+  {
+   "N": 6,
+   "thr": 0.9,
+   "trades": 2070,
+   "pf_at_10_16": 0.45,
+   "pf_at_4_0": 1.33
+  },
+  {
+   "N": 8,
+   "thr": 0.6,
+   "trades": 2712,
+   "pf_at_10_16": 0.35,
+   "pf_at_4_0": 1.09
+  },
+  {
+   "N": 8,
+   "thr": 0.7,
+   "trades": 2320,
+   "pf_at_10_16": 0.38,
+   "pf_at_4_0": 1.2
+  },
+  {
+   "N": 8,
+   "thr": 0.8,
+   "trades": 1969,
+   "pf_at_10_16": 0.41,
+   "pf_at_4_0": 1.27
+  },
+  {
+   "N": 8,
+   "thr": 0.9,
+   "trades": 1554,
+   "pf_at_10_16": 0.41,
+   "pf_at_4_0": 1.35
+  },
+  {
+   "N": 12,
+   "thr": 0.6,
+   "trades": 2164,
+   "pf_at_10_16": 0.3,
+   "pf_at_4_0": 1.12
+  },
+  {
+   "N": 12,
+   "thr": 0.7,
+   "trades": 1750,
+   "pf_at_10_16": 0.32,
+   "pf_at_4_0": 1.23
+  },
+  {
+   "N": 12,
+   "thr": 0.8,
+   "trades": 1428,
+   "pf_at_10_16": 0.31,
+   "pf_at_4_0": 1.29
+  },
+  {
+   "N": 12,
+   "thr": 0.9,
+   "trades": 968,
+   "pf_at_10_16": 0.34,
+   "pf_at_4_0": 1.47
+  }
+ ],
+ "trade_examples": [
+  {
+   "time": "2026-03-24 07:35:00",
+   "side": "BUY",
+   "entry": 6650.11,
+   "sl": "2.5 x ATR20 below entry",
+   "tp": null,
+   "exit": 6717.44,
+   "pnl": 6.73,
+   "why": "ER(6) > 0.8 on the closed M5 bar; drift regime persisted, time exit after 24 bars"
+  },
+  {
+   "time": "2026-01-28 00:30:00",
+   "side": "BUY",
+   "entry": 6641.82,
+   "sl": "2.5 x ATR20 below entry",
+   "tp": null,
+   "exit": 6709.62,
+   "pnl": 6.78,
+   "why": "ER(6) > 0.8 on the closed M5 bar; drift regime persisted, time exit after 24 bars"
+  },
+  {
+   "time": "2026-07-31 16:30:00",
+   "side": "BUY",
+   "entry": 7777.91,
+   "sl": "2.5 x ATR20 below entry",
+   "tp": null,
+   "exit": 7845.82,
+   "pnl": 6.79,
+   "why": "ER(6) > 0.8 on the closed M5 bar; drift regime persisted, time exit after 24 bars"
+  },
+  {
+   "time": "2026-01-10 11:55:00",
+   "side": "BUY",
+   "entry": 7482.46,
+   "sl": "2.5 x ATR20 below entry",
+   "tp": null,
+   "exit": 7407.91,
+   "pnl": -7.46,
+   "why": "ER(6) > 0.8 but the regime flipped / spread 10.16 paid at entry -> SL"
+  },
+  {
+   "time": "2026-07-29 15:30:00",
+   "side": "BUY",
+   "entry": 7851.05,
+   "sl": "2.5 x ATR20 below entry",
+   "tp": null,
+   "exit": 7828.03,
+   "pnl": -2.3,
+   "why": "ER(6) > 0.8 but the regime flipped / spread 10.16 paid at entry -> SL"
+  }
+ ],
+ "failure_conditions": [
+  "entry spread > ~5 (DSI30 drift regimes show 4.6-10.16)",
+  "regime flips shortly after entry (memoryless durations)",
+  "data gaps (signals suppressed)"
+ ],
+ "timeframe_comparison": [
+  {
+   "timeframe": "M5",
+   "pf": 0.41,
+   "trades": 2479,
+   "note": "official, spread 10.16"
+  },
+  {
+   "timeframe": "M15 / H1 (VOL round 2)",
+   "pf": "<1 at 10.16 (0/648 H1 sets PF>1)",
+   "trades": null,
+   "note": "regimes are minutes long; longer bars average them out"
+  }
+ ],
+ "params_tried": 964,
+ "tests_count": {
+  "statistical_tests": 674,
+  "symbols_screened": 49,
+  "symbols_with_preholdout_data": 39,
+  "multiple_testing": "Benjamini-Hochberg 5% over each block"
+ },
+ "dsi_live_spread_samples": [
+  {
+   "symbol_id": 2464,
+   "samples": 8,
+   "spread_min": 2.69,
+   "spread_max": 3.76,
+   "corr_spread_vs_abs_move_prev_2_samples": 0.62,
+   "series": [
+    "0s bid 2865.23 spread 3.58",
+    "33s bid 2866.18 spread 3.76",
+    "59s bid 2866.25 spread 3.61",
+    "69s bid 2866.49 spread 3.69",
+    "98s bid 2866.31 spread 2.69",
+    "158s bid 2866.82 spread 3.46",
+    "189s bid 2867.18 spread 3.58",
+    "208s bid 2867.30 spread 3.52"
+   ]
+  },
+  {
+   "symbol_id": 2469,
+   "samples": 8,
+   "spread_min": 0.23,
+   "spread_max": 2.14,
+   "corr_spread_vs_abs_move_prev_2_samples": 0.88,
+   "series": [
+    "0s bid 2718.68 spread 0.23",
+    "33s bid 2718.46 spread 0.29",
+    "59s bid 2718.23 spread 0.40",
+    "69s bid 2718.36 spread 0.33",
+    "98s bid 2717.94 spread 0.54",
+    "158s bid 2715.37 spread 2.14",
+    "189s bid 2716.85 spread 1.04",
+    "208s bid 2717.31 spread 0.70"
+   ]
+  },
+  {
+   "symbol_id": 2470,
+   "samples": 8,
+   "spread_min": 2.34,
+   "spread_max": 7.62,
+   "corr_spread_vs_abs_move_prev_2_samples": 0.58,
+   "series": [
+    "0s bid 7818.58 spread 2.34",
+    "33s bid 7818.27 spread 2.52",
+    "59s bid 7817.10 spread 3.29",
+    "69s bid 7816.54 spread 3.65",
+    "98s bid 7814.96 spread 4.63",
+    "158s bid 7810.68 spread 7.06",
+    "189s bid 7809.42 spread 7.62",
+    "208s bid 7809.90 spread 7.27"
+   ]
+  }
+ ],
+ "official": {
+  "pf": 0.40966225965331665,
+  "is_pf": 0.3709340388258484,
+  "oos_pf": 0.5140544196993871,
+  "trades": 2479,
+  "qualified": false,
+  "score": 0.0
+ },
+ "screen": [
+  {
+   "symbol": "V5",
+   "symbol_id": 2632,
+   "spread": 1.629,
+   "m5_range": 21.736,
+   "cost_ratio": 0.075,
+   "key_stats": "M5 n=998 t_drift=0.26 AC1=0.022 VR12=0.95 VR48=1.05 AC|r|=0.001; H1 n=719 t_drift=0.67 VR12=0.89 VR48=1.07",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V5(1s)",
+   "symbol_id": 2633,
+   "spread": 1.58,
+   "m5_range": 21.58,
+   "cost_ratio": 0.073,
+   "key_stats": "M5 n=998 t_drift=0.76 AC1=-0.042 VR12=0.84 VR48=0.65 AC|r|=0.016; H1 n=719 t_drift=-0.27 VR12=0.86 VR48=1.02",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V10",
+   "symbol_id": 2428,
+   "spread": 0.188,
+   "m5_range": 2.136,
+   "cost_ratio": 0.088,
+   "key_stats": "M5 n=998 t_drift=1.36 AC1=0.019 VR12=0.87 VR48=0.76 AC|r|=-0.012; H1 n=719 t_drift=0.09 VR12=0.91 VR48=0.80",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V10(1s)",
+   "symbol_id": 2429,
+   "spread": 0.38,
+   "m5_range": 4.26,
+   "cost_ratio": 0.089,
+   "key_stats": "M5 n=998 t_drift=-1.56 AC1=0.015 VR12=1.04 VR48=0.97 AC|r|=-0.008; H1 n=719 t_drift=0.17 VR12=0.85 VR48=0.83",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V15",
+   "symbol_id": 2649,
+   "spread": 4.781,
+   "m5_range": 66.537,
+   "cost_ratio": 0.072,
+   "key_stats": "M5 n=998 t_drift=-0.79 AC1=0.062 VR12=1.10 VR48=1.35 AC|r|=0.016; H1 n=719 t_drift=0.24 VR12=0.93 VR48=0.82",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V15(1s)",
+   "symbol_id": 2502,
+   "spread": 0.799,
+   "m5_range": 9.32,
+   "cost_ratio": 0.086,
+   "key_stats": "M5 n=998 t_drift=0.41 AC1=0.037 VR12=0.97 VR48=0.54 AC|r|=-0.053; H1 n=719 t_drift=0.72 VR12=0.89 VR48=0.66",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V20(1s)",
+   "symbol_id": 2668,
+   "spread": 7.266,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no bars before 2026-09-15 (listed after the holdout cut)",
+   "verdict": "untestable pre-holdout"
+  },
+  {
+   "symbol": "V25",
+   "symbol_id": 2430,
+   "spread": 0.331,
+   "m5_range": 2.961,
+   "cost_ratio": 0.112,
+   "key_stats": "M5 n=998 t_drift=-0.68 AC1=-0.009 VR12=0.84 VR48=0.65 AC|r|=-0.012; H1 n=719 t_drift=0.29 VR12=0.83 VR48=0.66",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V25(1s)",
+   "symbol_id": 2431,
+   "spread": 70.05,
+   "m5_range": 961.43,
+   "cost_ratio": 0.073,
+   "key_stats": "M5 n=998 t_drift=2.06 AC1=-0.027 VR12=0.88 VR48=0.74 AC|r|=-0.028; H1 n=719 t_drift=1.73 VR12=0.90 VR48=0.77",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V30",
+   "symbol_id": 2648,
+   "spread": 10.025,
+   "m5_range": 137.775,
+   "cost_ratio": 0.073,
+   "key_stats": "M5 n=998 t_drift=-0.11 AC1=0.037 VR12=1.09 VR48=1.17 AC|r|=0.005; H1 n=719 t_drift=-2.54 VR12=1.21 VR48=1.05",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V30(1s)",
+   "symbol_id": 2503,
+   "spread": 0.586,
+   "m5_range": 8.259,
+   "cost_ratio": 0.071,
+   "key_stats": "M5 n=998 t_drift=2.21 AC1=0.013 VR12=0.95 VR48=0.88 AC|r|=0.021; H1 n=719 t_drift=-0.41 VR12=0.88 VR48=0.52",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V40(1s)",
+   "symbol_id": 2669,
+   "spread": 16.394,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no bars before 2026-09-15 (listed after the holdout cut)",
+   "verdict": "untestable pre-holdout"
+  },
+  {
+   "symbol": "V50",
+   "symbol_id": 2432,
+   "spread": 0.023,
+   "m5_range": 0.197,
+   "cost_ratio": 0.117,
+   "key_stats": "M5 n=998 t_drift=0.45 AC1=-0.017 VR12=0.95 VR48=0.91 AC|r|=0.026; H1 n=719 t_drift=-0.65 VR12=0.92 VR48=0.93",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V50(1s)",
+   "symbol_id": 2433,
+   "spread": 51.75,
+   "m5_range": 521.75,
+   "cost_ratio": 0.099,
+   "key_stats": "M5 n=998 t_drift=0.71 AC1=-0.031 VR12=0.94 VR48=0.98 AC|r|=0.004; H1 n=719 t_drift=-0.08 VR12=0.92 VR48=0.63",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V60(1s)",
+   "symbol_id": 2670,
+   "spread": 24.386,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no bars before 2026-09-15 (listed after the holdout cut)",
+   "verdict": "untestable pre-holdout"
+  },
+  {
+   "symbol": "V75",
+   "symbol_id": 2434,
+   "spread": 13.7,
+   "m5_range": 160.88,
+   "cost_ratio": 0.085,
+   "key_stats": "M5 n=998 t_drift=-0.23 AC1=0.052 VR12=1.27 VR48=1.54 AC|r|=0.017; H1 n=7102 t_drift=0.29 VR12=1.03 VR48=0.90",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V75(1s)",
+   "symbol_id": 2435,
+   "spread": 1.31,
+   "m5_range": 21.03,
+   "cost_ratio": 0.062,
+   "key_stats": "M5 n=998 t_drift=-1.16 AC1=-0.021 VR12=1.12 VR48=1.26 AC|r|=-0.005; H1 n=719 t_drift=-1.52 VR12=1.17 VR48=1.15",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V80(1s)",
+   "symbol_id": 2671,
+   "spread": 29.266,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no bars before 2026-09-15 (listed after the holdout cut)",
+   "verdict": "untestable pre-holdout"
+  },
+  {
+   "symbol": "V90",
+   "symbol_id": 2647,
+   "spread": 69.229,
+   "m5_range": 563.628,
+   "cost_ratio": 0.123,
+   "key_stats": "M5 n=998 t_drift=-0.59 AC1=-0.026 VR12=0.89 VR48=0.79 AC|r|=-0.022; H1 n=719 t_drift=-0.96 VR12=0.80 VR48=0.63",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V90(1s)",
+   "symbol_id": 2504,
+   "spread": 16.277,
+   "m5_range": 72.823,
+   "cost_ratio": 0.224,
+   "key_stats": "M5 n=998 t_drift=-0.22 AC1=0.028 VR12=1.11 VR48=0.78 AC|r|=0.015; H1 n=719 t_drift=0.03 VR12=0.88 VR48=0.65",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V100",
+   "symbol_id": 2436,
+   "spread": 0.27,
+   "m5_range": 2.42,
+   "cost_ratio": 0.112,
+   "key_stats": "M5 n=998 t_drift=1.67 AC1=0.005 VR12=0.97 VR48=0.69 AC|r|=0.011; H1 n=719 t_drift=-0.06 VR12=0.77 VR48=0.50",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V100(1s)",
+   "symbol_id": 2437,
+   "spread": 0.56,
+   "m5_range": 3.72,
+   "cost_ratio": 0.151,
+   "key_stats": "M5 n=998 t_drift=0.84 AC1=-0.011 VR12=0.97 VR48=0.71 AC|r|=-0.006; H1 n=719 t_drift=0.91 VR12=0.96 VR48=1.15",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V120(1s)",
+   "symbol_id": 2672,
+   "spread": 34.162,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no bars before 2026-09-15 (listed after the holdout cut)",
+   "verdict": "untestable pre-holdout"
+  },
+  {
+   "symbol": "V150(1s)",
+   "symbol_id": 2438,
+   "spread": 0.05,
+   "m5_range": 0.28,
+   "cost_ratio": 0.179,
+   "key_stats": "M5 n=998 t_drift=0.14 AC1=0.035 VR12=1.06 VR48=1.36 AC|r|=-0.015; H1 n=719 t_drift=0.86 VR12=1.06 VR48=0.69",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "V250(1s)",
+   "symbol_id": 2440,
+   "spread": 0.00153,
+   "m5_range": 0.00455,
+   "cost_ratio": 0.336,
+   "key_stats": "M5 n=998 t_drift=0.63 AC1=0.041 VR12=1.07 VR48=0.86 AC|r|=-0.054; H1 n=719 t_drift=0.37 VR12=0.83 VR48=0.92",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "HFV100",
+   "symbol_id": 2650,
+   "spread": 12.71,
+   "m5_range": 245.02,
+   "cost_ratio": 0.052,
+   "key_stats": "M5 n=998 t_drift=1.95 AC1=0.007 VR12=0.95 VR48=1.05 AC|r|=0.050; H1 n=719 t_drift=0.70 VR12=0.87 VR48=0.73",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "HFV75",
+   "symbol_id": 2651,
+   "spread": 9.39,
+   "m5_range": 168.16,
+   "cost_ratio": 0.056,
+   "key_stats": "M5 n=998 t_drift=-1.20 AC1=-0.011 VR12=0.83 VR48=0.52 AC|r|=-0.011; H1 n=719 t_drift=-2.16 VR12=1.08 VR48=1.30",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "HFV50",
+   "symbol_id": 2652,
+   "spread": 15.6,
+   "m5_range": 263.99,
+   "cost_ratio": 0.059,
+   "key_stats": "M5 n=998 t_drift=1.01 AC1=-0.043 VR12=0.85 VR48=0.68 AC|r|=-0.038; H1 n=719 t_drift=-0.52 VR12=1.16 VR48=1.32",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "HFV25",
+   "symbol_id": 2653,
+   "spread": 8.42,
+   "m5_range": 142.91,
+   "cost_ratio": 0.059,
+   "key_stats": "M5 n=998 t_drift=0.34 AC1=-0.029 VR12=0.84 VR48=0.83 AC|r|=0.051; H1 n=719 t_drift=0.47 VR12=0.95 VR48=1.26",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "HFV10",
+   "symbol_id": 2654,
+   "spread": 2.31,
+   "m5_range": 46.86,
+   "cost_ratio": 0.049,
+   "key_stats": "M5 n=998 t_drift=-0.16 AC1=0.023 VR12=0.98 VR48=0.70 AC|r|=-0.028; H1 n=719 t_drift=1.17 VR12=0.97 VR48=1.13",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "Step100",
+   "symbol_id": 2448,
+   "spread": 0.1,
+   "m5_range": 2.6,
+   "cost_ratio": 0.038,
+   "key_stats": "M5 n=998 t_drift=-0.24 AC1=0.003 VR12=1.11 VR48=0.86 AC|r|=0.006; H1 n=719 t_drift=-1.12 VR12=1.00 VR48=0.92; M1 3000 bars: zero-change share 0.107 = theory for 60 fair +/-0.1 ticks; out-of-time (Jul-Aug) breakout/MR/tsmom: max t 1.19 over 180 sets; min lot probed 1.00 unit",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "Step200",
+   "symbol_id": 2563,
+   "spread": 0.2,
+   "m5_range": 5.0,
+   "cost_ratio": 0.04,
+   "key_stats": "M5 n=998 t_drift=0.50 AC1=0.013 VR12=1.04 VR48=1.07 AC|r|=-0.031; H1 n=719 t_drift=0.69 VR12=0.96 VR48=0.62",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "Step300",
+   "symbol_id": 2530,
+   "spread": 0.3,
+   "m5_range": 7.5,
+   "cost_ratio": 0.04,
+   "key_stats": "M5 n=998 t_drift=0.58 AC1=0.027 VR12=1.13 VR48=1.22 AC|r|=0.003; H1 n=719 t_drift=0.26 VR12=0.99 VR48=1.13",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "Step400",
+   "symbol_id": 2531,
+   "spread": 0.4,
+   "m5_range": 10.0,
+   "cost_ratio": 0.04,
+   "key_stats": "M5 n=998 t_drift=1.57 AC1=0.046 VR12=1.05 VR48=0.77 AC|r|=0.004; H1 n=719 t_drift=-0.63 VR12=1.00 VR48=0.99",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "Step500",
+   "symbol_id": 2564,
+   "spread": 0.5,
+   "m5_range": 13.0,
+   "cost_ratio": 0.038,
+   "key_stats": "M5 n=998 t_drift=0.66 AC1=0.020 VR12=1.03 VR48=1.07 AC|r|=0.049; H1 n=719 t_drift=0.94 VR12=0.96 VR48=0.61",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "Step3000",
+   "symbol_id": 2673,
+   "spread": 4.0,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no bars before 2026-09-15 (listed after the holdout cut)",
+   "verdict": "untestable pre-holdout"
+  },
+  {
+   "symbol": "Step4000",
+   "symbol_id": 2674,
+   "spread": 4.0,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no bars before 2026-09-15 (listed after the holdout cut)",
+   "verdict": "untestable pre-holdout"
+  },
+  {
+   "symbol": "Step5000",
+   "symbol_id": 2675,
+   "spread": 6.0,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no bars before 2026-09-15 (listed after the holdout cut)",
+   "verdict": "untestable pre-holdout"
+  },
+  {
+   "symbol": "Step6000",
+   "symbol_id": 2676,
+   "spread": 6.0,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no bars before 2026-09-15 (listed after the holdout cut)",
+   "verdict": "untestable pre-holdout"
+  },
+  {
+   "symbol": "Step10000",
+   "symbol_id": 2677,
+   "spread": 10.0,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no bars before 2026-09-15 (listed after the holdout cut)",
+   "verdict": "untestable pre-holdout"
+  },
+  {
+   "symbol": "MultiStep2",
+   "symbol_id": 2565,
+   "spread": 0.25,
+   "m5_range": 3.7,
+   "cost_ratio": 0.068,
+   "key_stats": "M5 n=998 t_drift=0.08 AC1=-0.002 VR12=1.21 VR48=0.84 AC|r|=-0.017; H1 n=719 t_drift=0.23 VR12=0.93 VR48=0.69",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "MultiStep3",
+   "symbol_id": 2534,
+   "spread": 0.2,
+   "m5_range": 3.4,
+   "cost_ratio": 0.059,
+   "key_stats": "M5 n=998 t_drift=0.30 AC1=-0.062 VR12=0.98 VR48=1.29 AC|r|=-0.021; H1 n=719 t_drift=0.87 VR12=1.15 VR48=1.20",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "MultiStep4",
+   "symbol_id": 2566,
+   "spread": 0.2,
+   "m5_range": 3.0,
+   "cost_ratio": 0.067,
+   "key_stats": "M5 n=998 t_drift=-0.19 AC1=0.000 VR12=0.99 VR48=1.01 AC|r|=-0.024; H1 n=719 t_drift=0.08 VR12=1.00 VR48=0.82",
+   "verdict": "fair random walk (no BH-significant drift/AC/VR); no edge possible net of spread"
+  },
+  {
+   "symbol": "VolSwLow",
+   "symbol_id": 2616,
+   "spread": 0.91,
+   "m5_range": 7.18,
+   "cost_ratio": 0.127,
+   "key_stats": "M5 n=998 t_drift=1.24 AC1=0.079 VR12=1.13 VR48=0.91 AC|r|=0.409; H1 n=719 t_drift=0.75 VR12=1.02 VR48=1.41; VolSwitch H1 Apr-Sep: vol clustering only (by design), no directional structure",
+   "verdict": "vol clustering by design only; directionally fair; no edge"
+  },
+  {
+   "symbol": "VolSwMed",
+   "symbol_id": 2617,
+   "spread": 0.69,
+   "m5_range": 26.05,
+   "cost_ratio": 0.026,
+   "key_stats": "M5 n=998 t_drift=2.43 AC1=-0.028 VR12=0.97 VR48=1.17 AC|r|=0.109; H1 n=719 t_drift=-0.05 VR12=1.35 VR48=1.65; VolSwitch H1 Apr-Sep (3598 bars): no drift by vol regime, no leverage effect, mom12 t 1.48",
+   "verdict": "vol clustering by design only; directionally fair; no edge"
+  },
+  {
+   "symbol": "VolSwHigh",
+   "symbol_id": 2618,
+   "spread": 0.14,
+   "m5_range": 3.73,
+   "cost_ratio": 0.038,
+   "key_stats": "M5 n=998 t_drift=0.79 AC1=0.016 VR12=1.26 VR48=1.21 AC|r|=0.209; H1 n=719 t_drift=-0.07 VR12=0.88 VR48=0.95; VolSwitch H1 Apr-Sep: acabs 0.24 (vol regimes by design), AC1|regime |r|<0.03",
+   "verdict": "vol clustering by design only; directionally fair; no edge"
+  },
+  {
+   "symbol": "DSI10",
+   "symbol_id": 2464,
+   "spread": 3.77,
+   "m5_range": 3.57,
+   "cost_ratio": 1.056,
+   "key_stats": "M5 n=11654 t_drift=-2.29 AC1=0.148 VR12=1.52 VR48=1.62 AC|r|=0.105; DSI10: AC1 0.15, VR12 1.52; break-even spread ~1.6 (L-only); spread 2.4-3.8 observed",
+   "verdict": "real regime momentum (BH q<0.001) but killed by regime-dependent spread"
+  },
+  {
+   "symbol": "DSI20",
+   "symbol_id": 2469,
+   "spread": 4.05,
+   "m5_range": 3.14,
+   "cost_ratio": 1.29,
+   "key_stats": "M5 n=22656 t_drift=1.03 AC1=0.097 VR12=1.54 VR48=1.65 AC|r|=0.043; DSI20: AC1 0.10, VR12 1.54; break-even spread ~2.8 (L-only); spread 2.1-4.05 when drifting",
+   "verdict": "real regime momentum (BH q<0.001) but killed by regime-dependent spread"
+  },
+  {
+   "symbol": "DSI30",
+   "symbol_id": 2470,
+   "spread": 10.16,
+   "m5_range": 5.86,
+   "cost_ratio": 1.734,
+   "key_stats": "M5 n=73510 t_drift=-0.07 AC1=0.052 VR12=1.42 VR48=1.61 AC|r|=0.043; H1 n=15016 t_drift=-0.78 VR12=1.16 VR48=1.18; DSI30 M5 73.5k bars: AC1 0.05, VR12 1.42; long-only ER follower gross +4.9 pts/trade, break-even spread ~5; spread 6.5-10.2 when drifting",
+   "verdict": "real regime momentum (BH q<0.001) but killed by regime-dependent spread"
+  }
+ ]
+}
