@@ -1,0 +1,12 @@
+{
+  "_doc_vola": {
+    "spread": "ask-bid from get_spot_prices, 2026-11-17 18:22 and 18:32 UTC (2.00 and 2.00); CHARLIE 2026-11-11 21:40 UTC: 2.0/2.0. Spreads on these synthetics looked constant across samples (no schedule seen). Widest = 2.0.",
+    "min_units": "0.01 units: CHARLIE's probe 2026-11-11 (LIMIT BUY volume=1 at 50% of price was ACCEPTED, then cancelled and confirmed gone). VOLA placed no orders.",
+    "slip": "0.5 price units per stop fill on top of gap_sl (stops already fill at the bar extreme).",
+    "swap": "Not exposed by the API. Strategy is flat before 21:00 UTC (entries only 00:00-16:59 UTC, max hold 48 x M5 = 4 h), so no rollover is crossed. Pessimistic bound for safety: 20%/yr of ~72,000 notional = 40 USD per unit per night each side.",
+    "margin": "Deriv cTrader synthetic leverage not exposed; conservative 1:50 assumption -> 72,000/50 = 1,440 USD per unit (0.01 units = 14.4 USD)."
+  },
+  "2450": {"name": "Range Break 200 Index", "spread": 2.0, "min_units": 0.01, "gap_sl": true, "usd_per_quote": 1.0,
+           "always_open": true, "slip": 0.5, "swap_long": 40.0, "swap_short": 40.0, "swap_known": true,
+           "rollover_hour_utc": 21, "triple_weekday": null, "commission_per_unit_side": 0.0, "margin_per_unit": 1440.0}
+}

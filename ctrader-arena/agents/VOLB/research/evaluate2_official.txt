@@ -1,0 +1,24 @@
+start balance $60.00  period 2026-01-02 -> 2026-09-14  (OOS from 2026-06-30)
+full   trades= 2479 PF=0.41 net=$-1374.86 (-2291%) win=21% exp=$-0.555 t=-18.50 DD=$1376.63 worst=$-7.46 sharpe=-14.75 tr/wk=48.4 swap=$0.00
+is     trades= 1811 PF=0.37 net=$-1068.61 (-1781%) win=19% exp=$-0.590 t=-17.62 DD=$1072.55 worst=$-7.46 sharpe=-16.27 tr/wk=50.6 swap=$0.00
+oos    trades=  668 PF=0.51 net=$-306.25 (-510%) win=27% exp=$-0.458 t=-7.15 DD=$313.75 worst=$-2.30 sharpe=-11.68 tr/wk=43.4 swap=$0.00
+stress trades=10967 PF=0.00 net=$-17540.47 (-29234%) win=0% exp=$-1.599 t=-497.88 DD=$17540.47 worst=$-2.72 sharpe=-42.11 tr/wk=214.2 swap=$0.00
+folds  2026-01-02:462tr PF0.36 $-292.26  2026-02-22:521tr PF0.31 $-340.79  2026-04-14:571tr PF0.36 $-328.64  2026-06-04:476tr PF0.56 $-190.42  2026-07-25:449tr PF0.48 $-222.75
+MC DD  p50=$1379.84 p95=$1502.63 p99=$1548.00
+balance technical_min=$1563.6 recommended_min=$6010.53 operating=$9015.8 margin=15.600000000000001
+  [FAIL] PF full >= 1.30
+  [FAIL] PF in-sample >= 1.20
+  [FAIL] PF out-of-sample >= 1.20
+  [FAIL] PF under cost stress (1.5x spread + slippage) >= 1.10
+  [PASS] trades >= 100
+  [PASS] OOS trades >= 30
+  [FAIL] >= 4 of 5 walk-forward folds profitable
+  [FAIL] expectancy t-stat >= 2.0
+  [FAIL] max drawdown <= 25% of start balance
+  [FAIL] Monte-Carlo 95% drawdown <= 35% of start balance
+  [FAIL] worst trade <= 5% of start balance
+  [PASS] no look-ahead
+  [PASS] min lot known and respected
+  [PASS] swap known for overnight holds
+  [PASS] margin <= 50% of start balance
+NOT QUALIFIED   score=0.0/100

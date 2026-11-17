@@ -1,0 +1,66 @@
+symbol,id,spread,m5_range,cost_ratio,key_stats,verdict
+Boom 500 Index,2442,0.527,2.847,0.185,n=1000 price=4645.5 AC1=-0.028 jumpbars=33.2% skew=+1.8,
+Crash 500 Index,2443,0.327,1.913,0.171,n=1000 price=3173.9 AC1=-0.012 jumpbars=33.3% skew=-1.7,
+Boom 1000 Index,2444,1.7185,4.635,0.371,n=1000 price=15652.5 AC1=-0.030 jumpbars=27.8% skew=+2.7,
+Crash 1000 Index,2445,0.5382,1.803,0.299,n=1000 price=5912.4 AC1=+0.029 jumpbars=25.1% skew=-2.7,
+Boom 300 Index,2446,0.501,1.0165,0.493,n=1000 price=402.4 AC1=+0.008 jumpbars=0.1% skew=+1.4,
+Crash 300 Index,2447,1.106,5.4845,0.202,n=1000 price=2118.6 AC1=-0.036 jumpbars=0.3% skew=-1.3,
+Range Break 100 Index,2449,2.6,22.0,0.118,n=1000 price=53286.7 AC1=-0.082 jumpbars=3.6% skew=+0.6,
+Range Break 200 Index,2450,2.0,23.0,0.087,n=1000 price=64508.0 AC1=+0.003 jumpbars=2.6% skew=+2.4,
+Jump 10 Index,2451,3.03,45.795,0.066,n=1000 price=92585.6 AC1=-0.044 jumpbars=0.0% skew=+0.3,
+Jump 25 Index,2452,10.85,137.02,0.079,n=1000 price=113932.4 AC1=-0.024 jumpbars=0.0% skew=-0.2,
+Jump 50 Index,2453,10.0,167.72,0.06,n=1000 price=67258.8 AC1=+0.017 jumpbars=0.0% skew=-0.1,
+Jump 75 Index,2454,1.58,24.785,0.064,n=1000 price=6920.8 AC1=+0.008 jumpbars=0.1% skew=-0.2,
+Jump 100 Index,2455,0.06,0.75,0.08,n=1000 price=157.1 AC1=+0.038 jumpbars=0.0% skew=-0.0,
+DEX 900 DOWN Index,2461,6.02,46.535,0.129,n=1000 price=25566.2 AC1=-0.031 jumpbars=4.4% skew=-2.8,
+DEX 900 UP Index,2462,0.54,4.325,0.125,n=1000 price=2490.1 AC1=+0.013 jumpbars=3.1% skew=+2.4,
+DEX 1500 DOWN Index,2465,3.9,24.35,0.16,n=1000 price=42540.2 AC1=-0.035 jumpbars=4.4% skew=-4.1,
+DEX 1500 UP Index,2466,0.46,2.37,0.194,n=1000 price=3979.2 AC1=-0.010 jumpbars=6.5% skew=+4.0,
+DEX 600 DOWN Index,2467,0.55,4.06,0.135,n=1000 price=2510.8 AC1=-0.015 jumpbars=0.8% skew=-1.8,
+DEX 600 UP Index,2468,0.43,4.035,0.107,n=1000 price=2363.0 AC1=+0.031 jumpbars=1.2% skew=+1.7,
+Crash 600 Index,2505,3.288,11.274,0.292,n=1000 price=22120.9 AC1=-0.027 jumpbars=32.9% skew=-2.1,
+Crash 900 Index,2506,1.368,5.191,0.264,n=1000 price=15587.2 AC1=-0.016 jumpbars=24.2% skew=-3.0,
+Boom 600 Index,2507,0.775,2.58,0.3,n=1000 price=5064.2 AC1=-0.014 jumpbars=33.6% skew=+2.1,
+Boom 900 Index,2508,0.971,3.1755,0.306,n=1000 price=9526.4 AC1=-0.013 jumpbars=26.9% skew=+2.5,
+Volatility Crash 550 Index,2567,0.52,2.54,0.205,n=1000 price=1417.2 AC1=-0.047 jumpbars=3.0% skew=-2.2,
+Volatility Boom 550 Index,2568,1.09,8.815,0.124,n=1000 price=5761.6 AC1=-0.016 jumpbars=2.6% skew=+2.2,
+Skew Step Index 5 Up,2569,0.8,8.5,0.094,n=1000 price=12651.9 AC1=-0.020 jumpbars=0.0% skew=-0.1,
+Volatility Crash 400 Index,2570,1.11,8.38,0.132,n=1000 price=4458.8 AC1=-0.016 jumpbars=2.3% skew=-2.7,
+Volatility Boom 400 Index,2571,1.24,15.435,0.08,n=1000 price=8243.5 AC1=-0.029 jumpbars=2.6% skew=+2.0,
+Volatility Crash 750 Index,2572,1.9,16.69,0.114,n=1000 price=12912.0 AC1=+0.029 jumpbars=3.9% skew=-2.9,
+Volatility Boom 750 Index,2573,2.06,14.38,0.143,n=1000 price=11281.8 AC1=-0.001 jumpbars=3.2% skew=+3.1,
+Skew Step Index 5 Down,2574,1.0,8.6,0.116,n=1000 price=12517.5 AC1=-0.026 jumpbars=0.0% skew=+0.2,
+Skew Step Index 4 Up,2575,0.6,6.5,0.092,n=1000 price=12121.6 AC1=-0.013 jumpbars=0.0% skew=-0.1,
+Skew Step Index 4 Down,2576,0.6,6.5,0.092,n=1000 price=12302.6 AC1=-0.011 jumpbars=0.0% skew=+0.1,
+Trek Up Index,2606,1.05,12.465,0.084,n=1000 price=13117.8 AC1=-0.069 jumpbars=0.4% skew=+2.2,
+Trek Down Index,2607,0.72,8.295,0.087,n=1000 price=8498.4 AC1=-0.004 jumpbars=0.1% skew=-6.0,
+Crash 150 Index,2619,0.1498,1.7841,0.084,n=1000 price=9397.0 AC1=-0.040 jumpbars=0.0% skew=-1.1,
+Boom 150 Index,2620,0.18,1.8101,0.099,n=1000 price=9264.1 AC1=-0.013 jumpbars=0.0% skew=+0.9,
+Exponential Growth Index 1,2621,7.259,,,0 bars,untestable
+Exponential Growth Index 2,2622,32.7079,318.0606,0.103,n=1000 price=97747.0 AC1=-0.003 jumpbars=0.0% skew=+0.0,
+Ladder Volatility Up Index,2623,3.36,43.57,0.077,n=1000 price=9446.6 AC1=+0.007 jumpbars=0.0% skew=-0.0,
+Ladder Volatility Down Index,2624,1.12,15.54,0.072,n=1000 price=18318.7 AC1=-0.031 jumpbars=0.0% skew=+0.1,
+Boom 99 Index,2634,7.835,19.5865,0.4,n=1000 price=106436.3 AC1=+0.046 jumpbars=0.0% skew=+1.0,
+Boom 100 Index,2635,7.375,17.258,0.427,n=1000 price=94591.7 AC1=-0.041 jumpbars=0.0% skew=+0.8,
+Boom 200 Index,2636,7.615,18.5325,0.411,n=1000 price=99302.2 AC1=+0.015 jumpbars=0.0% skew=+1.1,
+Crash 99 Index,2637,7.089,17.5455,0.404,n=1000 price=96412.0 AC1=-0.027 jumpbars=0.0% skew=-0.8,
+Crash 100 Index,2638,7.435,17.726,0.419,n=1000 price=95511.4 AC1=-0.019 jumpbars=0.0% skew=-0.8,
+Crash 200 Index,2639,7.801,18.984,0.411,n=1000 price=102750.8 AC1=-0.016 jumpbars=0.0% skew=-1.3,
+Crash Boom Flip 150 Index,2641,0.1722,2.0473,0.084,n=1000 price=10122.9 AC1=+0.006 jumpbars=0.0% skew=-0.1,
+Crash Boom Flip 300 Index,2642,2.876,20.108,0.143,n=1000 price=7626.7 AC1=-0.065 jumpbars=0.1% skew=-0.4,
+Crash Boom Flip 500 Index,2643,1.0195,5.8674,0.174,n=1000 price=9649.9 AC1=-0.049 jumpbars=0.1% skew=-0.0,
+Crash Boom Flip 1000 Index,2644,0.6261,2.8942,0.216,n=1000 price=9578.5 AC1=+0.066 jumpbars=0.2% skew=+0.4,
+Boom 50 Index,2645,1.2719,16.8395,0.076,n=1000 price=106463.1 AC1=+0.047 jumpbars=0.0% skew=+0.7,
+Crash 50 Index,2646,1.208,15.6405,0.077,n=1000 price=99754.6 AC1=-0.013 jumpbars=0.0% skew=-0.6,
+Snap 50 Index,2666,8.43,125.46,0.067,n=1000 price=59600.0 AC1=+0.033 jumpbars=0.0% skew=+0.0,
+Snap 80 Index,2667,31.85,409.42,0.078,n=1000 price=113915.4 AC1=-0.012 jumpbars=0.0% skew=-0.1,
+Crash 75 Index,2678,1.742,,,no pre-holdout history,untestable (launched after holdout start)
+Crash 250 Index,2679,2.404,,,no pre-holdout history,untestable (launched after holdout start)
+Crash 750 Index,2680,2.966,,,no pre-holdout history,untestable (launched after holdout start)
+Crash 1100 Index,2681,3.218,,,no pre-holdout history,untestable (launched after holdout start)
+Crash 1500 Index,2682,3.346,,,no pre-holdout history,untestable (launched after holdout start)
+Boom 75 Index,2683,1.744,,,no pre-holdout history,untestable (launched after holdout start)
+Boom 250 Index,2684,2.382,,,no pre-holdout history,untestable (launched after holdout start)
+Boom 750 Index,2685,3.058,,,no pre-holdout history,untestable (launched after holdout start)
+Boom 1100 Index,2686,3.274,,,no pre-holdout history,untestable (launched after holdout start)
+Boom 1500 Index,2687,3.344,,,no pre-holdout history,untestable (launched after holdout start)

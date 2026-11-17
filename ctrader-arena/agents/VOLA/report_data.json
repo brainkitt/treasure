@@ -1,0 +1,1096 @@
+{
+ "strategy_name": "VOLA C1 - Range Break 200 breakout-follow (NOT an edge)",
+ "one_line": "No validated edge in the spike/jump synthetics; the best in-sample plateau (RB200 M5 breakout-follow) failed two pre-declared out-of-sample confirmations and the official evaluate2 (PF 0.92).",
+ "instrument(s)": [
+  "Range Break 200 Index (2450)"
+ ],
+ "timeframe": "M5",
+ "logic": {
+  "entry": "close of M5 bar above the highest high (below the lowest low) of the previous 24 bars -> buy (sell) at next open; signal bar must close <= 16:59 UTC",
+  "exit": "trailing stop on bar closes or time exit after 48 bars (4 h); always flat before the 21:00 UTC rollover",
+  "stop": "2 x ATR(24) hard stop, trailing by the same distance (gap fills at bar extreme in the engine)",
+  "take_profit": "none",
+  "sizing": "broker minimum 0.01 units",
+  "risk": "one position; cBot: spread gate, daily loss 10%, equity kill-switch 25%, 6-loss pause"
+ },
+ "parameters": [
+  {
+   "name": "N",
+   "default": 24,
+   "range": "6-48",
+   "meaning": "Donchian lookback (bars)"
+  },
+  {
+   "name": "K",
+   "default": 2.0,
+   "range": "1-3",
+   "meaning": "stop & trail distance in ATR(24)"
+  },
+  {
+   "name": "H",
+   "default": 48,
+   "range": "12-48",
+   "meaning": "time exit (bars)"
+  },
+  {
+   "name": "last_entry_hour",
+   "default": 16,
+   "range": "fixed",
+   "meaning": "no entries after 16:59 UTC (no rollover crossing)"
+  }
+ ],
+ "rejected_alternatives": [
+  {
+   "name": "F1 spike-hazard drift harvest (Crash150/Boom150/VolCrash550/DEX600UP/TrekUp)",
+   "result": "300 sets; median PF IS 0.82/0.00-1.06, no set with IS and OOS t>2",
+   "why_rejected": "hazard memoryless (T7 p>0.1 everywhere); drift side pays spread + gap-filled spikes"
+  },
+  {
+   "name": "F2 post-spike fade/follow (7 symbols)",
+   "result": "336 sets; median PF IS 0.17-0.87, OOS 0.00-0.89",
+   "why_rejected": "no post-jump drift (T6 never BH-significant)"
+  },
+  {
+   "name": "F3 Donchian breakout/fade (Jump75, TrekUp, RB200, Crash150)",
+   "result": "192 sets; only RB200-follow plateau PF>1 (IS 1.2-1.7)",
+   "why_rejected": "RB200 plateau failed unseen Jul-Aug (PF 0.66, t -2.0) and Jun-Jul (C1 0.79 / WF-selected R2 0.89); break directions independent (P(same)=0.54, p=0.28)"
+  },
+  {
+   "name": "F4 Range Break boundary fade/follow at M5",
+   "result": "48 sets; IS PF>1 6%, OOS 0%",
+   "why_rejected": "fair reflection at boundaries (confirms CHARLIE at M1)"
+  },
+  {
+   "name": "F6 time-series momentum/reversal (7 symbols)",
+   "result": "126 sets; median PF 0.86-0.99 IS, 0.83-0.95 OOS",
+   "why_rejected": "VR(6) 0.97-1.01 on 8-16k bars; no autocorrelation"
+  },
+  {
+   "name": "F8 Volatility Crash 550 short (drift lead t=-2.2/-2.3 in screen)",
+   "result": "independent Feb-Aug H1: PF 1.19/1.53, t 1.3/1.7",
+   "why_rejected": "not significant; consistent with negative median path of a multiplicative martingale (zero mean); 1 of 36 symbols"
+  },
+  {
+   "name": "Boom 150 negative drift (t -2.15/-2.54 in screen)",
+   "result": "10 months earlier H1: t -0.43",
+   "why_rejected": "did not replicate"
+  },
+  {
+   "name": "time-of-day / spread schedule",
+   "result": "T4/T5 hour tests: 0 BH-significant of 140; spreads identical across 3 sampling times",
+   "why_rejected": "no schedule"
+  }
+ ],
+ "walk_forward": [
+  {
+   "fold": 1,
+   "test_start": "2026-08-07 02:30:00",
+   "test_end": "2026-08-14 21:15:00",
+   "chosen": {
+    "N": 48,
+    "d": -1,
+    "tk": 1,
+    "H": 12
+   },
+   "is_pf": 1.104,
+   "oos_pf": 0.599,
+   "oos_trades": 53,
+   "oos_net_price_units": -713.4
+  },
+  {
+   "fold": 2,
+   "test_start": "2026-08-14 21:15:00",
+   "test_end": "2026-08-22 15:55:00",
+   "chosen": {
+    "N": 12,
+    "d": 1,
+    "tk": 3,
+    "H": 12
+   },
+   "is_pf": 0.937,
+   "oos_pf": 1.027,
+   "oos_trades": 94,
+   "oos_net_price_units": 83.0
+  },
+  {
+   "fold": 3,
+   "test_start": "2026-08-22 15:55:00",
+   "test_end": "2026-08-30 10:30:00",
+   "chosen": {
+    "N": 48,
+    "d": 1,
+    "tk": 3,
+    "H": 12
+   },
+   "is_pf": 1.097,
+   "oos_pf": 1.903,
+   "oos_trades": 32,
+   "oos_net_price_units": 1156.0
+  },
+  {
+   "fold": 4,
+   "test_start": "2026-08-30 10:30:00",
+   "test_end": "2026-09-07 05:25:00",
+   "chosen": {
+    "N": 48,
+    "d": 1,
+    "tk": 3,
+    "H": 12
+   },
+   "is_pf": 1.233,
+   "oos_pf": 1.501,
+   "oos_trades": 41,
+   "oos_net_price_units": 964.0
+  },
+  {
+   "fold": 5,
+   "test_start": "2026-09-07 05:25:00",
+   "test_end": "2026-09-15 00:00:00",
+   "chosen": {
+    "N": 48,
+    "d": 1,
+    "tk": 3,
+    "H": 12
+   },
+   "is_pf": 1.287,
+   "oos_pf": 1.254,
+   "oos_trades": 40,
+   "oos_net_price_units": 390.0
+  }
+ ],
+ "neighbour_table": [
+  {
+   "N": 12,
+   "K": 1,
+   "H": 48,
+   "pf_full": 0.948,
+   "pf_is": 0.869,
+   "pf_oos": 1.113,
+   "trades": 663
+  },
+  {
+   "N": 12,
+   "K": 2,
+   "H": 48,
+   "pf_full": 0.875,
+   "pf_is": 0.734,
+   "pf_oos": 1.258,
+   "trades": 484
+  },
+  {
+   "N": 12,
+   "K": 3,
+   "H": 48,
+   "pf_full": 0.977,
+   "pf_is": 0.866,
+   "pf_oos": 1.248,
+   "trades": 370
+  },
+  {
+   "N": 24,
+   "K": 1,
+   "H": 48,
+   "pf_full": 0.993,
+   "pf_is": 0.803,
+   "pf_oos": 1.452,
+   "trades": 391
+  },
+  {
+   "N": 24,
+   "K": 2,
+   "H": 48,
+   "pf_full": 0.978,
+   "pf_is": 0.811,
+   "pf_oos": 1.434,
+   "trades": 327
+  },
+  {
+   "N": 24,
+   "K": 3,
+   "H": 48,
+   "pf_full": 1.042,
+   "pf_is": 0.876,
+   "pf_oos": 1.493,
+   "trades": 293
+  },
+  {
+   "N": 48,
+   "K": 1,
+   "H": 48,
+   "pf_full": 1.109,
+   "pf_is": 0.937,
+   "pf_oos": 1.531,
+   "trades": 275
+  },
+  {
+   "N": 48,
+   "K": 2,
+   "H": 48,
+   "pf_full": 1.106,
+   "pf_is": 0.943,
+   "pf_oos": 1.532,
+   "trades": 230
+  },
+  {
+   "N": 48,
+   "K": 3,
+   "H": 48,
+   "pf_full": 1.189,
+   "pf_is": 1.03,
+   "pf_oos": 1.598,
+   "trades": 222
+  }
+ ],
+ "trade_examples": [
+  {
+   "time": "2026-08-27 13:35:00",
+   "side": "SELL",
+   "entry": 66522.5,
+   "sl": "2 x ATR24 (trailing)",
+   "tp": "none",
+   "exit": 65605.0,
+   "pnl": 9.18,
+   "why": "Donchian-24 close breakout, exit SL"
+  },
+  {
+   "time": "2026-07-01 13:20:00",
+   "side": "BUY",
+   "entry": 68320.0,
+   "sl": "2 x ATR24 (trailing)",
+   "tp": "none",
+   "exit": 69197.5,
+   "pnl": 8.78,
+   "why": "Donchian-24 close breakout, exit TIME"
+  },
+  {
+   "time": "2026-07-05 07:05:00",
+   "side": "SELL",
+   "entry": 69772.0,
+   "sl": "2 x ATR24 (trailing)",
+   "tp": "none",
+   "exit": 68962.5,
+   "pnl": 8.1,
+   "why": "Donchian-24 close breakout, exit SL"
+  },
+  {
+   "time": "2026-08-03 00:00:00",
+   "side": "SELL",
+   "entry": 65486.0,
+   "sl": "2 x ATR24 (trailing)",
+   "tp": "none",
+   "exit": 66016.5,
+   "pnl": -5.3,
+   "why": "Donchian-24 close breakout, exit SL - range-break jump against the position filled at bar extreme"
+  },
+  {
+   "time": "2026-09-03 15:40:00",
+   "side": "BUY",
+   "entry": 66056.5,
+   "sl": "2 x ATR24 (trailing)",
+   "tp": "none",
+   "exit": 65553.0,
+   "pnl": -5.04,
+   "why": "Donchian-24 close breakout, exit SL - range-break jump against the position filled at bar extreme"
+  }
+ ],
+ "failure_conditions": [
+  "It is a fair game: expectancy is about -1 spread per trade plus gap-filled stops",
+  "range-break jumps of 200-530 points against the position (worst trade -$5.30 at 0.01 units)",
+  "any period: fold PFs 0.48-1.32 flip sign randomly"
+ ],
+ "timeframe_comparison": [
+  {
+   "timeframe": "M5",
+   "pf": 0.9223113964686996,
+   "trades": 359,
+   "note": "official evaluate2"
+  },
+  {
+   "timeframe": "H1 (stats only)",
+   "pf": null,
+   "trades": null,
+   "note": "H1 drift/VR/hour tests on 36 symbols x 30 days: 11 raw p<0.05 of 218 (11 expected), 0 BH"
+  }
+ ],
+ "params_tried": 1201,
+ "distinct_param_sets_approx": 1050,
+ "statistical_tests": {
+  "count": 628,
+  "raw_p_lt_0.05": 42,
+  "BH_q_lt_0.10": 2,
+  "note": "BH-significant only: vol clustering (|r| AC1) on RB200 and Jump 75 - no directional content"
+ },
+ "official": {
+  "full": {
+   "trades": 359,
+   "pf": 0.9223113964686996,
+   "net": -22.990000000000016,
+   "return_pct": -76.63333333333338,
+   "win_rate": 31.197771587743734,
+   "avg_win": 2.4369196428571427,
+   "avg_loss": -1.1980769230769233,
+   "expectancy": -0.06403899721448472,
+   "t_stat": -0.5317402594781961,
+   "max_dd_usd": 69.51,
+   "max_dd_pct": 173.3416458852868,
+   "worst_trade": -5.305,
+   "best_trade": 9.175,
+   "max_consec_losses": 11,
+   "sharpe_daily": -1.103508521954359,
+   "trades_per_week": 21.369047619047617,
+   "weeks_profitable_pct": 53.84615384615385,
+   "months_profitable_pct": 25.0,
+   "avg_hold_hours": 2.0074280408542244,
+   "overnight_trades": 0,
+   "exposure_pct": 35.74735449735449,
+   "swap_total": 0.0,
+   "commission_total": 0.0,
+   "spread_cost_est": -7.18,
+   "recovery_factor": -0.3307437778736875,
+   "longest_dd_days": 80.98611111111111,
+   "days": 84
+  },
+  "is": {
+   "trades": 250,
+   "pf": 0.7759859645749717,
+   "net": -46.60500000000001,
+   "return_pct": -155.35000000000002,
+   "win_rate": 29.2,
+   "avg_win": 2.2115068493150685,
+   "avg_loss": -1.1753954802259887,
+   "expectancy": -0.18642000000000006,
+   "t_stat": -1.3707942161786821,
+   "max_dd_usd": 69.51,
+   "max_dd_pct": 173.3416458852868,
+   "worst_trade": -5.305,
+   "best_trade": 8.775,
+   "max_consec_losses": 11,
+   "sharpe_daily": -3.368565718333614,
+   "trades_per_week": 21.551724137931036,
+   "weeks_profitable_pct": 44.44444444444444,
+   "months_profitable_pct": 0.0,
+   "avg_hold_hours": 1.955,
+   "overnight_trades": 0,
+   "exposure_pct": 35.111350574712645,
+   "swap_total": 0.0,
+   "commission_total": 0.0,
+   "spread_cost_est": -5.0,
+   "recovery_factor": -0.6704790677600346,
+   "longest_dd_days": 55.06597222222222,
+   "days": 58
+  },
+  "oos": {
+   "trades": 109,
+   "pf": 1.2687187073281752,
+   "net": 23.614999999999995,
+   "return_pct": 78.71666666666664,
+   "win_rate": 35.77981651376147,
+   "avg_win": 2.8588461538461543,
+   "avg_loss": -1.2554285714285713,
+   "expectancy": 0.21665137614678895,
+   "t_stat": 0.8881527909961803,
+   "max_dd_usd": 11.16000000000001,
+   "max_dd_pct": 36.68333333333334,
+   "worst_trade": -5.035,
+   "best_trade": 9.175,
+   "max_consec_losses": 7,
+   "sharpe_daily": 3.531700045837657,
+   "trades_per_week": 20.96153846153846,
+   "weeks_profitable_pct": 60.0,
+   "months_profitable_pct": 100.0,
+   "avg_hold_hours": 2.127675840978593,
+   "overnight_trades": 0,
+   "exposure_pct": 37.16613247863248,
+   "swap_total": 0.0,
+   "commission_total": 0.0,
+   "spread_cost_est": -2.1799999999999997,
+   "recovery_factor": 2.116039426523295,
+   "longest_dd_days": 6.135416666666667,
+   "days": 26
+  },
+  "stress": {
+   "trades": 359,
+   "pf": 0.911266754005845,
+   "net": -26.415000000000003,
+   "return_pct": -88.05000000000001,
+   "win_rate": 30.64066852367688,
+   "avg_win": 2.466136363636364,
+   "avg_loss": -1.195542168674699,
+   "expectancy": -0.07357938718662953,
+   "t_stat": -0.6114627088404886,
+   "max_dd_usd": 71.08500000000001,
+   "max_dd_pct": 177.6680829792552,
+   "worst_trade": -5.32,
+   "best_trade": 9.16,
+   "max_consec_losses": 15,
+   "sharpe_daily": -1.2709048235484832,
+   "trades_per_week": 21.369047619047617,
+   "weeks_profitable_pct": 53.84615384615385,
+   "months_profitable_pct": 25.0,
+   "avg_hold_hours": 2.0041782729805013,
+   "overnight_trades": 0,
+   "exposure_pct": 35.68948412698413,
+   "swap_total": 0.0,
+   "commission_total": 0.0,
+   "spread_cost_est": -10.770000000000001,
+   "recovery_factor": -0.3715973834142224,
+   "longest_dd_days": 80.98611111111111,
+   "days": 84
+  },
+  "folds": [
+   {
+    "start": "2026-06-23",
+    "end": "2026-07-09",
+    "trades": 60,
+    "net": 4.079999999999998,
+    "pf": 1.0881019218311379
+   },
+   {
+    "start": "2026-07-09",
+    "end": "2026-07-26",
+    "trades": 75,
+    "net": -21.084999999999997,
+    "pf": 0.6109060712308545
+   },
+   {
+    "start": "2026-07-26",
+    "end": "2026-08-11",
+    "trades": 76,
+    "net": -37.370000000000005,
+    "pf": 0.482158941315042
+   },
+   {
+    "start": "2026-08-11",
+    "end": "2026-08-28",
+    "trades": 69,
+    "net": 11.499999999999998,
+    "pf": 1.1875560629536002
+   },
+   {
+    "start": "2026-08-28",
+    "end": "2026-09-14",
+    "trades": 79,
+    "net": 19.885000000000005,
+    "pf": 1.3210105738961986
+   }
+  ],
+  "mc": {
+   "dd50": 57.08500000000001,
+   "dd95": 110.1002500000001,
+   "dd99": 136.07300000000012,
+   "p_loss": 0.7078
+  },
+  "balance": {
+   "technical_min": 150.47,
+   "recommended_min": 440.4,
+   "recommended_operating": 660.6,
+   "margin_at_max_exposure": 14.4
+  },
+  "gates": {
+   "PF full >= 1.30": false,
+   "PF in-sample >= 1.20": false,
+   "PF out-of-sample >= 1.20": true,
+   "PF under cost stress (1.5x spread + slippage) >= 1.10": false,
+   "trades >= 100": true,
+   "OOS trades >= 30": true,
+   ">= 4 of 5 walk-forward folds profitable": false,
+   "expectancy t-stat >= 2.0": false,
+   "max drawdown <= 25% of start balance": false,
+   "Monte-Carlo 95% drawdown <= 35% of start balance": false,
+   "worst trade <= 5% of start balance": false,
+   "no look-ahead": true,
+   "min lot known and respected": true,
+   "swap known for overnight holds": true,
+   "margin <= 50% of start balance": true
+  },
+  "qualified": false,
+  "score": 4.0
+ },
+ "screen": [
+  {
+   "symbol": "Boom 500 Index",
+   "id": 2442,
+   "spread": 0.527,
+   "m5_range": 2.847,
+   "cost_ratio": 0.185,
+   "key_stats": "n=1000 price=4645.5 AC1=-0.028 jumpbars=33.2% skew=+1.8 | disc: drift_t +0.19 AC1 -0.027 VR6 1.06 ; h1: drift_t +0.07 AC1 -0.013 VR6 1.02",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Crash 500 Index",
+   "id": 2443,
+   "spread": 0.327,
+   "m5_range": 1.913,
+   "cost_ratio": 0.171,
+   "key_stats": "n=1000 price=3173.9 AC1=-0.012 jumpbars=33.3% skew=-1.7 | disc: drift_t +0.83 AC1 -0.012 VR6 0.97 ; h1: drift_t +0.21 AC1 +0.011 VR6 0.94",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Boom 1000 Index",
+   "id": 2444,
+   "spread": 1.7185,
+   "m5_range": 4.635,
+   "cost_ratio": 0.371,
+   "key_stats": "n=1000 price=15652.5 AC1=-0.030 jumpbars=27.8% skew=+2.7 | disc: drift_t +1.57 AC1 -0.030 VR6 1.01",
+   "verdict": "fair game: no BH-significant structure; cost/M5-range >= 0.25 -> too expensive at M5"
+  },
+  {
+   "symbol": "Crash 1000 Index",
+   "id": 2445,
+   "spread": 0.5382,
+   "m5_range": 1.803,
+   "cost_ratio": 0.299,
+   "key_stats": "n=1000 price=5912.4 AC1=+0.029 jumpbars=25.1% skew=-2.7 | disc: drift_t -0.02 AC1 +0.028 VR6 1.01",
+   "verdict": "fair game: no BH-significant structure; cost/M5-range >= 0.25 -> too expensive at M5"
+  },
+  {
+   "symbol": "Boom 300 Index",
+   "id": 2446,
+   "spread": 0.501,
+   "m5_range": 1.0165,
+   "cost_ratio": 0.493,
+   "key_stats": "n=1000 price=402.4 AC1=+0.008 jumpbars=0.1% skew=+1.4 | disc: drift_t +0.41 AC1 +0.009 VR6 1.07",
+   "verdict": "fair game: no BH-significant structure; cost/M5-range >= 0.25 -> too expensive at M5"
+  },
+  {
+   "symbol": "Crash 300 Index",
+   "id": 2447,
+   "spread": 1.106,
+   "m5_range": 5.4845,
+   "cost_ratio": 0.202,
+   "key_stats": "n=1000 price=2118.6 AC1=-0.036 jumpbars=0.3% skew=-1.3 | disc: drift_t -0.11 AC1 -0.036 VR6 0.91",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Range Break 100 Index",
+   "id": 2449,
+   "spread": 2.6,
+   "m5_range": 22.0,
+   "cost_ratio": 0.118,
+   "key_stats": "n=1000 price=53286.7 AC1=-0.082 jumpbars=3.6% skew=+0.6 | disc: drift_t -0.62 AC1 -0.082 VR6 0.84 ; h1: drift_t +0.02 AC1 +0.036 VR6 1.06",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Range Break 200 Index",
+   "id": 2450,
+   "spread": 2.0,
+   "m5_range": 23.0,
+   "cost_ratio": 0.087,
+   "key_stats": "n=1000 price=64508.0 AC1=+0.003 jumpbars=2.6% skew=+2.4 | disc: drift_t +0.91 AC1 +0.002 VR6 0.97 ; h1: drift_t -1.04 AC1 +0.010 VR6 1.06 ; deep: drift_t -0.32 AC1 -0.002 VR6 1.00",
+   "verdict": "BH-significant: T8_volclust(deep) (vol-clustering only; no directional edge)"
+  },
+  {
+   "symbol": "Jump 10 Index",
+   "id": 2451,
+   "spread": 3.03,
+   "m5_range": 45.795,
+   "cost_ratio": 0.066,
+   "key_stats": "n=1000 price=92585.6 AC1=-0.044 jumpbars=0.0% skew=+0.3 | disc: drift_t -0.16 AC1 -0.044 VR6 1.02 ; h1: drift_t -0.01 AC1 +0.060 VR6 1.13",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Jump 25 Index",
+   "id": 2452,
+   "spread": 10.85,
+   "m5_range": 137.02,
+   "cost_ratio": 0.079,
+   "key_stats": "n=1000 price=113932.4 AC1=-0.024 jumpbars=0.0% skew=-0.2 | disc: drift_t -1.12 AC1 -0.024 VR6 0.85 ; h1: drift_t -0.41 AC1 +0.014 VR6 1.12",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Jump 50 Index",
+   "id": 2453,
+   "spread": 10.0,
+   "m5_range": 167.72,
+   "cost_ratio": 0.06,
+   "key_stats": "n=1000 price=67258.8 AC1=+0.017 jumpbars=0.0% skew=-0.1 | disc: drift_t -0.06 AC1 +0.017 VR6 1.02 ; h1: drift_t +1.00 AC1 +0.017 VR6 1.04",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Jump 75 Index",
+   "id": 2454,
+   "spread": 1.58,
+   "m5_range": 24.785,
+   "cost_ratio": 0.064,
+   "key_stats": "n=1000 price=6920.8 AC1=+0.008 jumpbars=0.1% skew=-0.2 | disc: drift_t -0.02 AC1 +0.008 VR6 1.00 ; h1: drift_t -1.81 AC1 -0.023 VR6 0.91 ; deep: drift_t -0.78 AC1 +0.001 VR6 0.99",
+   "verdict": "BH-significant: T8_volclust(deep) (vol-clustering only; no directional edge)"
+  },
+  {
+   "symbol": "Jump 100 Index",
+   "id": 2455,
+   "spread": 0.06,
+   "m5_range": 0.75,
+   "cost_ratio": 0.08,
+   "key_stats": "n=1000 price=157.1 AC1=+0.038 jumpbars=0.0% skew=-0.0 | disc: drift_t -0.11 AC1 +0.037 VR6 0.94 ; h1: drift_t -0.59 AC1 -0.037 VR6 0.85",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "DEX 900 DOWN Index",
+   "id": 2461,
+   "spread": 6.02,
+   "m5_range": 46.535,
+   "cost_ratio": 0.129,
+   "key_stats": "n=1000 price=25566.2 AC1=-0.031 jumpbars=4.4% skew=-2.8 | disc: drift_t -0.65 AC1 -0.032 VR6 0.95 ; h1: drift_t -0.29 AC1 -0.020 VR6 0.96",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "DEX 900 UP Index",
+   "id": 2462,
+   "spread": 0.54,
+   "m5_range": 4.325,
+   "cost_ratio": 0.125,
+   "key_stats": "n=1000 price=2490.1 AC1=+0.013 jumpbars=3.1% skew=+2.4 | disc: drift_t -0.22 AC1 +0.013 VR6 1.02 ; h1: drift_t +0.55 AC1 +0.032 VR6 1.05",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "DEX 1500 DOWN Index",
+   "id": 2465,
+   "spread": 3.9,
+   "m5_range": 24.35,
+   "cost_ratio": 0.16,
+   "key_stats": "n=1000 price=42540.2 AC1=-0.035 jumpbars=4.4% skew=-4.1 | disc: drift_t +0.65 AC1 -0.034 VR6 0.89",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "DEX 1500 UP Index",
+   "id": 2466,
+   "spread": 0.46,
+   "m5_range": 2.37,
+   "cost_ratio": 0.194,
+   "key_stats": "n=1000 price=3979.2 AC1=-0.010 jumpbars=6.5% skew=+4.0 | disc: drift_t +0.21 AC1 -0.010 VR6 0.97 ; h1: drift_t +0.51 AC1 +0.046 VR6 1.16",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "DEX 600 DOWN Index",
+   "id": 2467,
+   "spread": 0.55,
+   "m5_range": 4.06,
+   "cost_ratio": 0.135,
+   "key_stats": "n=1000 price=2510.8 AC1=-0.015 jumpbars=0.8% skew=-1.8 | disc: drift_t -0.17 AC1 -0.014 VR6 0.97 ; h1: drift_t -1.39 AC1 +0.082 VR6 1.13",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "DEX 600 UP Index",
+   "id": 2468,
+   "spread": 0.43,
+   "m5_range": 4.035,
+   "cost_ratio": 0.107,
+   "key_stats": "n=1000 price=2363.0 AC1=+0.031 jumpbars=1.2% skew=+1.7 | disc: drift_t -0.44 AC1 +0.033 VR6 1.01 ; h1: drift_t +0.19 AC1 +0.062 VR6 1.20 ; deep: drift_t +0.00 AC1 -0.009 VR6 0.97",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Crash 600 Index",
+   "id": 2505,
+   "spread": 3.288,
+   "m5_range": 11.274,
+   "cost_ratio": 0.292,
+   "key_stats": "n=1000 price=22120.9 AC1=-0.027 jumpbars=32.9% skew=-2.1 | disc: drift_t -0.14 AC1 -0.027 VR6 0.93",
+   "verdict": "fair game: no BH-significant structure; cost/M5-range >= 0.25 -> too expensive at M5"
+  },
+  {
+   "symbol": "Crash 900 Index",
+   "id": 2506,
+   "spread": 1.368,
+   "m5_range": 5.191,
+   "cost_ratio": 0.264,
+   "key_stats": "n=1000 price=15587.2 AC1=-0.016 jumpbars=24.2% skew=-3.0 | disc: drift_t +1.43 AC1 -0.016 VR6 0.92",
+   "verdict": "fair game: no BH-significant structure; cost/M5-range >= 0.25 -> too expensive at M5"
+  },
+  {
+   "symbol": "Boom 600 Index",
+   "id": 2507,
+   "spread": 0.775,
+   "m5_range": 2.58,
+   "cost_ratio": 0.3,
+   "key_stats": "n=1000 price=5064.2 AC1=-0.014 jumpbars=33.6% skew=+2.1 | disc: drift_t -0.05 AC1 -0.014 VR6 0.93",
+   "verdict": "fair game: no BH-significant structure; cost/M5-range >= 0.25 -> too expensive at M5"
+  },
+  {
+   "symbol": "Boom 900 Index",
+   "id": 2508,
+   "spread": 0.971,
+   "m5_range": 3.1755,
+   "cost_ratio": 0.306,
+   "key_stats": "n=1000 price=9526.4 AC1=-0.013 jumpbars=26.9% skew=+2.5 | disc: drift_t +0.66 AC1 -0.013 VR6 0.89",
+   "verdict": "fair game: no BH-significant structure; cost/M5-range >= 0.25 -> too expensive at M5"
+  },
+  {
+   "symbol": "Volatility Crash 550 Index",
+   "id": 2567,
+   "spread": 0.52,
+   "m5_range": 2.54,
+   "cost_ratio": 0.205,
+   "key_stats": "n=1000 price=1417.2 AC1=-0.047 jumpbars=3.0% skew=-2.2 | disc: drift_t -2.20 AC1 -0.048 VR6 0.88 ; h1: drift_t -2.28 AC1 -0.049 VR6 0.96 ; deep: drift_t -2.50 AC1 +0.002 VR6 1.01",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Volatility Boom 550 Index",
+   "id": 2568,
+   "spread": 1.09,
+   "m5_range": 8.815,
+   "cost_ratio": 0.124,
+   "key_stats": "n=1000 price=5761.6 AC1=-0.016 jumpbars=2.6% skew=+2.2 | disc: drift_t -0.67 AC1 -0.019 VR6 0.88 ; h1: drift_t +0.42 AC1 +0.016 VR6 0.97",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Skew Step Index 5 Up",
+   "id": 2569,
+   "spread": 0.8,
+   "m5_range": 8.5,
+   "cost_ratio": 0.094,
+   "key_stats": "n=1000 price=12651.9 AC1=-0.020 jumpbars=0.0% skew=-0.1 | disc: drift_t +0.59 AC1 -0.020 VR6 0.90 ; h1: drift_t -0.46 AC1 +0.057 VR6 1.09",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Volatility Crash 400 Index",
+   "id": 2570,
+   "spread": 1.11,
+   "m5_range": 8.38,
+   "cost_ratio": 0.132,
+   "key_stats": "n=1000 price=4458.8 AC1=-0.016 jumpbars=2.3% skew=-2.7 | disc: drift_t -0.38 AC1 -0.016 VR6 0.94 ; h1: drift_t -0.87 AC1 -0.052 VR6 0.92",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Volatility Boom 400 Index",
+   "id": 2571,
+   "spread": 1.24,
+   "m5_range": 15.435,
+   "cost_ratio": 0.08,
+   "key_stats": "n=1000 price=8243.5 AC1=-0.029 jumpbars=2.6% skew=+2.0 | disc: drift_t +0.74 AC1 -0.028 VR6 0.98 ; h1: drift_t +0.86 AC1 +0.016 VR6 1.01",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Volatility Crash 750 Index",
+   "id": 2572,
+   "spread": 1.9,
+   "m5_range": 16.69,
+   "cost_ratio": 0.114,
+   "key_stats": "n=1000 price=12912.0 AC1=+0.029 jumpbars=3.9% skew=-2.9 | disc: drift_t -0.35 AC1 +0.030 VR6 1.07 ; h1: drift_t +0.23 AC1 -0.012 VR6 0.91",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Volatility Boom 750 Index",
+   "id": 2573,
+   "spread": 2.06,
+   "m5_range": 14.38,
+   "cost_ratio": 0.143,
+   "key_stats": "n=1000 price=11281.8 AC1=-0.001 jumpbars=3.2% skew=+3.1 | disc: drift_t +1.38 AC1 -0.002 VR6 0.96 ; h1: drift_t -1.46 AC1 +0.013 VR6 0.97",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Skew Step Index 5 Down",
+   "id": 2574,
+   "spread": 1.0,
+   "m5_range": 8.6,
+   "cost_ratio": 0.116,
+   "key_stats": "n=1000 price=12517.5 AC1=-0.026 jumpbars=0.0% skew=+0.2 | disc: drift_t -0.03 AC1 -0.026 VR6 1.02 ; h1: drift_t -0.75 AC1 +0.048 VR6 1.06",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Skew Step Index 4 Up",
+   "id": 2575,
+   "spread": 0.6,
+   "m5_range": 6.5,
+   "cost_ratio": 0.092,
+   "key_stats": "n=1000 price=12121.6 AC1=-0.013 jumpbars=0.0% skew=-0.1 | disc: drift_t -0.47 AC1 -0.013 VR6 0.97 ; h1: drift_t +0.91 AC1 +0.013 VR6 0.99",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Skew Step Index 4 Down",
+   "id": 2576,
+   "spread": 0.6,
+   "m5_range": 6.5,
+   "cost_ratio": 0.092,
+   "key_stats": "n=1000 price=12302.6 AC1=-0.011 jumpbars=0.0% skew=+0.1 | disc: drift_t +0.18 AC1 -0.011 VR6 1.12 ; h1: drift_t +1.14 AC1 +0.046 VR6 1.14",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Trek Up Index",
+   "id": 2606,
+   "spread": 1.05,
+   "m5_range": 12.465,
+   "cost_ratio": 0.084,
+   "key_stats": "n=1000 price=13117.8 AC1=-0.069 jumpbars=0.4% skew=+2.2 | disc: drift_t -0.38 AC1 -0.070 VR6 0.95 ; h1: drift_t -0.63 AC1 -0.018 VR6 0.95 ; deep: drift_t -0.83 AC1 -0.022 VR6 0.98",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Trek Down Index",
+   "id": 2607,
+   "spread": 0.72,
+   "m5_range": 8.295,
+   "cost_ratio": 0.087,
+   "key_stats": "n=1000 price=8498.4 AC1=-0.004 jumpbars=0.1% skew=-6.0 | disc: drift_t -1.00 AC1 -0.004 VR6 0.95 ; h1: drift_t +0.25 AC1 +0.013 VR6 1.00",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Crash 150 Index",
+   "id": 2619,
+   "spread": 0.1498,
+   "m5_range": 1.7841,
+   "cost_ratio": 0.084,
+   "key_stats": "n=1000 price=9397.0 AC1=-0.040 jumpbars=0.0% skew=-1.1 | disc: drift_t +0.66 AC1 -0.040 VR6 0.93 ; h1: drift_t -2.37 AC1 -0.039 VR6 1.05 ; deep: drift_t -2.21 AC1 +0.011 VR6 1.01",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Boom 150 Index",
+   "id": 2620,
+   "spread": 0.18,
+   "m5_range": 1.8101,
+   "cost_ratio": 0.099,
+   "key_stats": "n=1000 price=9264.1 AC1=-0.013 jumpbars=0.0% skew=+0.9 | disc: drift_t -1.25 AC1 -0.013 VR6 0.92 ; h1: drift_t -2.15 AC1 -0.021 VR6 1.01 ; deep: drift_t -2.54 AC1 +0.001 VR6 1.01",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Exponential Growth Index 1",
+   "id": 2621,
+   "spread": 7.259,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "0 bars",
+   "verdict": "not pulled (sibling Exp Growth 2 tested: fair game); shared M5 file is post-holdout only"
+  },
+  {
+   "symbol": "Exponential Growth Index 2",
+   "id": 2622,
+   "spread": 32.7079,
+   "m5_range": 318.0606,
+   "cost_ratio": 0.103,
+   "key_stats": "n=1000 price=97747.0 AC1=-0.003 jumpbars=0.0% skew=+0.0 | disc: drift_t +0.75 AC1 -0.005 VR6 1.03 ; h1: drift_t -0.81 AC1 +0.026 VR6 1.01",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Ladder Volatility Up Index",
+   "id": 2623,
+   "spread": 3.36,
+   "m5_range": 43.57,
+   "cost_ratio": 0.077,
+   "key_stats": "n=1000 price=9446.6 AC1=+0.007 jumpbars=0.0% skew=-0.0 | disc: drift_t -0.01 AC1 +0.008 VR6 0.97 ; h1: drift_t +0.08 AC1 -0.048 VR6 0.88",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Ladder Volatility Down Index",
+   "id": 2624,
+   "spread": 1.12,
+   "m5_range": 15.54,
+   "cost_ratio": 0.072,
+   "key_stats": "n=1000 price=18318.7 AC1=-0.031 jumpbars=0.0% skew=+0.1 | disc: drift_t +1.65 AC1 -0.030 VR6 0.98 ; h1: drift_t -0.96 AC1 -0.043 VR6 0.89",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Boom 99 Index",
+   "id": 2634,
+   "spread": 7.835,
+   "m5_range": 19.5865,
+   "cost_ratio": 0.4,
+   "key_stats": "n=1000 price=106436.3 AC1=+0.046 jumpbars=0.0% skew=+1.0 | disc: drift_t +0.84 AC1 +0.046 VR6 1.01",
+   "verdict": "fair game: no BH-significant structure; cost/M5-range >= 0.25 -> too expensive at M5"
+  },
+  {
+   "symbol": "Boom 100 Index",
+   "id": 2635,
+   "spread": 7.375,
+   "m5_range": 17.258,
+   "cost_ratio": 0.427,
+   "key_stats": "n=1000 price=94591.7 AC1=-0.041 jumpbars=0.0% skew=+0.8 | disc: drift_t +1.90 AC1 -0.041 VR6 0.95",
+   "verdict": "fair game: no BH-significant structure; cost/M5-range >= 0.25 -> too expensive at M5"
+  },
+  {
+   "symbol": "Boom 200 Index",
+   "id": 2636,
+   "spread": 7.615,
+   "m5_range": 18.5325,
+   "cost_ratio": 0.411,
+   "key_stats": "n=1000 price=99302.2 AC1=+0.015 jumpbars=0.0% skew=+1.1 | disc: drift_t -1.81 AC1 +0.015 VR6 0.99",
+   "verdict": "fair game: no BH-significant structure; cost/M5-range >= 0.25 -> too expensive at M5"
+  },
+  {
+   "symbol": "Crash 99 Index",
+   "id": 2637,
+   "spread": 7.089,
+   "m5_range": 17.5455,
+   "cost_ratio": 0.404,
+   "key_stats": "n=1000 price=96412.0 AC1=-0.027 jumpbars=0.0% skew=-0.8 | disc: drift_t +0.71 AC1 -0.027 VR6 0.96",
+   "verdict": "fair game: no BH-significant structure; cost/M5-range >= 0.25 -> too expensive at M5"
+  },
+  {
+   "symbol": "Crash 100 Index",
+   "id": 2638,
+   "spread": 7.435,
+   "m5_range": 17.726,
+   "cost_ratio": 0.419,
+   "key_stats": "n=1000 price=95511.4 AC1=-0.019 jumpbars=0.0% skew=-0.8 | disc: drift_t +1.42 AC1 -0.019 VR6 0.92",
+   "verdict": "fair game: no BH-significant structure; cost/M5-range >= 0.25 -> too expensive at M5"
+  },
+  {
+   "symbol": "Crash 200 Index",
+   "id": 2639,
+   "spread": 7.801,
+   "m5_range": 18.984,
+   "cost_ratio": 0.411,
+   "key_stats": "n=1000 price=102750.8 AC1=-0.016 jumpbars=0.0% skew=-1.3 | disc: drift_t +0.18 AC1 -0.016 VR6 0.89",
+   "verdict": "fair game: no BH-significant structure; cost/M5-range >= 0.25 -> too expensive at M5"
+  },
+  {
+   "symbol": "Crash Boom Flip 150 Index",
+   "id": 2641,
+   "spread": 0.1722,
+   "m5_range": 2.0473,
+   "cost_ratio": 0.084,
+   "key_stats": "n=1000 price=10122.9 AC1=+0.006 jumpbars=0.0% skew=-0.1 | disc: drift_t +0.43 AC1 +0.006 VR6 1.06 ; h1: drift_t -0.02 AC1 +0.024 VR6 1.23",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Crash Boom Flip 300 Index",
+   "id": 2642,
+   "spread": 2.876,
+   "m5_range": 20.108,
+   "cost_ratio": 0.143,
+   "key_stats": "n=1000 price=7626.7 AC1=-0.065 jumpbars=0.1% skew=-0.4 | disc: drift_t +0.42 AC1 -0.064 VR6 0.85 ; h1: drift_t -0.46 AC1 +0.020 VR6 1.14",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Crash Boom Flip 500 Index",
+   "id": 2643,
+   "spread": 1.0195,
+   "m5_range": 5.8674,
+   "cost_ratio": 0.174,
+   "key_stats": "n=1000 price=9649.9 AC1=-0.049 jumpbars=0.1% skew=-0.0 | disc: drift_t +0.91 AC1 -0.049 VR6 0.84 ; h1: drift_t -2.25 AC1 +0.035 VR6 1.11",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Crash Boom Flip 1000 Index",
+   "id": 2644,
+   "spread": 0.6261,
+   "m5_range": 2.8942,
+   "cost_ratio": 0.216,
+   "key_stats": "n=1000 price=9578.5 AC1=+0.066 jumpbars=0.2% skew=+0.4 | disc: drift_t +0.68 AC1 +0.066 VR6 1.14",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Boom 50 Index",
+   "id": 2645,
+   "spread": 1.2719,
+   "m5_range": 16.8395,
+   "cost_ratio": 0.076,
+   "key_stats": "n=1000 price=106463.1 AC1=+0.047 jumpbars=0.0% skew=+0.7 | disc: drift_t -0.94 AC1 +0.047 VR6 1.17 ; h1: drift_t -0.99 AC1 +0.012 VR6 1.16",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Crash 50 Index",
+   "id": 2646,
+   "spread": 1.208,
+   "m5_range": 15.6405,
+   "cost_ratio": 0.077,
+   "key_stats": "n=1000 price=99754.6 AC1=-0.013 jumpbars=0.0% skew=-0.6 | disc: drift_t -0.19 AC1 -0.013 VR6 0.95 ; h1: drift_t +0.30 AC1 -0.007 VR6 0.99",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Snap 50 Index",
+   "id": 2666,
+   "spread": 8.43,
+   "m5_range": 125.46,
+   "cost_ratio": 0.067,
+   "key_stats": "n=1000 price=59600.0 AC1=+0.033 jumpbars=0.0% skew=+0.0 | disc: drift_t -0.26 AC1 +0.032 VR6 1.00",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Snap 80 Index",
+   "id": 2667,
+   "spread": 31.85,
+   "m5_range": 409.42,
+   "cost_ratio": 0.078,
+   "key_stats": "n=1000 price=113915.4 AC1=-0.012 jumpbars=0.0% skew=-0.1 | disc: drift_t -0.12 AC1 -0.013 VR6 0.96",
+   "verdict": "fair game: no BH-significant structure"
+  },
+  {
+   "symbol": "Crash 75 Index",
+   "id": 2678,
+   "spread": 1.742,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no pre-holdout history",
+   "verdict": "untestable: no pre-holdout history (launched after 2026-09-15 or only post-holdout bars)"
+  },
+  {
+   "symbol": "Crash 250 Index",
+   "id": 2679,
+   "spread": 2.404,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no pre-holdout history",
+   "verdict": "untestable: no pre-holdout history (launched after 2026-09-15 or only post-holdout bars)"
+  },
+  {
+   "symbol": "Crash 750 Index",
+   "id": 2680,
+   "spread": 2.966,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no pre-holdout history",
+   "verdict": "untestable: no pre-holdout history (launched after 2026-09-15 or only post-holdout bars)"
+  },
+  {
+   "symbol": "Crash 1100 Index",
+   "id": 2681,
+   "spread": 3.218,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no pre-holdout history",
+   "verdict": "untestable: no pre-holdout history (launched after 2026-09-15 or only post-holdout bars)"
+  },
+  {
+   "symbol": "Crash 1500 Index",
+   "id": 2682,
+   "spread": 3.346,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no pre-holdout history",
+   "verdict": "untestable: no pre-holdout history (launched after 2026-09-15 or only post-holdout bars)"
+  },
+  {
+   "symbol": "Boom 75 Index",
+   "id": 2683,
+   "spread": 1.744,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no pre-holdout history",
+   "verdict": "untestable: no pre-holdout history (launched after 2026-09-15 or only post-holdout bars)"
+  },
+  {
+   "symbol": "Boom 250 Index",
+   "id": 2684,
+   "spread": 2.382,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no pre-holdout history",
+   "verdict": "untestable: no pre-holdout history (launched after 2026-09-15 or only post-holdout bars)"
+  },
+  {
+   "symbol": "Boom 750 Index",
+   "id": 2685,
+   "spread": 3.058,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no pre-holdout history",
+   "verdict": "untestable: no pre-holdout history (launched after 2026-09-15 or only post-holdout bars)"
+  },
+  {
+   "symbol": "Boom 1100 Index",
+   "id": 2686,
+   "spread": 3.274,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no pre-holdout history",
+   "verdict": "untestable: no pre-holdout history (launched after 2026-09-15 or only post-holdout bars)"
+  },
+  {
+   "symbol": "Boom 1500 Index",
+   "id": 2687,
+   "spread": 3.344,
+   "m5_range": null,
+   "cost_ratio": null,
+   "key_stats": "no pre-holdout history",
+   "verdict": "untestable: no pre-holdout history (launched after 2026-09-15 or only post-holdout bars)"
+  }
+ ]
+}

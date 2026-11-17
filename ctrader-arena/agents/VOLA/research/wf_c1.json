@@ -1,0 +1,162 @@
+{
+ "walk_forward": [
+  {
+   "fold": 1,
+   "test_start": "2026-08-07 02:30:00",
+   "test_end": "2026-08-14 21:15:00",
+   "chosen": {
+    "N": 48,
+    "d": -1,
+    "tk": 1,
+    "H": 12
+   },
+   "is_pf": 1.104,
+   "oos_pf": 0.599,
+   "oos_trades": 53,
+   "oos_net_price_units": -713.4
+  },
+  {
+   "fold": 2,
+   "test_start": "2026-08-14 21:15:00",
+   "test_end": "2026-08-22 15:55:00",
+   "chosen": {
+    "N": 12,
+    "d": 1,
+    "tk": 3,
+    "H": 12
+   },
+   "is_pf": 0.937,
+   "oos_pf": 1.027,
+   "oos_trades": 94,
+   "oos_net_price_units": 83.0
+  },
+  {
+   "fold": 3,
+   "test_start": "2026-08-22 15:55:00",
+   "test_end": "2026-08-30 10:30:00",
+   "chosen": {
+    "N": 48,
+    "d": 1,
+    "tk": 3,
+    "H": 12
+   },
+   "is_pf": 1.097,
+   "oos_pf": 1.903,
+   "oos_trades": 32,
+   "oos_net_price_units": 1156.0
+  },
+  {
+   "fold": 4,
+   "test_start": "2026-08-30 10:30:00",
+   "test_end": "2026-09-07 05:25:00",
+   "chosen": {
+    "N": 48,
+    "d": 1,
+    "tk": 3,
+    "H": 12
+   },
+   "is_pf": 1.233,
+   "oos_pf": 1.501,
+   "oos_trades": 41,
+   "oos_net_price_units": 964.0
+  },
+  {
+   "fold": 5,
+   "test_start": "2026-09-07 05:25:00",
+   "test_end": "2026-09-15 00:00:00",
+   "chosen": {
+    "N": 48,
+    "d": 1,
+    "tk": 3,
+    "H": 12
+   },
+   "is_pf": 1.287,
+   "oos_pf": 1.254,
+   "oos_trades": 40,
+   "oos_net_price_units": 390.0
+  }
+ ],
+ "neighbour_table": [
+  {
+   "N": 12,
+   "K": 1,
+   "H": 48,
+   "pf_full": 0.948,
+   "pf_is": 0.869,
+   "pf_oos": 1.113,
+   "trades": 663
+  },
+  {
+   "N": 12,
+   "K": 2,
+   "H": 48,
+   "pf_full": 0.875,
+   "pf_is": 0.734,
+   "pf_oos": 1.258,
+   "trades": 484
+  },
+  {
+   "N": 12,
+   "K": 3,
+   "H": 48,
+   "pf_full": 0.977,
+   "pf_is": 0.866,
+   "pf_oos": 1.248,
+   "trades": 370
+  },
+  {
+   "N": 24,
+   "K": 1,
+   "H": 48,
+   "pf_full": 0.993,
+   "pf_is": 0.803,
+   "pf_oos": 1.452,
+   "trades": 391
+  },
+  {
+   "N": 24,
+   "K": 2,
+   "H": 48,
+   "pf_full": 0.978,
+   "pf_is": 0.811,
+   "pf_oos": 1.434,
+   "trades": 327
+  },
+  {
+   "N": 24,
+   "K": 3,
+   "H": 48,
+   "pf_full": 1.042,
+   "pf_is": 0.876,
+   "pf_oos": 1.493,
+   "trades": 293
+  },
+  {
+   "N": 48,
+   "K": 1,
+   "H": 48,
+   "pf_full": 1.109,
+   "pf_is": 0.937,
+   "pf_oos": 1.531,
+   "trades": 275
+  },
+  {
+   "N": 48,
+   "K": 2,
+   "H": 48,
+   "pf_full": 1.106,
+   "pf_is": 0.943,
+   "pf_oos": 1.532,
+   "trades": 230
+  },
+  {
+   "N": 48,
+   "K": 3,
+   "H": 48,
+   "pf_full": 1.189,
+   "pf_is": 1.03,
+   "pf_oos": 1.598,
+   "trades": 222
+  }
+ ]
+}

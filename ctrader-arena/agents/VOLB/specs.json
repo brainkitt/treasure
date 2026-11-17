@@ -1,0 +1,6 @@
+{
+ "_doc": "VOLB specs. spread = WIDEST DSI30 spread ever observed (10.16, VOL round-1 live samples 2026-11-17 while DSI30 drifted up; VOLB samples 2026-11-17 ~16:22 and 16:32 UTC: 7.48 and 6.45; quiet-regime low 0.55). DSI spreads are dynamic and widen in drift regimes, i.e. exactly when this strategy signals. min_units 0.10 probed by VOL (LIMIT BUY volume=1 rejected 'minimum allowed volume = 0.10'). Commission 0 (account history). Swap: API does not expose it; the strategy never holds across 21:00 UTC (entry blackout 18:50-21:05, max hold 2 h) so swap is never charged; a conservative bound is still recorded: owner's V75 history -0.07 USD per 0.01 unit per night at price ~39500 (0.018%/night) scaled to DSI30 ~7800 = 1.4 USD/unit/night, x3 pessimism = 4.3 USD/unit/night, triple on Wednesday assumed. margin_per_unit: conservative 1:50 on price ~7800 = 156 USD/unit -> 15.6 USD at 0.10 units. slip 0.1 price units per stop fill.",
+ "2470": {"name": "Drift Switch Index 30", "spread": 10.16, "min_units": 0.1, "gap_sl": false, "usd_per_quote": 1.0,
+          "always_open": true, "slip": 0.1, "commission_per_unit_side": 0.0, "swap_long": 4.3, "swap_short": 4.3,
+          "triple_weekday": 2, "swap_known": true, "rollover_hour_utc": 21, "margin_per_unit": 156.0}
+}

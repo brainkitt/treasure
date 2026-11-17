@@ -1,0 +1,16 @@
+mult 0.054 (spread 0.55)
+full   trades= 2012 PF=2.16 net=$949.53 (1583%) win=49% exp=$0.472 t=11.93 DD=$24.81 worst=$-6.49 sharpe=11.51 tr/wk=39.3 swap=$0.00
+is     trades= 1425 PF=2.09 net=$621.38 (1036%) win=49% exp=$0.436 t=9.54 DD=$24.81 worst=$-6.49 sharpe=11.29 tr/wk=39.8 swap=$0.00
+oos    trades=  587 PF=2.31 net=$328.16 (547%) win=50% exp=$0.559 t=7.18 DD=$10.53 worst=$-2.20 sharpe=11.97 tr/wk=38.1 swap=$0.00
+mult 0.197 (spread 2.0)
+full   trades= 2020 PF=1.69 net=$664.11 (1107%) win=45% exp=$0.329 t=8.38 DD=$35.81 worst=$-6.64 sharpe=8.06 tr/wk=39.5 swap=$0.00
+is     trades= 1432 PF=1.62 net=$416.89 (695%) win=44% exp=$0.291 t=6.42 DD=$35.81 worst=$-6.64 sharpe=7.56 tr/wk=40.0 swap=$0.00
+oos    trades=  588 PF=1.86 net=$247.22 (412%) win=47% exp=$0.420 t=5.44 DD=$14.06 worst=$-2.21 sharpe=9.08 tr/wk=38.2 swap=$0.00
+mult 0.394 (spread 4.0)
+full   trades= 2038 PF=1.21 net=$255.77 (426%) win=40% exp=$0.126 t=3.25 DD=$51.85 worst=$-6.84 sharpe=3.07 tr/wk=39.8 swap=$0.00
+is     trades= 1447 PF=1.15 net=$128.01 (213%) win=38% exp=$0.088 t=1.99 DD=$51.85 worst=$-6.84 sharpe=2.27 tr/wk=40.4 swap=$0.00
+oos    trades=  591 PF=1.36 net=$127.76 (213%) win=43% exp=$0.216 t=2.83 DD=$22.66 worst=$-2.30 sharpe=4.66 tr/wk=38.4 swap=$0.00
+mult 0.635 (spread 6.45)
+full   trades= 2074 PF=0.84 net=$-244.72 (-408%) win=34% exp=$-0.118 t=-3.15 DD=$263.51 worst=$-7.08 sharpe=-3.00 tr/wk=40.5 swap=$0.00
+is     trades= 1474 PF=0.79 net=$-224.71 (-375%) win=32% exp=$-0.152 t=-3.53 DD=$244.18 worst=$-7.08 sharpe=-4.18 tr/wk=41.2 swap=$0.00
+oos    trades=  600 PF=0.95 net=$-20.01 (-33%) win=37% exp=$-0.033 t=-0.45 DD=$56.94 worst=$-2.30 sharpe=-0.75 tr/wk=39.0 swap=$0.00
