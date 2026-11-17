@@ -165,6 +165,7 @@ footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line);
     <li><a href="#replay">Test 3 · Latency replay</a></li>
     <li><a href="#fivemin">Test 4 · 5-minute windows</a></li>
     <li><a href="#demo">Test 5 · Demo trades</a></li>
+    <li><a href="#live">Test 6 · Live demo trades</a></li>
     <li><a href="#small">Small account</a></li>
     <li><a href="#bot">The bot</a></li>
     <li><a href="#method">Method &amp; parameters</a></li>
@@ -191,7 +192,7 @@ footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line);
     <div class="kpi"><div class="v num">$0.82</div><div class="k">margin for 0.01 BTC (min size)</div></div>
     <div class="kpi"><div class="v num">0 / 18</div><div class="k">5-minute rules with an edge</div></div>
   </div>
-  <p><strong>Bottom line:</strong> the method does not carry over in its 5-minute form, and only a very narrow sub-second version remains possible. I built that version as a cTrader bot (<a href="#bot">§10</a>) that starts in <strong>paper mode</strong>. It logs what it would have earned using Deriv's real quotes on your own machine and connection, the one measurement I could not make from this server. Do not fund it until that log shows a positive average over 100+ signals.</p>
+  <p><strong>Bottom line:</strong> the method does not carry over in its 5-minute form, and only a very narrow sub-second version remains possible. I built that version as a cTrader bot (<a href="#bot">§11</a>) that starts in <strong>paper mode</strong>. It logs what it would have earned using Deriv's real quotes on your own machine and connection, the one measurement I could not make from this server. Do not fund it until that log shows a positive average over 100+ signals.</p>
 </section>
 
 <section id="mapping">
@@ -309,8 +310,37 @@ footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line);
   <p>These trades confirm sizing, costs and margin. They are not a latency test: each order went through this assistant's tool connection, which takes seconds per call, far slower than the half-second window. Latency can only be tested by a bot running inside cTrader, which is what the cBot's paper mode does.</p>
 </section>
 
+<section id="live">
+  <h2><span class="n">09</span>Test 6 · Live demo trades from real-time signals</h2>
+  <p>On 17 Nov 2026 a signal engine read OKX's BTC-USDT best bid and offer in real time and fired whenever the mid moved at least $23.42 within 500 ms (20 s cooldown). For each signal under 10 s old I sent a market order for 0.01 BTC on the demo account with a $60 stop, then closed it straight away. Each order went through this assistant's connector, so fills arrived 11–48 s after the signal in normal operation and minutes later when the connector was reconnecting. Fills more than 60 s after their signal are marked invalid. The test was set to stop after 10 trades or a −$1.50 loss, and it stopped at 10 trades.</p>
+  <div class="kpis">
+    <div class="kpi"><div class="v num neg">−$1.45</div><div class="k">net P&amp;L, 10 trades</div></div>
+    <div class="kpi"><div class="v num neg">−$0.85</div><div class="k">P&amp;L of 7 valid trades</div></div>
+    <div class="kpi"><div class="v num">1 / 10</div><div class="k">winning trades</div></div>
+    <div class="kpi"><div class="v num">12.4 s</div><div class="k">median fill delay (valid)</div></div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th class="r">#</th><th>Signal (UTC)</th><th>Side</th><th class="r">OKX move</th><th class="r">Fill delay</th><th class="r">Held</th><th class="r">Entry → exit</th><th class="r">P&amp;L</th><th>Status</th></tr></thead>
+    <tbody>
+<tr><td class="r">1</td><td>08:40:26</td><td>Sell</td><td class="r">$32.40</td><td class="r">871.0 s</td><td class="r">11 s</td><td class="r">64,320.57 → 64,343.20</td><td class="r neg">−$0.23</td><td><span class="pill bad">invalid</span></td></tr>
+<tr><td class="r">2</td><td>09:00:21</td><td>Sell</td><td class="r">$28.65</td><td class="r">14.4 s</td><td class="r">69 s</td><td class="r">64,240.97 → 64,203.57</td><td class="r pos">+$0.37</td><td><span class="pill good">valid</span></td></tr>
+<tr><td class="r">3</td><td>09:06:07</td><td>Buy</td><td class="r">$25.70</td><td class="r">48.4 s</td><td class="r">8 s</td><td class="r">64,271.86 → 64,255.79</td><td class="r neg">−$0.16</td><td><span class="pill good">valid</span></td></tr>
+<tr><td class="r">4</td><td>09:09:25</td><td>Sell</td><td class="r">$34.00</td><td class="r">12.4 s</td><td class="r">8 s</td><td class="r">64,249.00 → 64,268.91</td><td class="r neg">−$0.20</td><td><span class="pill good">valid</span></td></tr>
+<tr><td class="r">5</td><td>09:14:07</td><td>Sell</td><td class="r">$28.00</td><td class="r">11.3 s</td><td class="r">8 s</td><td class="r">64,198.33 → 64,215.23</td><td class="r neg">−$0.17</td><td><span class="pill good">valid</span></td></tr>
+<tr><td class="r">6</td><td>09:22:57</td><td>Buy</td><td class="r">$29.45</td><td class="r">11.6 s</td><td class="r">8 s</td><td class="r">64,270.37 → 64,251.21</td><td class="r neg">−$0.19</td><td><span class="pill good">valid</span></td></tr>
+<tr><td class="r">7</td><td>09:27:54</td><td>Buy</td><td class="r">$23.60</td><td class="r">14.5 s</td><td class="r">9 s</td><td class="r">64,342.07 → 64,314.25</td><td class="r neg">−$0.28</td><td><span class="pill good">valid</span></td></tr>
+<tr><td class="r">8</td><td>10:19:24</td><td>Sell</td><td class="r">$24.60</td><td class="r">261.6 s</td><td class="r">8 s</td><td class="r">64,206.68 → 64,226.18</td><td class="r neg">−$0.20</td><td><span class="pill bad">invalid</span></td></tr>
+<tr><td class="r">9</td><td>10:27:11</td><td>Sell</td><td class="r">$28.80</td><td class="r">11.1 s</td><td class="r">4 s</td><td class="r">64,150.90 → 64,172.82</td><td class="r neg">−$0.22</td><td><span class="pill good">valid</span></td></tr>
+<tr><td class="r">10</td><td>10:32:02</td><td>Buy</td><td class="r">$24.10</td><td class="r">160.8 s</td><td class="r">5 s</td><td class="r">64,258.20 → 64,241.30</td><td class="r neg">−$0.17</td><td><span class="pill bad">invalid</span></td></tr>
+      <tr><td colspan="7"><strong>Total</strong> (valid −$0.85, invalid −$0.60)</td><td class="r neg"><strong>−$1.45</strong></td><td></td></tr>
+    </tbody>
+  </table></div>
+  <p>Fill delays of the valid trades were 11.1, 11.3, 11.6, 12.4, 14.4, 14.5, 48.4 s. The three invalid trades filled 160.8 s, 261.6 s and 871 s after their signals. In the second session, 3 of the 6 signals could not be traded because they were already more than 10 s old when they reached me.</p>
+  <div class="note bad"><strong>At connector speed the strategy mostly pays the spread.</strong> The spread on 0.01 BTC is about $0.18, and the average loss was −$0.14 per trade. Only 1 of 10 trades made money. By the time each order filled, 11 s or more after the signal, Deriv's quote had already caught up with OKX (it lags by at most 0.5 s, see Test 1), so there was no lag left to capture. These results measure slow execution, not the strategy as designed. They neither prove nor rule out the sub-second version, which only the cBot running inside cTrader can test.</div>
+</section>
+
 <section id="small">
-  <h2><span class="n">09</span>Small account ($15–$30)</h2>
+  <h2><span class="n">10</span>Small account ($15–$30)</h2>
   <div class="tbl"><table>
     <thead><tr><th>Question</th><th>Answer at 0.01 BTC</th></tr></thead>
     <tbody>
@@ -327,7 +357,7 @@ footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line);
 </section>
 
 <section id="bot">
-  <h2><span class="n">10</span>The bot: LatArbBot for cTrader</h2>
+  <h2><span class="n">11</span>The bot: LatArbBot for cTrader</h2>
   <p>A cTrader Automate cBot in C#, at <code>latarb-ctrader/LatArbBot.cs</code> on branch <code>claude/polymarket-btc-arbitrage-0avqt1</code>. It runs inside cTrader on your computer, so it sees Deriv's real ticks and your real connection speed.</p>
   <ol class="steps">
     <li><div><h4>Leading price</h4><p>Opens a WebSocket to OKX (<code>bbo-tbt</code>, BTC-USDT) and keeps the best bid/ask mid.</p></div></li>
@@ -372,7 +402,7 @@ footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line);
 </section>
 
 <section id="method">
-  <h2><span class="n">11</span>Method, data and every parameter used</h2>
+  <h2><span class="n">12</span>Method, data and every parameter used</h2>
   <div class="tbl"><table>
     <thead><tr><th>Test</th><th>Data</th><th>Settings</th><th>Trials</th></tr></thead>
     <tbody id="tb-method"></tbody>
@@ -387,12 +417,13 @@ footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line);
 </section>
 
 <section id="verdict">
-  <h2><span class="n">12</span>Verdict and next steps</h2>
+  <h2><span class="n">13</span>Verdict and next steps</h2>
   <div class="tbl"><table>
     <thead><tr><th>Idea</th><th>Status</th><th>Why</th></tr></thead>
     <tbody>
       <tr><td>5-minute Up/Down as CFD trades</td><td><span class="pill bad">rejected</span></td><td>0 of 18 rules profitable over 90 days; spread exceeds any predictive edge</td></tr>
       <tr><td>Minute-scale lag arbitrage</td><td><span class="pill bad">rejected</span></td><td>Deriv tracks exchanges within the same minute (0.994)</td></tr>
+      <tr><td>Signal → order through the connector</td><td><span class="pill bad">rejected</span></td><td>10 live demo trades, 1 winner, −$1.45; 11 s+ fills only pay the spread (Test 6)</td></tr>
       <tr><td>Sub-second lag arbitrage</td><td><span class="pill warn">unproven</span></td><td>Pays in replay only if your execution beats Deriv's ≤0.5 s lag; must be measured on your machine</td></tr>
     </tbody>
   </table></div>
@@ -401,7 +432,7 @@ footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line);
     <li><div><h4>Judge the paper log</h4><p>Positive average per trade after 100+ signals: move to live mode on the demo account. Otherwise stop here; the idea doesn't work on your setup.</p></div></li>
     <li><div><h4>Check the broker's terms</h4><p>Before any real money, confirm that this kind of trading is allowed.</p></div></li>
   </ol>
-  <footer>Data: Deriv cTrader demo quotes, trendbars and trades; Binance, Coinbase, Kraken and OKX public market data; 16 Nov 2026. Account balance before tests $9,871.96, after $9,871.73. No positions or orders left open.</footer>
+  <footer>Data: Deriv cTrader demo quotes, trendbars and trades; Binance, Coinbase, Kraken and OKX public market data; 16 Nov 2026. Account balance before tests $9,871.96, after $9,871.73. No positions or orders left open. Live demo trades (Test 6), 17 Nov 2026: balance $9,871.73 before, $9,870.28 after; no BTCUSD position left open.</footer>
 </section>
 </main>
 </div>
