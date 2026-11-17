@@ -1,0 +1,8 @@
+{
+ "_doc": "VOL specs, measured 2026-11-17 14:34-16:07 UTC. spread = WIDEST live DSI20 spread observed (66 get_spot_prices samples over DSI10/20/30, agents/VOL/research/spreads.csv). DSI spreads are DYNAMIC and regime-dependent: DSI20 median 0.86 when sideways but 2.12 (max 4.05) when |ER10(M1)|>0.5 i.e. exactly when the strategy enters; corr(spread,|ER10|)=0.82 (DSI20), 0.85 (DSI30: 9.3 median in trend, max 10.16), DSI10 max 3.64. min_units 0.10 probed 2026-11-17 (LIMIT BUY volume=1 rejected: 'minimum allowed volume = 0.10') for DSI10/20/30. Commission 0 (account history). swap: API does not expose; bound from owner's V75 history (-0.07 USD per 0.01 unit per night at price ~39500 = 0.018%/night) scaled to DSI20 price 2700 = 0.48 USD/unit/night, x3 pessimism = 1.5 USD/unit/night both sides, triple Friday->Sat not documented so triple_weekday=4 assumed. margin_per_unit: conservative 1:50 leverage on price ~2710 = 54.2 USD/unit. slip 0.1 price units per stop fill.",
+ "2469": {"name": "Drift Switch Index 20", "spread": 4.05, "min_units": 0.1, "gap_sl": false, "usd_per_quote": 1.0, "always_open": true,
+          "slip": 0.1, "commission_per_unit_side": 0.0, "swap_long": 1.5, "swap_short": 1.5, "triple_weekday": 4, "swap_known": true,
+          "rollover_hour_utc": 21, "margin_per_unit": 54.2},
+ "2464": {"name": "Drift Switch Index 10", "spread": 3.64, "min_units": 0.1, "gap_sl": false, "usd_per_quote": 1.0, "always_open": true, "slip": 0.1, "margin_per_unit": 57.0},
+ "2470": {"name": "Drift Switch Index 30", "spread": 10.16, "min_units": 0.1, "gap_sl": false, "usd_per_quote": 1.0, "always_open": true, "slip": 0.1, "margin_per_unit": 157.0}
+}

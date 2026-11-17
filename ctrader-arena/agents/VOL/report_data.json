@@ -1,0 +1,192 @@
+{
+ "strategy_name": "VOL Drift-Switch regime trend follower (NOT QUALIFIED - no edge net of dynamic spread)",
+ "one_line": "Real, documented regime persistence on Deriv Drift Switch indices gives a strong GROSS momentum edge, but Deriv's dynamic spread widens during drift regimes and consumes it; not tradable.",
+ "instrument(s)": [
+  "Drift Switch Index 20 (2469)"
+ ],
+ "timeframe": "M5",
+ "logic": {
+  "entry": "Long at next M5 open when efficiency ratio of last 6 closed M5 bars > 0.8 (no data gap in window)",
+  "exit": "trailing stop 1.5xATR20 ratcheted on bar closes, or time exit after 24 bars (2h)",
+  "stop": "hard SL 3xATR20",
+  "take_profit": "none",
+  "sizing": "broker minimum 0.10 units",
+  "risk": "worst trade -$1.39 at 0.1 units; cBot adds spread gate, daily loss limit, equity kill-switch, consecutive-loss pause"
+ },
+ "parameters": [
+  {
+   "name": "N",
+   "default": 6,
+   "range": "4-9",
+   "meaning": "ER lookback bars"
+  },
+  {
+   "name": "thr",
+   "default": 0.8,
+   "range": "0.5-0.8",
+   "meaning": "ER threshold"
+  },
+  {
+   "name": "sl_atr",
+   "default": 3.0,
+   "range": "2-3",
+   "meaning": "stop in ATR20"
+  },
+  {
+   "name": "trail_atr",
+   "default": 1.5,
+   "range": "1-4",
+   "meaning": "trailing distance in ATR20"
+  },
+  {
+   "name": "max_bars",
+   "default": 24,
+   "range": "12-96",
+   "meaning": "time exit"
+  },
+  {
+   "name": "shorts",
+   "default": false,
+   "range": "bool",
+   "meaning": "allow short side"
+  }
+ ],
+ "rejected_alternatives": [
+  {
+   "name": "DSI30 momentum (M5, 10.5 months)",
+   "result": "gross +5.5 pts/long trade, t>7; PF 1.86 at spread 2, break-even ~6",
+   "why_rejected": "live DSI30 spread 7.3-10.2 whenever trending (median 9.3); PF 0.62 at 9.6"
+  },
+  {
+   "name": "DSI20 momentum at widest trend spread 4.05",
+   "result": "0 of 576 IS parameter sets PF>1",
+   "why_rejected": "spread widens with regime (corr 0.82)"
+  },
+  {
+   "name": "DSI20 at median trend spread 2.12",
+   "result": "9% of 576 sets IS PF>1.2; default PF 1.10 full, OOS 1.01",
+   "why_rejected": "edge gone net of realistic cost"
+  },
+  {
+   "name": "DSI10 at widest spread 3.64",
+   "result": "7% sets PF>1, none >1.2 (20 days data)",
+   "why_rejected": "no edge; too little data"
+  },
+  {
+   "name": "Volatility 75 H1 (1 year, owner's instrument)",
+   "result": "mean t=0.03, VR(2..60)=0.90-1.03, AC~0; momentum cells not replicated across halves",
+   "why_rejected": "random walk; owner's 28 trades = ~12 decisions, not evidence"
+  },
+  {
+   "name": "Trek Up/Down, Exp Growth 1/2, Ladder Up/Down, VolSwitch High (H1 30d), Step, Multi Step 2, VolSwitch Low, Exp Growth 1 (M5 1000 bars)",
+   "result": "all drift |t|<1.8, VR~1, |AC|<2SE",
+   "why_rejected": "fair games, nothing structural to exploit"
+  }
+ ],
+ "walk_forward": {
+  "note": "anchored, 5 folds, refit on 324 sets each fold. At hypothetical 1.0 spread: OOS PF 1.61/1.51/1.66/1.63/1.63, all 5 folds positive (gross effect is real). At official widest spread 4.05 the official 5 time folds are PF 0.54/0.77/0.80/0.52/0.65 - all negative."
+ },
+ "neighbour_table": [
+  {
+   "spread": 0.81,
+   "pf_full": 1.66,
+   "pf_oos": 1.5
+  },
+  {
+   "spread": 1.01,
+   "pf_full": 1.55,
+   "pf_oos": 1.4
+  },
+  {
+   "spread": 2.11,
+   "pf_full": 1.1,
+   "pf_oos": 1.01
+  },
+  {
+   "spread": 4.05,
+   "pf_full": 0.65,
+   "pf_oos": 0.6
+  },
+  {
+   "note": "IS grid at spread 1.0: 324/324 sets PF>1, 99% PF>1.2 (broad plateau); at 4.05: 0/576 PF>1"
+  }
+ ],
+ "trade_examples": [
+  {
+   "time": "2026-08-11 23:25:00",
+   "side": "long",
+   "entry": 3148.25,
+   "sl": "3xATR20 (trail 1.5xATR)",
+   "tp": null,
+   "exit": 3189.23,
+   "pnl": 4.1,
+   "why": "ER6>0.8 trend detected; exit TIME"
+  },
+  {
+   "time": "2026-08-11 16:55:00",
+   "side": "long",
+   "entry": 3068.43,
+   "sl": "3xATR20 (trail 1.5xATR)",
+   "tp": null,
+   "exit": 3108.25,
+   "pnl": 3.98,
+   "why": "ER6>0.8 trend detected; exit TIME"
+  },
+  {
+   "time": "2026-08-01 16:30:00",
+   "side": "long",
+   "entry": 2812.78,
+   "sl": "3xATR20 (trail 1.5xATR)",
+   "tp": null,
+   "exit": 2851.86,
+   "pnl": 3.91,
+   "why": "ER6>0.8 trend detected; exit TIME"
+  },
+  {
+   "time": "2026-09-03 19:55:00",
+   "side": "long",
+   "entry": 3402.24,
+   "sl": "3xATR20 (trail 1.5xATR)",
+   "tp": null,
+   "exit": 3388.35,
+   "pnl": -1.39,
+   "why": "ER6>0.8 trend detected; exit SL"
+  },
+  {
+   "time": "2026-08-13 19:20:00",
+   "side": "long",
+   "entry": 3181.42,
+   "sl": "3xATR20 (trail 1.5xATR)",
+   "tp": null,
+   "exit": 3168.21,
+   "pnl": -1.32,
+   "why": "ER6>0.8 trend detected; exit SL"
+  }
+ ],
+ "failure_conditions": [
+  "Dynamic spread widening in drift regimes (observed, decisive)",
+  "Spread gate would only admit entries when spread is narrow, which coincides with driftless regimes -> admitted signals are mostly false positives",
+  "Unknown DSI swap; Deriv may change spread algorithm"
+ ],
+ "timeframe_comparison": [
+  {
+   "timeframe": "M1",
+   "pf": null,
+   "trades": null,
+   "note": "lag-1 AC ~0 on M1, momentum only appears at 5-10 min; 7 days only"
+  },
+  {
+   "timeframe": "M5",
+   "pf": 0.65,
+   "trades": 1298,
+   "note": "official, spread 4.05"
+  },
+  {
+   "timeframe": "H1",
+   "pf": null,
+   "trades": null,
+   "note": "regimes (20-30 min) are averaged out; VR(H1) ~1"
+  }
+ ],
+ "params_tried": 2900
+}

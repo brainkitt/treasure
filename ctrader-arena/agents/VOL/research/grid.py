@@ -6,7 +6,7 @@ sid=int(sys.argv[1]); sp=float(sys.argv[2])
 b=load(sid,'M_5'); n=int(len(b)*0.7); bi=b.iloc[:n].reset_index(drop=True)
 spec={'min_units':0.1}
 rows=[]
-grid=list(itertools.product([4,6,9],[0.5,0.65,0.8],[2.0,3.0],[1.0,1.5,2.5],[12,24,48],[False,True]))
+grid=list(itertools.product([4,6,9],[0.5,0.65,0.8],[2.0,3.0],[1.0,1.5,2.5,4.0],[12,24,48,96],[False,True]))
 for N,thr,sl,trl,H,sh in grid:
     p=dict(N=N,thr=thr,sl_atr=sl,trail_atr=trl,max_bars=H,shorts=sh)
     od=S.signals(bi,p,spec); tr=engine.simulate(bi,od,spread=sp)
