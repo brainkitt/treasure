@@ -50,6 +50,14 @@ def load(symbol_id, period="M_1"):
         df[c] = df[c] / SCALE
     df = df.rename(columns={"timestamp": "ts"})
     df["time"] = pd.to_datetime(df.ts, unit="ms")
+    # Sealed holdout: if data/.holdout exists (one line "<symbol_id> <ISO date>" per sealed symbol, or "* <date>"),
+    # bars on/after that date are hidden unless ARENA_HOLDOUT_UNLOCK=1 (supervisor only).
+    hp = os.path.join(DATA, ".holdout")
+    if os.path.exists(hp) and os.environ.get("ARENA_HOLDOUT_UNLOCK") != "1":
+        rules = dict(l.split()[:2] for l in open(hp) if l.strip() and not l.startswith("#"))
+        cut = rules.get(str(symbol_id), rules.get("*"))
+        if cut:
+            df = df[df.time < pd.Timestamp(cut)]
     return df.reset_index(drop=True)
 
 
