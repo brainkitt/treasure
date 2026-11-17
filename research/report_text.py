@@ -25,7 +25,7 @@ SUMMARY = """
 </div>
 """
 
-VOL_LINE = "Across two research rounds and about 7,100 backtests, nothing survived costs. Drift Switch indices trend for a few minutes at a time (real before costs, momentum t-stats of 8 to 12), but Deriv's spread widens by about the capturable move exactly when they trend, so the official result is PF 0.65. Holding longer did not help because the regimes last minutes, not hours. Volatility 75 and the other synthetics behaved like fair games. VolBot.cs is included for reference only; do not run it with money."
+VOL_LINE = "After four research rounds covering every Deriv synthetic family (about 120 instruments screened, about 1,300 statistical tests corrected for multiple testing, about 9,000 backtested parameter sets), nothing shows a real edge after costs. See the Synthetics deep search section. Drift Switch indices have a genuine short-lived momentum effect before costs, but their spread widens by about the capturable move exactly when they trend. Every other synthetic behaves like a fair random walk by design. None of the synthetic cBots should be run with money."
 
 METHOD = """
 <h2 id="method">How the competition was run</h2>
@@ -106,4 +106,33 @@ def deploy_section(ranked, data):
 <li>Never add martingale, grid or averaging-down logic. None of the tested edges needs it.</li>
 </ul></div></div>
 <div class="note" style="margin-top:14px"><b>Known weaknesses.</b> IDX was tested only in a rising equity market (2024–2026), and its worst loss came on a crash day (3 Apr 2025, −$33.84). Its swap charge is an estimate: Deriv's index swap rates were not visible, so it uses a 7.5%/year bound. CFX depends on a few large trades (PF 1.40 without its best 5, 1.11 without its best 10). It lost money in the second half of 2023 and was flat from June to November 2026. Its night and weekend spreads were never measured. Both bots were researched with thousands of parameter trials (IDX about 6,300, CFX about 830). The walk-forward tests, neighbouring-parameter tests and out-of-sample replication reduce the chance of a curve-fit but cannot rule it out.</div>
+"""
+
+
+SYNTH_INTRO = """
+<p>You asked agent 3 to keep searching all Deriv synthetics, preferring M5 and a small account. It ran as two teams. Before they started, the most recent two months of synthetic data (15 Sep to 17 Nov 2026) were <b>sealed</b>: the agents could not see them, and any finalist had to pass on them in a final one-shot test. Neither team found a candidate good enough to request that test.</p>
+"""
+
+SYNTH_FINDINGS = """
+<div class="grid2" style="margin-top:14px">
+<div class="panel"><h4 style="margin-top:0">What was tested</h4><ul class="tight">
+<li><b>Universe:</b> 65 spike/jump symbols and 49 continuous symbols. Live spreads were sampled for each one, and its cost was measured against its typical M5 move.</li>
+<li><b>Statistics:</b> about 1,300 tests (drift, autocorrelation, variance ratios, time-of-day and weekday effects, spike hazard by time since the last spike, post-spike drift, volatility clustering, M1 microstructure). Each block was corrected with Benjamini-Hochberg. Only two effects survived: volatility clustering, which is directionless and built in by design, and Drift Switch regime momentum.</li>
+<li><b>Strategies:</b> more than 11 families, about 2,200 parameter sets across rounds 3-4. They covered:
+<ul class="tight"><li>drift harvesting between spikes, and fading or following spikes;</li>
+<li>breakouts with trailing stops, and Range Break boundary trades;</li>
+<li>Step-index mean reversion;</li>
+<li>volatility-regime breakouts and time-series momentum;</li>
+<li>spread-window timing, and Drift Switch with low-volatility and spread-cap filters.</li></ul></li>
+<li><b>Structural checks:</b>
+<ul class="tight"><li>Deriv's published swap rates: equal and negative on both sides, so there is no carry edge.</li>
+<li>Product descriptions: all describe compensated, driftless designs.</li>
+<li>Spread schedules: spreads on Volatility, Step and spike indices were constant across samples. Drift Switch spreads widen as the index trends.</li></ul></li>
+</ul></div>
+<div class="panel"><h4 style="margin-top:0">Why there is no edge, and what could change that</h4><ul class="tight">
+<li>Deriv generates synthetic prices with a random number generator designed to be a fair game, with any drift exactly compensated. On a fair random walk every trading rule loses the spread on average. The data matches this: Step 100's tick statistics match a fair ±0.1 walk exactly.</li>
+<li>Your 28 profitable Volatility 75 trades were about 12 independent decisions on an index whose drift t-statistic over a year is 0.03. That is consistent with luck.</li>
+<li>Drift Switch is the one exception: before costs, momentum earns about +4.9 points per trade (PF 2.2 at a 0.55 spread). But its spread rises from about 0.5 to 4-10 exactly while the index trends, and the break-even spread is about 5. That is why every Drift Switch bot loses money in the official test (PF 0.41-0.65).</li>
+<li><b>The one open question:</b> the real spread at the moment of entry. To settle it, attach <code>VolbBot.cs</code> to a Drift Switch Index 30 M5 chart on <b>demo only</b> for 2-4 weeks. It prints a <code>SPREADLOG</code> line every bar. If entry spreads are consistently ≤ 3, re-test with the logged spreads. Even at 4.0 the backtest only reaches PF 1.21, below the 1.30 gate. So treat this as research, not a trading plan.</li>
+</ul></div></div>
 """

@@ -324,7 +324,7 @@ def build(out_path):
              'on years of Deriv cTrader history with spread, swap, commission and slippage charged. This report compares them, explains each strategy with real trade examples, and gives the settings and account sizes to run them.</p>')
     P.append('<nav class="toc"><a href="#summary">Summary</a><a href="#compare">Comparison</a><a href="#curves">Equity &amp; drawdown</a>'
              + "".join(f'<a href="#{n.lower()}">{n}</a>' for n, *_ in present) +
-             '<a href="#method">Method</a><a href="#deploy">Deployment</a><a href="#code">cBot code</a></nav>')
+             '<a href="#synth">Synthetics deep search</a><a href="#method">Method</a><a href="#deploy">Deployment</a><a href="#code">cBot code</a></nav>')
 
     # ---------------- executive summary
     P.append('<h2 id="summary">Executive summary</h2>')
@@ -399,6 +399,7 @@ def build(out_path):
     for n, title, mk, cb, col in ranked:
         P.append(bot_section(n, title, mk, cb, col, data[n]))
 
+    P.append(synth_section(data))
     # ---------------- method + deployment + code
     P.append(METHOD_TEXT)
     P.append(deploy_section(ranked, data))
@@ -412,6 +413,55 @@ navigator.clipboard.writeText(el.textContent).then(()=>{b.textContent='Copied'},
     P.append("</div>")
     open(out_path, "w").write("\n".join(P))
     print("wrote", out_path, os.path.getsize(out_path) // 1024, "KB")
+
+
+def synth_section(data):
+    teams = []
+    for t, fam in (("VOLA", "Spike / jump families: Crash & Boom, Jump, DEX, Range Break, Snap, Vol Crash/Boom, Crash Boom Flip, Skew Step, Trek, Exp. Growth, Ladder"),
+                   ("VOLB", "Continuous families: Volatility 5-250 incl. (1s), Step, Multi Step, VolSwitch, Drift Switch")):
+        mp = os.path.join(ROOT, "submissions", t, "metrics.json")
+        if not os.path.exists(mp):
+            continue
+        teams.append((t, fam, json.load(open(mp)), json.load(open(os.path.join(ROOT, "agents", t, "report_data.json")))))
+    if not teams:
+        return ""
+    S = ['<h2 id="synth">Synthetics deep search (rounds 3-4)</h2>',
+         SYNTH_INTRO,
+         '<div class="tbl"><table><tr><th>Team</th><th>Scope</th><th class="n">Symbols screened</th><th class="n">Param. sets</th>'
+         '<th>Finalist</th><th class="n">PF</th><th class="n">OOS PF</th><th class="n">Trades</th><th>Holdout</th><th>Verdict</th></tr>']
+    for t, fam, m, rd in teams:
+        S.append(f'<tr><td><b>{t}</b></td><td class="small">{E(fam)}</td><td class="n">{len(rd.get("screen", []))}</td><td class="n">{rd.get("params_tried","–")}</td>'
+                 f'<td class="small">{E(rd.get("strategy_name",""))}</td><td class="n">{m["full"]["pf"]:.2f}</td><td class="n">{m["oos"]["pf"]:.2f}</td>'
+                 f'<td class="n">{m["full"]["trades"]}</td><td><span class="pill mid">not requested</span></td><td><span class="pill no">NO EDGE</span></td></tr>')
+    S.append("</table></div>")
+    # cost ratio chart from both screens
+    rows = []
+    for t, fam, m, rd in teams:
+        for r in rd.get("screen", []):
+            try:
+                c = float(r.get("cost_ratio"))
+            except (TypeError, ValueError):
+                continue
+            if c == c:
+                rows.append((str(r.get("symbol", ""))[:22], c, "var(--c3)" if t == "VOLB" else "var(--c2)"))
+    rows.sort(key=lambda x: x[1])
+    if rows:
+        sel = rows[:20] + rows[-6:] if len(rows) > 26 else rows
+        w, rh = 860, 18; h = 30 + rh * len(sel)
+        X = scale(0, max(r[1] for r in sel) * 1.1, 200, w - 60)
+        svg = [f'<svg viewBox="0 0 {w} {h}" class="chart" role="img" aria-label="Spread as share of M5 range">']
+        for i, (lab, c, col) in enumerate(sel):
+            y = 10 + i * rh
+            svg.append(f'<text x="194" y="{y+12}" class="tick" text-anchor="end">{E(lab)}</text>'
+                       f'<rect x="200" y="{y+2}" width="{max(1, X(c)-200):.1f}" height="{rh-6}" rx="2" style="fill:{col}"/>'
+                       f'<text x="{X(c)+5:.1f}" y="{y+12}" class="val">{c*100:.1f}%</text>')
+        svg.append("</svg>")
+        S.append('<h3>What one round-trip costs, as a share of a typical 5-minute move</h3>'
+                 '<p class="small muted">Spread divided by the median M5 bar range. The 20 cheapest and the 6 most expensive symbols screened are shown. Orange = spike families (VOLA), purple = continuous families (VOLB). '
+                 'Cheap instruments are the ones where a small edge could survive. The screen found no reliable directional edge on any of them; the cheapest are fair random walks.</p>'
+                 '<div class="panel">' + "".join(svg) + "</div>")
+    S.append(SYNTH_FINDINGS)
+    return "".join(S)
 
 
 def bot_section(n, title, mk, cb, col, a):
@@ -484,6 +534,8 @@ def bot_section(n, title, mk, cb, col, a):
 
 SUMMARY_TEXT = ""
 VOL_LINE = ""
+SYNTH_INTRO = ""
+SYNTH_FINDINGS = ""
 METHOD_TEXT = ""
 
 
@@ -496,6 +548,7 @@ if __name__ == "__main__":
     try:
         import report_text as RT  # editorial text written by the supervisor
         SUMMARY_TEXT, METHOD_TEXT, VOL_LINE = RT.SUMMARY, RT.METHOD, RT.VOL_LINE
+        SYNTH_INTRO, SYNTH_FINDINGS = RT.SYNTH_INTRO, RT.SYNTH_FINDINGS
         deploy_section = RT.deploy_section
     except ImportError:
         pass
