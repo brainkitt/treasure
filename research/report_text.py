@@ -25,7 +25,7 @@ SUMMARY = """
 </div>
 """
 
-VOL_LINE = "Drift Switch indices have a real momentum effect before costs, but Deriv's spread widens exactly when they trend and absorbs it (official PF 0.65). Volatility 75 and the other synthetics behaved like fair games."
+VOL_LINE = "Across two research rounds and about 7,100 backtests, nothing survived costs. Drift Switch indices trend for a few minutes at a time (real before costs, momentum t-stats of 8 to 12), but Deriv's spread widens by about the capturable move exactly when they trend, so the official result is PF 0.65. Holding longer did not help because the regimes last minutes, not hours. Volatility 75 and the other synthetics behaved like fair games. VolBot.cs is included for reference only; do not run it with money."
 
 METHOD = """
 <h2 id="method">How the competition was run</h2>

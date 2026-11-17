@@ -81,6 +81,31 @@
    "name": "Trek Up/Down, Exp Growth 1/2, Ladder Up/Down, VolSwitch High (H1 30d), Step, Multi Step 2, VolSwitch Low, Exp Growth 1 (M5 1000 bars)",
    "result": "all drift |t|<1.8, VR~1, |AC|<2SE",
    "why_rejected": "fair games, nothing structural to exploit"
+  },
+  {
+   "name": "R2 regime persistence (VR q=1..288 M5)",
+   "result": "VR plateaus after 1-2 h (DSI30 1.53@2h, 1.76@24h); 2-4 h sign-momentum t ~0",
+   "why_rejected": "regimes last minutes, so longer holds cannot multiply the gross move"
+  },
+  {
+   "name": "R2 DSI30 regime-hold native H1, 2 years, swap incl., spread 10.16",
+   "result": "0/648 IS sets PF>1; top-10 OOS median PF 0.83",
+   "why_rejected": "spread not amortised; H1 averages regimes out"
+  },
+  {
+   "name": "R2 DSI30/DSI20 on M15 & H1-from-M5 with wide trails",
+   "result": "DSI30 M15 8% sets PF>1; DSI20 M15 13% PF>1 none >1.2",
+   "why_rejected": "no edge at trending-regime spread"
+  },
+  {
+   "name": "R2 DSI10 M15 trend-hold, spread 3.64 (3.4 months)",
+   "result": "IS best t 2.0 of 324 sets; OOS share PF>1 0.51, IS-top10 OOS median PF 1.09, corr IS/OOS 0.15",
+   "why_rejected": "consistent with multiple-testing noise; OOS < 1.2"
+  },
+  {
+   "name": "R2 Volatility indices H1/H4 vol-regime",
+   "result": "V75 1y H1 drift t 0.03, VR ~1",
+   "why_rejected": "skipped after quick check (random walk)"
   }
  ],
  "walk_forward": {
@@ -188,5 +213,5 @@
    "note": "regimes (20-30 min) are averaged out; VR(H1) ~1"
   }
  ],
- "params_tried": 2900
+ "params_tried": 7100
 }
