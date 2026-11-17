@@ -1,0 +1,12 @@
+{
+ "_doc": "IDX overrides. spread = widest bid/ask in get_spot_prices samples (2026-11-17 14:34 and 14:46 UTC, i.e. 09:34/09:46 NY right after the US cash open; identical both times: SP 0.36, RUT 0.30, MID 1.22) plus ~10% buffer because no sample exists at 15:00 NY (the entry/exit time). min_units: LIMIT-probe rejections ('minimum allowed volume = 0.10'): SP/RUT round 1, MID 2026-11-17 (this agent). commission 0 (Deriv cTrader history). Swap: Deriv publishes index financing as benchmark + markup; its stock-index spec table (deriv.com/markets/stock-indices, 2026-11-17) shows long-swap -4.49 (EU indices), -6.91 (AU200) = benchmark+~2.5%/yr. US rows not visible -> CONSERVATIVE bound 7.5%/yr of price / 360 per unit per night for longs (SOFR ~4.3% + 3.2% markup): SP 7400*0.075/360 = 1.54, RUT 2740 -> 0.57, MID 3625 -> 0.76 USD/unit/night; triple on Friday rollover. Strategy is long-only, swap_short set to the same bound anyway. margin_per_unit at 1:50 (2% of price), conservative vs Deriv's advertised 1:100-1:400. slip 0.25 pts per stop fill.",
+ "2517": {"name": "US SP 500", "spread": 0.40, "min_units": 0.1, "slip": 0.25, "usd_per_quote": 1.0, "gap_sl": false,
+          "commission_per_unit_side": 0.0, "swap_long": 1.54, "swap_short": 1.54, "triple_weekday": 4, "rollover_hour_utc": 21,
+          "swap_known": true, "margin_per_unit": 148.0},
+ "2521": {"name": "US Small Cap 2000", "spread": 0.33, "min_units": 0.1, "slip": 0.25, "usd_per_quote": 1.0, "gap_sl": false,
+          "commission_per_unit_side": 0.0, "swap_long": 0.57, "swap_short": 0.57, "triple_weekday": 4, "rollover_hour_utc": 21,
+          "swap_known": true, "margin_per_unit": 55.0},
+ "2522": {"name": "US Mid Cap 400", "spread": 1.35, "min_units": 0.1, "slip": 0.25, "usd_per_quote": 1.0, "gap_sl": false,
+          "commission_per_unit_side": 0.0, "swap_long": 0.76, "swap_short": 0.76, "triple_weekday": 4, "rollover_hour_utc": 21,
+          "swap_known": true, "margin_per_unit": 73.0}
+}

@@ -1,0 +1,9 @@
+{
+ "_doc": "CFX specs (2026-11-17). spread: live get_spot_prices samples 2026-11-17 14:34, 15:16, 15:41 UTC: BTCUSD 21.8 / 19.8 / 18.4, ETHUSD 1.58 / 1.58 / 1.58 (ETH quoted with a fixed 1.58 spread). Used: BTC 25.0, ETH 2.0 (= widest seen + ~15-25% margin for night/weekend widening; 2023-24 BTC prices were 25-70k so a fixed 25 is pessimistic there). slip: 0.2 x spread on every market/stop fill. min_units: probe-CFX LIMIT BUY volume=1 (=0.01 BTC) at 32000 was ACCEPTED -> min <= 0.01 BTC (smallest expressible size), order cancelled immediately and get_pending_orders confirmed empty; ETH volume=1 REJECTED 'minimum allowed volume = 0.10' -> 0.1 ETH. commission 0 (account history). swap: the strategy never holds through 20:00-22:59 UTC so no rollover is crossed (0 nights in every run); swap_known=true with a deliberately pessimistic bound in case of manual override: 0.08% of the sample-max price per unit per night (~29%/yr), both sides, triple on Friday (Deriv crypto CFD swap rates are not published for cTrader). margin_per_unit: conservative 1:10 leverage on the sample-max price (BTC 126164, ETH 4954).",
+ "101": {"name": "BTCUSD", "spread": 25.0, "slip": 5.0, "min_units": 0.01, "usd_per_quote": 1.0, "always_open": true,
+         "commission_per_unit_side": 0.0, "swap_long": 101.0, "swap_short": 101.0, "triple_weekday": 4, "swap_known": true,
+         "rollover_hour_utc": 21, "margin_per_unit": 12617.0},
+ "102": {"name": "ETHUSD", "spread": 2.0, "slip": 0.4, "min_units": 0.1, "usd_per_quote": 1.0, "always_open": true,
+         "commission_per_unit_side": 0.0, "swap_long": 4.0, "swap_short": 4.0, "triple_weekday": 4, "swap_known": true,
+         "rollover_hour_utc": 21, "margin_per_unit": 496.0}
+}

@@ -1,0 +1,376 @@
+{
+ "strategy_name": "IndexDipBuy (IDX)",
+ "one_line": "Buy US SP 500 / US Small Cap 2000 at 15:00 NY when the session closes at a 7-session low; exit next session (TP 0.75 ATR, SL 3 ATR).",
+ "instrument(s)": [
+  "US SP 500 (2517)",
+  "US Small Cap 2000 (2521)"
+ ],
+ "timeframe": "H1 bars, daily-session decisions (session close = 15:00 New York)",
+ "logic": {
+  "entry": "At close of the H1 bar opening 14:00 NY: if session close <= lowest of last 7 session closes -> market BUY at next bar open (15:00 NY). Long only.",
+  "exit": "Time exit at close of 22nd H1 bar after fill (next session 15:00 NY) unless SL/TP hit first.",
+  "stop": "3.0 x ATR14 of session bars (hard SL on every order).",
+  "take_profit": "0.75 x ATR14.",
+  "sizing": "Broker minimum 0.1 unit per index (optional risk-% sizing in cBot, clamped to [min, MaxVolumeUnits]).",
+  "risk": "Start balance $700 (min that passes all gates); planned risk/trade median $24 SP, $13 RUT; daily loss limit 8%, equity kill-switch 25%, pause after 7 consecutive losses, skip if planned risk >12% balance."
+ },
+ "parameters": [
+  {
+   "name": "N",
+   "default": 7,
+   "range": "5-10 (plateau)",
+   "meaning": "lookback in sessions for the closing low"
+  },
+  {
+   "name": "tp_atr",
+   "default": 0.75,
+   "range": "0-1.5",
+   "meaning": "take profit in session ATRs"
+  },
+  {
+   "name": "sl_atr",
+   "default": 3.0,
+   "range": "2-4",
+   "meaning": "hard stop in session ATRs"
+  },
+  {
+   "name": "hold_sessions",
+   "default": 1,
+   "range": "1-3",
+   "meaning": "time exit after N sessions (22 H1 bars for 1)"
+  },
+  {
+   "name": "atr_n",
+   "default": 14,
+   "range": "fixed",
+   "meaning": "ATR period in sessions"
+  },
+  {
+   "name": "signal_hour_ny",
+   "default": 14,
+   "range": "14-15",
+   "meaning": "NY open hour of the session-closing H1 bar"
+  }
+ ],
+ "rejected_alternatives": [
+  {
+   "name": "Overnight drift long (18:00->09:00 NY)",
+   "result": "SP PF 1.09-1.17, RUT 1.05-1.13, MID <1",
+   "why_rejected": "tiny edge, pure beta"
+  },
+  {
+   "name": "Intraday momentum (early return -> afternoon)",
+   "result": "PF 0.79-1.04",
+   "why_rejected": "no edge"
+  },
+  {
+   "name": "Generic H1 z-score mean reversion",
+   "result": "SP ~1.0, RUT 1.1-1.4 unstable",
+   "why_rejected": "unstable across folds/indices"
+  },
+  {
+   "name": "Pre-US-open fade (H1)",
+   "result": "corr -0.2 stable, but tradable PF SP 1.2-1.3, RUT 1.0, MID <0.8",
+   "why_rejected": "correlation driven by few big days"
+  },
+  {
+   "name": "DELTA round-1 PreOpenFade, frozen, on unseen 2024-05..2026-03 M15",
+   "result": "PF 0.74-0.86 per half-year; 1.45 only Mar-Nov 2026",
+   "why_rejected": "regime-specific, disproved"
+  },
+  {
+   "name": "Overnight long after down cash session",
+   "result": "SP up to 1.28, RUT 1.1-1.2, MID <1",
+   "why_rejected": "weak; MID reopen artifact"
+  },
+  {
+   "name": "European-session fade + vol filter (1728 sets)",
+   "result": "median PF ~1.1",
+   "why_rejected": "weak"
+  },
+  {
+   "name": "High-vol US-session momentum (1728 sets)",
+   "result": "median PF <1",
+   "why_rejected": "no edge"
+  },
+  {
+   "name": "US Mid Cap 400 leg",
+   "result": "IS PF 1.15, full 1.20",
+   "why_rejected": "IS PF <1.2 and 3.4 bp spread"
+  },
+  {
+   "name": "$-capped stops to fit small balance",
+   "result": "PF 1.07-1.17",
+   "why_rejected": "kills the edge (edge lives in high vol)"
+  },
+  {
+   "name": "Short 7-session highs (mirror)",
+   "result": "PF 0.62-0.72",
+   "why_rejected": "effect is asymmetric"
+  },
+  {
+   "name": "US Small Cap 2000 only (small-account mode)",
+   "result": "QUALIFIED at $250, PF 1.60, t 2.07, score 57.5",
+   "why_rejected": "kept as documented option, weaker evidence than 2 legs"
+  }
+ ],
+ "walk_forward": [
+  {
+   "fold": 2,
+   "train": "2024-05..2024-11",
+   "test": "2024-11..2025-05",
+   "chosen": "N5 TP.75 SL3 H1",
+   "test_trades": 75,
+   "test_pf": 1.24
+  },
+  {
+   "fold": 3,
+   "train": "2024-05..2025-05",
+   "test": "2025-05..2025-11",
+   "chosen": "N8 TP.75 SL4 H1",
+   "test_trades": 24,
+   "test_pf": 3.26
+  },
+  {
+   "fold": 4,
+   "train": "2024-05..2025-11",
+   "test": "2025-11..2026-05",
+   "chosen": "N7 TP.75 SL4 H1",
+   "test_trades": 46,
+   "test_pf": 1.85
+  },
+  {
+   "fold": 5,
+   "train": "2024-05..2026-05",
+   "test": "2026-05..2026-11",
+   "chosen": "N8 TP0 SL3 H3",
+   "test_trades": 28,
+   "test_pf": 3.64
+  }
+ ],
+ "neighbour_table": [
+  {
+   "variant": "final",
+   "trades": 220,
+   "pf": 1.86,
+   "pf_is": 1.68,
+   "pf_oos": 2.25
+  },
+  {
+   "variant": "N=5",
+   "trades": 275,
+   "pf": 1.62,
+   "pf_is": 1.57,
+   "pf_oos": 1.74
+  },
+  {
+   "variant": "N=6",
+   "trades": 246,
+   "pf": 1.77,
+   "pf_is": 1.6,
+   "pf_oos": 2.19
+  },
+  {
+   "variant": "N=8",
+   "trades": 201,
+   "pf": 1.8,
+   "pf_is": 1.62,
+   "pf_oos": 2.19
+  },
+  {
+   "variant": "N=10",
+   "trades": 176,
+   "pf": 1.72,
+   "pf_is": 1.49,
+   "pf_oos": 2.21
+  },
+  {
+   "variant": "TP=0",
+   "trades": 220,
+   "pf": 1.72,
+   "pf_is": 1.48,
+   "pf_oos": 2.31
+  },
+  {
+   "variant": "TP=0.5",
+   "trades": 220,
+   "pf": 1.9,
+   "pf_is": 1.64,
+   "pf_oos": 2.49
+  },
+  {
+   "variant": "TP=1.0",
+   "trades": 220,
+   "pf": 2.0,
+   "pf_is": 1.82,
+   "pf_oos": 2.4
+  },
+  {
+   "variant": "TP=1.5",
+   "trades": 220,
+   "pf": 1.79,
+   "pf_is": 1.52,
+   "pf_oos": 2.43
+  },
+  {
+   "variant": "SL=2",
+   "trades": 220,
+   "pf": 1.73,
+   "pf_is": 1.51,
+   "pf_oos": 2.25
+  },
+  {
+   "variant": "SL=2.5",
+   "trades": 220,
+   "pf": 1.89,
+   "pf_is": 1.72,
+   "pf_oos": 2.25
+  },
+  {
+   "variant": "SL=4",
+   "trades": 220,
+   "pf": 1.88,
+   "pf_is": 1.7,
+   "pf_oos": 2.25
+  },
+  {
+   "variant": "hold=2",
+   "trades": 163,
+   "pf": 1.7,
+   "pf_is": 1.39,
+   "pf_oos": 2.66
+  },
+  {
+   "variant": "hold=3",
+   "trades": 144,
+   "pf": 1.8,
+   "pf_is": 1.33,
+   "pf_oos": 5.27
+  },
+  {
+   "variant": "US Tech 100 replication (frozen params, not traded)",
+   "trades": 109,
+   "pf": 1.64,
+   "pf_is": 1.97,
+   "pf_oos": 1.26
+  }
+ ],
+ "trade_examples": [
+  {
+   "time": "2025-04-21 19:00 UTC",
+   "symbol": "US SP 500",
+   "side": "BUY",
+   "entry": 5103.42,
+   "sl": 4358.67,
+   "tp": 5289.61,
+   "exit": 5289.61,
+   "pnl": 18.46,
+   "why": "7-session closing low after tariff selloff; TP next morning"
+  },
+  {
+   "time": "2026-11-06 20:00 UTC",
+   "symbol": "US SP 500",
+   "side": "BUY",
+   "entry": 7405.29,
+   "sl": 7021.95,
+   "tp": 7501.12,
+   "exit": 7501.12,
+   "pnl": 8.81,
+   "why": "Friday closing low; TP Monday"
+  },
+  {
+   "time": "2025-04-08 19:00 UTC",
+   "symbol": "US Small Cap 2000",
+   "side": "BUY",
+   "entry": 1771.93,
+   "sl": 1537.45,
+   "tp": 1830.55,
+   "exit": 1830.55,
+   "pnl": 5.81,
+   "why": "capitulation low; TP on the tariff-pause rally"
+  },
+  {
+   "time": "2025-04-03 19:00 UTC",
+   "symbol": "US SP 500",
+   "side": "BUY",
+   "entry": 5439.57,
+   "sl": 5102.94,
+   "tp": 5523.73,
+   "exit": 5102.69,
+   "pnl": -33.84,
+   "why": "falling knife: crash continued, 3-ATR stop hit (worst trade)"
+  },
+  {
+   "time": "2026-03-26 19:00 UTC",
+   "symbol": "US SP 500",
+   "side": "BUY",
+   "entry": 6503.59,
+   "sl": 6137.67,
+   "tp": 6595.07,
+   "exit": 6382.74,
+   "pnl": -12.24,
+   "why": "dip kept falling, time exit next session"
+  }
+ ],
+ "failure_conditions": [
+  "sustained bear market / persistent downtrend (falling knives; not in sample)",
+  "crash days with gap through stop (Apr-2025 type)",
+  "both legs lose on same days (correlated)",
+  "swap higher than the 7.5%/yr bound",
+  "regime where short-term reversal disappears (fold 1 2024-05..11 was flat, PF 0.99)"
+ ],
+ "timeframe_comparison": [
+  {
+   "timeframe": "H1 session close 15:00 NY (final)",
+   "pf": 1.86,
+   "trades": 220,
+   "note": "liquid hour"
+  },
+  {
+   "timeframe": "H1 session close 16:00 NY",
+   "pf": 1.86,
+   "trades": 208,
+   "note": "same edge, closer to spread widening"
+  },
+  {
+   "timeframe": "H1 session close 12:00 NY",
+   "pf": 1.51,
+   "trades": 228,
+   "note": "weaker"
+  },
+  {
+   "timeframe": "M15 (SP only)",
+   "pf": 1.89,
+   "trades": 101,
+   "note": "vs 2.01 on H1, no benefit"
+  },
+  {
+   "timeframe": "H1/M15 intraday families",
+   "pf": "0.8-1.3",
+   "trades": "200-1080",
+   "note": "no robust intraday edge"
+  }
+ ],
+ "official": {
+  "qualified": true,
+  "score": 72.4,
+  "start_balance": 700,
+  "pf": 1.81,
+  "pf_is": 1.64,
+  "pf_oos": 2.19,
+  "pf_stress": 1.78,
+  "trades": 220,
+  "oos_trades": 76,
+  "t": 3.25,
+  "max_dd": 48.58,
+  "mc95": 76.68,
+  "worst": -33.84
+ },
+ "balance": {
+  "minimum_passing_gates": 700,
+  "evaluator_recommended": 1128,
+  "small_account_mode": "US Small Cap 2000 only at $250 (qualified, score 57.5)",
+  "why_not_30": "0.1-unit minimum x 3-ATR stops = $9-74 risk per trade; intraday ideas compatible with $1.5 stops all failed"
+ },
+ "params_tried": 6320
+}
