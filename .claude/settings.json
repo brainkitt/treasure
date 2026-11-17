@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ctrader_Demo__create_order",
+      "mcp__ctrader_Demo__close_position",
+      "mcp__ctrader_Demo__get_positions",
+      "mcp__ctrader_Demo__get_spot_prices",
+      "mcp__ctrader_Demo__get_balance",
+      "mcp__ctrader_Demo__get_position_details"
+    ]
+  }
+}
