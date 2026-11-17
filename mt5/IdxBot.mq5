@@ -42,7 +42,7 @@
 input group "General"
 input ENUM_TIMEFRAMES InpTimeframe            = PERIOD_H1;   // Strategy timeframe (tested on H1)
 input int             InpServerUtcOffsetHours = -99;         // Server UTC offset hours (-99 = auto)
-input long            InpMagic                = 26111701;    // Magic number (same on every IDX symbol)
+input long            InpMagic                 = 26111702;    // Magic number (same on every IDX symbol)
 input int             InpSlippagePoints       = 50;          // Max deviation (points)
 
 input group "Strategy"
