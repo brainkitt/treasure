@@ -4,7 +4,7 @@ lib.START = lib.pd.Timestamp("2023-05-01"); lib._cache.clear(); lib.SPREAD[102] 
 from h4b import *
 import json
 SPL = pd.Timestamp("2025-10-26")
-base = dict(k=2.5, n=24, H=2, slm=2.0)
+base = dict(k=2.5, n=24, H=2, slm=2.0)  # H = engine max_bars -> held H+1 bars
 rows = []
 def row(lbl, sid=102, spread_mult=1.0, **kw):
     tr = sim(sid, burst2(sid, **{**base, **kw}), slip_frac=0.2, spread_mult=spread_mult)

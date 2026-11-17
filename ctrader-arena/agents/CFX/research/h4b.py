@@ -20,7 +20,7 @@ def burst2(sid, k=2.5, n=48, H=2, slm=2.0, wick=0.0, trendL=0, volm=0.0, tpm=0.0
         if trendL > 0:
             if i < trendL or np.sign(c[i] - c[i - trendL]) != side: continue
         if volm > 0 and not (v[i] > volm * vm[i]): continue
-        if any(((hr[i] + 1 + j) % 24) in BLOCK for j in range(H)): continue
+        if any(((hr[i] + 1 + j) % 24) in BLOCK for j in range(H + 1)): continue   # H+1 bars are held (engine semantics)
         rows.append((i, side, 0, slm * rngm[i], tpm * rngm[i], H))
     return pd.DataFrame(rows, columns=["idx", "side", "kind", "sl", "tp", "max_bars"]).assign(volume=VOL[sid])
 
